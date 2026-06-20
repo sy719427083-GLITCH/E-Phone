@@ -13,3 +13,4 @@ Current prototype direction:
 - The phone UI is the whole viewport: no external phone frame, no black border, no dynamic island, and no outside background.
 - iPhone/Safari layouts should not feel pushed downward; prefer dynamic viewport units and light safe-area compensation so the UI sits higher and fills the visible screen.
 - New-role avatar upload should stay clean and circular without a hazy decorative block or frosted overlay behind it.
+- Role overview avatars should not have hazy decorative blocks or frosted highlight overlays.

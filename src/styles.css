@@ -1366,19 +1366,7 @@ button {
 }
 
 .character-hero::before {
-  position: absolute;
-  width: clamp(166px, 45vw, 204px);
-  height: clamp(166px, 45vw, 204px);
-  border: 2px solid rgba(238, 213, 222, 0.62);
-  border-radius: 50%;
-  background:
-    radial-gradient(circle, rgba(255, 255, 255, 0.38), rgba(255, 244, 248, 0.22) 54%, rgba(239, 220, 227, 0.22) 100%);
-  box-shadow:
-    0 0 0 10px rgba(255, 246, 249, 0.28),
-    0 0 24px rgba(210, 169, 184, 0.2),
-    inset 0 0 22px rgba(255, 255, 255, 0.58);
-  content: "";
-  pointer-events: none;
+  content: none;
 }
 
 .avatar-picker {
@@ -1422,6 +1410,17 @@ button {
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.62), transparent);
   content: "";
   pointer-events: none;
+}
+
+.character-hero .role-avatar {
+  background: rgba(255, 250, 252, 0.64);
+  box-shadow:
+    0 10px 20px rgba(190, 156, 170, 0.1),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.34);
+}
+
+.character-hero .role-avatar::after {
+  content: none;
 }
 
 .role-avatar img {

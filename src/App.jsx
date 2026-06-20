@@ -169,9 +169,9 @@ function LockScreen({ onUnlock }) {
         <p>{clock.date}</p>
         <strong>{clock.time}</strong>
       </div>
-      <button className="unlock-handle" onClick={onUnlock} aria-label="上划解锁">
+      <button className="unlock-handle" onClick={onUnlock} aria-label="点击解锁">
         <span />
-        <small>上划解锁</small>
+        <small>点击解锁</small>
       </button>
     </section>
   );

@@ -12,3 +12,4 @@ Current prototype direction:
 - Desktop app icons should not have colored square backgrounds, tiles, badges, or button plates; they should look integrated into the cat wallpaper.
 - The phone UI is the whole viewport: no external phone frame, no black border, no dynamic island, and no outside background.
 - iPhone/Safari layouts should not feel pushed downward; prefer dynamic viewport units and light safe-area compensation so the UI sits higher and fills the visible screen.
+- New-role avatar upload should stay clean and circular without a hazy decorative block or frosted overlay behind it.

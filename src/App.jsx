@@ -7,6 +7,7 @@ import {
   requestChatCompletion,
   resolveApiSelection,
 } from "./lib/apiStore.js";
+import { createIdentityDraft, IdentityStore } from "./lib/identityStore.js";
 import { parseGeneratedRole } from "./lib/roleGenerator.js";
 import { createRoleDraft, RoleStore } from "./lib/roleStore.js";
 
@@ -164,7 +165,7 @@ function SimplePane({ title }) {
   );
 }
 
-function SwipeRoleCard({ role, onOpen, onDelete }) {
+function SwipeRoleCard({ role, onOpen, onDelete, noun = "角色" }) {
   const [open, setOpen] = useState(false);
   const startPoint = useRef({ x: 0, y: 0 });
   const swiped = useRef(false);
@@ -208,18 +209,18 @@ function SwipeRoleCard({ role, onOpen, onDelete }) {
       >
         <span className="role-card-bg" aria-hidden="true" />
         <div className="role-avatar small">
-          {role.avatar ? <img src={role.avatar} alt="" /> : <span>{role.name.slice(0, 1) || "角"}</span>}
+          {role.avatar ? <img src={role.avatar} alt="" /> : <span>{role.name.slice(0, 1) || noun.slice(0, 1)}</span>}
         </div>
         <div className="role-card-main">
           <small>{role.worldview || "暂无关联世界观"}</small>
           <div className="role-card-head">
-            <b>{role.name || "未命名角色"}</b>
+            <b>{role.name || `未命名${noun}`}</b>
             <span>{role.gender || "未填性别"}</span>
           </div>
           <div className="role-card-tags">
             <span>{role.identity || "未填写身份"}</span>
           </div>
-          <p>{role.personality || role.persona || role.appearance || "还没有填写角色概况"}</p>
+          <p>{role.personality || role.persona || role.appearance || `还没有填写${noun}概况`}</p>
         </div>
       </button>
     </div>
@@ -261,8 +262,52 @@ function RolesScreen({ roles, onCreate, onOpenRole, onDeleteRole }) {
   );
 }
 
-function CharacterCreatePage({ initialRole = null, onBack, onSave }) {
-  const [draft, setDraft] = useState(() => initialRole || createRoleDraft());
+function IdentitiesScreen({ identities, onCreate, onOpenIdentity, onDeleteIdentity }) {
+  return (
+    <section className="page soft-page roles-page identities-page">
+      <Header title="我" />
+      <div className="role-toolbar">
+        <div>
+          <b>身份总览</b>
+          <span>{identities.length} 个身份</span>
+        </div>
+        <button className="role-create-button" onClick={onCreate}>
+          + 新建
+        </button>
+      </div>
+      <div className="role-list">
+        {identities.length === 0 ? (
+          <div className="empty-state compact-empty roles-empty">
+            <div className="mini-mark" />
+            <h2>还没有身份</h2>
+            <p>创建第一个身份后，就可以用自己的设定进入剧情互动。</p>
+          </div>
+        ) : (
+          identities.map((identity) => (
+            <SwipeRoleCard
+              key={identity.id}
+              role={identity}
+              noun="身份"
+              onOpen={onOpenIdentity}
+              onDelete={onDeleteIdentity}
+            />
+          ))
+        )}
+      </div>
+    </section>
+  );
+}
+
+function CharacterCreatePage({
+  initialRole = null,
+  onBack,
+  onSave,
+  profileKind = "role",
+  createDraft = createRoleDraft,
+}) {
+  const isIdentity = profileKind === "identity";
+  const noun = isIdentity ? "身份" : "角色";
+  const [draft, setDraft] = useState(() => initialRole || createDraft());
   const [message, setMessage] = useState("");
   const [generatorOpen, setGeneratorOpen] = useState(false);
   const [generatorKeyword, setGeneratorKeyword] = useState("");
@@ -297,35 +342,35 @@ function CharacterCreatePage({ initialRole = null, onBack, onSave }) {
   const saveRole = () => {
     const saved = onSave(draft);
     setDraft(saved);
-    setMessage(`已保存角色：${saved.name}`);
+    setMessage(`已保存${noun}：${saved.name}`);
   };
 
   const generateRole = async () => {
     const keyword = generatorKeyword.trim();
     if (!keyword) {
-      setMessage("请先填写角色关键词。");
+      setMessage(`请先填写${noun}关键词。`);
       return;
     }
     setGeneratingRole(true);
-    setMessage("正在生成角色信息...");
+    setMessage(`正在生成${noun}信息...`);
     try {
       const store = new ApiConfigStore();
       const config = store.getSelected();
       const prompt = [
-        "请根据用户关键词生成一个中文角色设定，用严格 JSON 返回，不要 Markdown，不要解释。",
+        `请根据用户关键词生成一个中文${noun}设定，用严格 JSON 返回，不要 Markdown，不要解释。`,
         "JSON 字段固定为：name, gender, identity, personality, appearance, worldview, persona。",
         "必须只返回一个 JSON 对象，所有字段都必须是字符串，不要嵌套对象。",
         "gender 只能从 女、男、非二元、其他 中选择一个。",
         "worldview 如果没有明确世界观，请填空字符串。",
         "appearance 写 1-2 句外貌与气质。",
-        "persona 写 2-4 句人设，包括背景、关系感、说话方式和故事钩子。",
+        `persona 写 2-4 句${noun}人设，包括背景、关系感、说话方式和故事钩子。`,
         `关键词：${keyword}`,
       ].join("\n");
       const content = await callWithRetryAndFallback(config, ({ api }) =>
         requestChatCompletion(api, prompt, fetch, { maxTokens: 700 }),
       );
       applyGeneratedRole(content);
-      setMessage("角色信息已生成并填入表单。");
+      setMessage(`${noun}信息已生成并填入表单。`);
     } catch (error) {
       setMessage(`生成失败：${error.message || "请检查 API 设置。"}`);
     } finally {
@@ -334,15 +379,15 @@ function CharacterCreatePage({ initialRole = null, onBack, onSave }) {
   };
 
   return (
-    <section className="page detail-page character-page">
+    <section className={`page detail-page character-page ${isIdentity ? "identity-create-page" : ""}`.trim()}>
       <Header
-        title={initialRole ? "编辑角色" : "新建角色"}
+        title={initialRole ? `编辑${noun}` : `新建${noun}`}
         onBack={onBack}
         action={(
           <button
             className="role-generate-toggle"
             onClick={() => setGeneratorOpen((open) => !open)}
-            aria-label="随机生成角色"
+            aria-label={`随机生成${noun}`}
           >
             <svg viewBox="0 0 32 32" aria-hidden="true">
               <path className="star-main" d="M16 4.8 18.9 12l7.7 1-5.6 5.1 1.4 7.6-6.4-3.8-6.4 3.8 1.4-7.6L5.4 13l7.7-1z" />
@@ -357,7 +402,7 @@ function CharacterCreatePage({ initialRole = null, onBack, onSave }) {
           <div className="role-generator-panel">
             <input
               value={generatorKeyword}
-              placeholder="输入关键词，例如：赛博花店老板"
+              placeholder={isIdentity ? "输入关键词，例如：穿书少女" : "输入关键词，例如：赛博花店老板"}
               onChange={(event) => setGeneratorKeyword(event.target.value)}
               onKeyDown={(event) => {
                 if (event.key === "Enter") generateRole();
@@ -456,7 +501,7 @@ function CharacterCreatePage({ initialRole = null, onBack, onSave }) {
 
         {message && <p className="api-message role-message">{message}</p>}
         <div className="action-row compact">
-          <button onClick={saveRole}>{initialRole ? "保存修改" : "保存角色"}</button>
+          <button onClick={saveRole}>{initialRole ? "保存修改" : `保存${noun}`}</button>
         </div>
       </div>
     </section>
@@ -924,9 +969,13 @@ export function App() {
   const [appPage, setAppPage] = useState(null);
   const [settingPage, setSettingPage] = useState(null);
   const [rolePage, setRolePage] = useState(null);
+  const [identityPage, setIdentityPage] = useState(null);
   const [selectedRoleId, setSelectedRoleId] = useState(null);
+  const [selectedIdentityId, setSelectedIdentityId] = useState(null);
   const [roleStore] = useState(() => new RoleStore());
+  const [identityStore] = useState(() => new IdentityStore());
   const [roles, setRoles] = useState(() => roleStore.list());
+  const [identities, setIdentities] = useState(() => identityStore.list());
   const clock = useClock();
 
   useEffect(() => {
@@ -936,6 +985,10 @@ export function App() {
   }, []);
 
   const selectedRole = useMemo(() => roles.find((role) => role.id === selectedRoleId) || null, [roles, selectedRoleId]);
+  const selectedIdentity = useMemo(
+    () => identities.find((identity) => identity.id === selectedIdentityId) || null,
+    [identities, selectedIdentityId],
+  );
   const content = useMemo(() => {
     if (appPage) return <SimplePane title={appPage.label} />;
     if (settingPage) return <SettingDetail page={settingPage} onBack={() => setSettingPage(null)} />;
@@ -979,6 +1032,37 @@ export function App() {
         />
       );
     }
+    if (identityPage === "create") {
+      return (
+        <CharacterCreatePage
+          profileKind="identity"
+          createDraft={createIdentityDraft}
+          onBack={() => setIdentityPage(null)}
+          onSave={(draft) => {
+            const saved = identityStore.save(draft);
+            setIdentities(identityStore.list());
+            setSelectedIdentityId(saved.id);
+            return saved;
+          }}
+        />
+      );
+    }
+    if (identityPage === "edit") {
+      return (
+        <CharacterCreatePage
+          profileKind="identity"
+          createDraft={createIdentityDraft}
+          initialRole={selectedIdentity}
+          onBack={() => setIdentityPage(null)}
+          onSave={(draft) => {
+            const saved = identityStore.save(draft);
+            setIdentities(identityStore.list());
+            setSelectedIdentityId(saved.id);
+            return saved;
+          }}
+        />
+      );
+    }
     if (tab === "home") return <HomeScreen clock={clock} openApp={setAppPage} />;
     if (tab === "settings") return <SettingsPage openSetting={setSettingPage} />;
     if (tab === "roles") {
@@ -998,8 +1082,40 @@ export function App() {
         />
       );
     }
+    if (tab === "me") {
+      return (
+        <IdentitiesScreen
+          identities={identities}
+          onCreate={() => setIdentityPage("create")}
+          onOpenIdentity={(id) => {
+            setSelectedIdentityId(id);
+            setIdentityPage("edit");
+          }}
+          onDeleteIdentity={(id) => {
+            identityStore.remove(id);
+            setIdentities(identityStore.list());
+            if (selectedIdentityId === id) setSelectedIdentityId(null);
+          }}
+        />
+      );
+    }
     return <SimplePane title={tab === "roles" ? "角色" : "我"} />;
-  }, [appPage, clock, rolePage, roleStore, roles, selectedRole, selectedRoleId, settingPage, tab]);
+  }, [
+    appPage,
+    clock,
+    identities,
+    identityPage,
+    identityStore,
+    rolePage,
+    roleStore,
+    roles,
+    selectedIdentity,
+    selectedIdentityId,
+    selectedRole,
+    selectedRoleId,
+    settingPage,
+    tab,
+  ]);
 
   if (locked) {
     return <LockScreen onUnlock={() => setLocked(false)} />;
@@ -1013,7 +1129,7 @@ export function App() {
         </button>
       ) : null}
       {content}
-      {!appPage && !settingPage && !rolePage ? <BottomTabs active={tab} setActive={setTab} /> : null}
+      {!appPage && !settingPage && !rolePage && !identityPage ? <BottomTabs active={tab} setActive={setTab} /> : null}
     </main>
   );
 }

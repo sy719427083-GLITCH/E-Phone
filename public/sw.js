@@ -1,4 +1,4 @@
-const CACHE_NAME = "e-phone-pink-pwa-v14";
+const CACHE_NAME = "e-phone-pink-pwa-v15";
 const ASSETS = [
   "manifest.webmanifest",
   "assets/pwa-icon.svg",
@@ -28,6 +28,7 @@ const ASSETS = [
   "assets/settings-icons/data.png",
   "assets/settings-icons/system.png",
   "assets/role-create-clean-a-nocat.png",
+  "assets/identity-create-bg.png",
   "assets/role-create-clean-a.png",
   "assets/role-create-hero-a.png",
   "assets/role-create-hero.png",

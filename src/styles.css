@@ -336,6 +336,10 @@ button {
   background: #ffffff;
 }
 
+.page.soft-page.identities-page {
+  background: #ffffff;
+}
+
 .settings-page {
   overflow-y: auto;
   padding: 0 14px calc(82px + var(--safe-bottom));
@@ -1192,6 +1196,13 @@ button {
   background:
     linear-gradient(180deg, rgba(255, 248, 251, 0.02), rgba(255, 248, 251, 0.18) 100%),
     url("/assets/role-create-clean-a-nocat.png") center top / cover no-repeat,
+    #fff8fa;
+}
+
+.character-page.identity-create-page {
+  background:
+    linear-gradient(180deg, rgba(255, 248, 251, 0.02), rgba(255, 248, 251, 0.2) 100%),
+    url("/assets/identity-create-bg.png") center top / cover no-repeat,
     #fff8fa;
 }
 

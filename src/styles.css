@@ -286,8 +286,8 @@ button {
   display: grid;
   grid-template-columns: 48px 1fr 48px;
   align-items: center;
-  min-height: 64px;
-  padding: max(18px, min(calc(var(--safe-top) + 8px), 34px)) 12px 3px;
+  min-height: 82px;
+  padding: max(34px, min(calc(var(--safe-top) + 20px), 58px)) 12px 5px;
 }
 
 .topbar h1 {
@@ -320,7 +320,7 @@ button {
 
 .floating-back {
   position: absolute;
-  top: max(28px, min(calc(var(--safe-top) + 18px), 42px));
+  top: max(42px, min(calc(var(--safe-top) + 28px), 62px));
   left: 14px;
   z-index: 20;
   padding: 8px 10px;
@@ -1201,8 +1201,8 @@ button {
 }
 
 .role-detail-page .topbar {
-  min-height: 66px;
-  padding-top: max(20px, calc(var(--safe-top) + 9px));
+  min-height: 82px;
+  padding-top: max(34px, min(calc(var(--safe-top) + 20px), 58px));
 }
 
 .character-page .back-button {

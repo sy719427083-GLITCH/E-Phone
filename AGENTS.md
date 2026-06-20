@@ -14,6 +14,7 @@ Current prototype direction:
 - iPhone/Safari layouts should not feel pushed downward; prefer dynamic viewport units and light safe-area compensation so the UI sits higher and fills the visible screen.
 - Do not render a custom top system time or battery indicator; let the phone/browser own that area while the app background fills behind it.
 - On real phones, large iPhones, touch/narrow screens, mobile browsers, and home-screen PWAs, every screen, wallpaper, lock screen, and in-app page should fill the viewport without bottom blank space or vertical centering. On desktop browsers, keep a responsive phone-proportioned preview instead of stretching the UI across the full width.
+- Mobile browser and home-screen PWA layouts should keep the same vertical placement; browser chrome and safe-area differences should not make the home/roles/me/settings tabs or page headers jump upward or downward.
 - Disable mobile tap gray highlights and avoid pressed-state dimming on app controls.
 - New-role avatar upload should stay clean and circular without a hazy decorative block or frosted overlay behind it.
 - Role overview avatars should not have hazy decorative blocks or frosted highlight overlays.

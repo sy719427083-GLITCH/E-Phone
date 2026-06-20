@@ -1,6 +1,6 @@
 :root {
   color: #42383d;
-  background: #ffffff;
+  background: #fff8fa;
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC", "Helvetica Neue", Arial, sans-serif;
   font-size: 14px;
   text-rendering: optimizeLegibility;
@@ -22,7 +22,7 @@ body,
 
 body {
   overflow: hidden;
-  background: #ffffff;
+  background: #fff8fa;
   -webkit-font-smoothing: antialiased;
 }
 
@@ -79,56 +79,6 @@ button {
     url("/assets/pink-cat-home-wallpaper-clean.png");
   background-size: cover;
   background-position: center;
-}
-
-.status-row {
-  position: absolute;
-  top: max(10px, calc(var(--safe-top) + 4px));
-  left: 22px;
-  right: 22px;
-  z-index: 3;
-  display: flex;
-  justify-content: space-between;
-  color: rgba(73, 61, 67, 0.68);
-  font-size: 11px;
-  font-weight: 600;
-}
-
-.status-time {
-  letter-spacing: 0;
-}
-
-.battery-status {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-}
-
-.battery-shell {
-  position: relative;
-  width: 23px;
-  height: 11px;
-  padding: 1px;
-  border: 1.4px solid rgba(73, 61, 67, 0.56);
-  border-radius: 3px;
-}
-
-.battery-shell::after {
-  position: absolute;
-  top: 3px;
-  right: -3.5px;
-  width: 2px;
-  height: 5px;
-  border-radius: 0 2px 2px 0;
-  background: rgba(73, 61, 67, 0.5);
-  content: "";
-}
-
-.battery-fill {
-  display: block;
-  height: 100%;
-  border-radius: 2px;
-  background: rgba(207, 120, 149, 0.72);
 }
 
 .home-widget {
@@ -1257,11 +1207,6 @@ button {
 .role-detail-page .topbar {
   min-height: 66px;
   padding-top: max(20px, calc(var(--safe-top) + 9px));
-}
-
-.role-detail-page .status-row {
-  z-index: 6;
-  color: rgba(112, 74, 91, 0.72);
 }
 
 .character-page .back-button {

@@ -109,57 +109,6 @@ function useClock() {
   return clock;
 }
 
-function useBattery() {
-  const [battery, setBattery] = useState({ charging: false, level: 87 });
-
-  useEffect(() => {
-    if (!("getBattery" in navigator)) return undefined;
-
-    let batteryManager;
-    const updateBattery = () => {
-      setBattery({
-        charging: Boolean(batteryManager.charging),
-        level: Math.round(batteryManager.level * 100),
-      });
-    };
-
-    navigator
-      .getBattery()
-      .then((manager) => {
-        batteryManager = manager;
-        updateBattery();
-        manager.addEventListener("chargingchange", updateBattery);
-        manager.addEventListener("levelchange", updateBattery);
-      })
-      .catch(() => undefined);
-
-    return () => {
-      if (!batteryManager) return;
-      batteryManager.removeEventListener("chargingchange", updateBattery);
-      batteryManager.removeEventListener("levelchange", updateBattery);
-    };
-  }, []);
-
-  return battery;
-}
-
-function StatusBar({ clock, battery }) {
-  return (
-    <div className="status-row">
-      <span className="status-time">{clock.time}</span>
-      <span className="battery-status" aria-label={`电量 ${battery.level}%`}>
-        <span className="battery-shell">
-          <span
-            className="battery-fill"
-            style={{ width: `${Math.min(100, Math.max(0, battery.level))}%` }}
-          />
-        </span>
-        <span>{battery.level}%{battery.charging ? " 充电" : ""}</span>
-      </span>
-    </div>
-  );
-}
-
 function LockScreen({ onUnlock }) {
   const clock = useClock();
 
@@ -985,7 +934,6 @@ export function App() {
   const [roleStore] = useState(() => new RoleStore());
   const [roles, setRoles] = useState(() => roleStore.list());
   const clock = useClock();
-  const battery = useBattery();
 
   useEffect(() => {
     if ("serviceWorker" in navigator) {
@@ -1067,7 +1015,6 @@ export function App() {
 
   return (
     <main className={`screen ${rolePage === "detail" ? "role-preview-screen" : ""}`} style={screenStyle}>
-      <StatusBar clock={clock} battery={battery} />
       {appPage ? (
         <button className="floating-back" onClick={() => setAppPage(null)}>
           返回

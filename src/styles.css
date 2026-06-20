@@ -1621,4 +1621,14 @@ button {
     width: 56px;
     height: 56px;
   }
+
+  input,
+  select,
+  textarea,
+  .field-row input,
+  .field-row select,
+  .field-row textarea,
+  .role-generator-panel input {
+    font-size: 16px;
+  }
 }

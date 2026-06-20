@@ -1506,6 +1506,12 @@ button {
     0 6px 14px rgba(214, 162, 181, 0.045);
 }
 
+.role-form-card .field-row input::placeholder,
+.role-form-card .field-row textarea::placeholder {
+  color: rgba(141, 112, 124, 0.52);
+  font-size: 11px;
+}
+
 .role-form-card .field-row .role-auto-input {
   width: min(100%, calc(var(--field-chars, 8) * 1em + 32px));
   min-width: 84px;

@@ -681,7 +681,7 @@ function ApiSettings({ onBack }) {
   };
 
   return (
-    <section className="page detail-page">
+    <section className="page detail-page api-settings-page">
       <Header title="API设置" onBack={onBack} />
 
       <div className="settings-group api-group">

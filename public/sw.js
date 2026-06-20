@@ -1,6 +1,5 @@
-const CACHE_NAME = "e-phone-pink-pwa-v12";
+const CACHE_NAME = "e-phone-pink-pwa-v13";
 const ASSETS = [
-  "./",
   "manifest.webmanifest",
   "assets/pwa-icon.svg",
   "assets/pink-cat-home-wallpaper-clean.png",
@@ -45,6 +44,20 @@ self.addEventListener("activate", (event) => {
 
 self.addEventListener("fetch", (event) => {
   if (event.request.method !== "GET") return;
+
+  if (event.request.mode === "navigate" || ["script", "style"].includes(event.request.destination)) {
+    event.respondWith(
+      fetch(event.request)
+        .then((response) => {
+          const copy = response.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
+          return response;
+        })
+        .catch(() => caches.match(event.request)),
+    );
+    return;
+  }
+
   event.respondWith(
     caches.match(event.request).then((cached) => cached || fetch(event.request)),
   );

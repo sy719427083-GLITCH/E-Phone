@@ -128,7 +128,7 @@ button {
   position: absolute;
   top: 40.8%;
   right: 18px;
-  bottom: calc(92px + var(--safe-bottom));
+  bottom: calc(110px + var(--safe-bottom));
   left: 18px;
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -178,7 +178,7 @@ button {
 .bottom-tabs {
   position: absolute;
   right: 14px;
-  bottom: max(10px, min(calc(var(--safe-bottom) + 8px), 16px));
+  bottom: max(24px, min(calc(var(--safe-bottom) + 18px), 32px));
   left: 14px;
   z-index: 8;
   display: grid;
@@ -1607,7 +1607,7 @@ button {
   }
 
   .home-grid {
-    bottom: 92px;
+    bottom: 110px;
     grid-template-rows: repeat(3, 82px);
     row-gap: 24px;
   }

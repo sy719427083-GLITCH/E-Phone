@@ -525,6 +525,12 @@ button {
   resize: none;
 }
 
+.api-group .field-row input::placeholder,
+.api-group .field-row textarea::placeholder {
+  color: rgba(141, 112, 124, 0.52);
+  font-size: 11px;
+}
+
 .field-row.select-wide select {
   appearance: none;
   grid-column: 2 / 4;

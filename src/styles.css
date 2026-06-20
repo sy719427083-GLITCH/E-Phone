@@ -1457,6 +1457,18 @@ button {
   filter: drop-shadow(0 10px 14px rgba(184, 120, 142, 0.14));
 }
 
+.identity-create-page .role-form-stack {
+  padding-top: 26px;
+}
+
+.identity-form-cat {
+  top: -54px;
+  right: 18px;
+  width: clamp(154px, 49vw, 204px);
+  z-index: 5;
+  filter: drop-shadow(0 9px 12px rgba(184, 120, 142, 0.1));
+}
+
 .role-form-card {
   position: relative;
   margin: 0;

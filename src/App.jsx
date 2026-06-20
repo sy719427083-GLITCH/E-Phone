@@ -423,7 +423,12 @@ function CharacterCreatePage({
         </div>
 
         <div className="role-form-stack">
-          <img className="role-form-cat" src={assetPath("assets/role-form-cat.png")} alt="" draggable="false" />
+          <img
+            className={`role-form-cat ${isIdentity ? "identity-form-cat" : ""}`.trim()}
+            src={assetPath(isIdentity ? "assets/identity-form-cat.png" : "assets/role-form-cat.png")}
+            alt=""
+            draggable="false"
+          />
           <div className="settings-group role-form-card role-card-two">
             <Field label="姓名" className="control-wide">
               <input

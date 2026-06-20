@@ -390,7 +390,11 @@ function CharacterCreatePage({ initialRole = null, onBack, onSave }) {
               />
             </Field>
             <Field label="性别" className="select-wide">
-              <select value={draft.gender} onChange={(event) => updateRole("gender", event.target.value)}>
+              <select
+                className={!draft.gender ? "role-placeholder-select" : ""}
+                value={draft.gender}
+                onChange={(event) => updateRole("gender", event.target.value)}
+              >
                 <option value="">选择</option>
                 <option value="女">女</option>
                 <option value="男">男</option>
@@ -473,35 +477,23 @@ function RoleDetailPage({ role, onBack, onEdit }) {
   }
 
   const detailRows = [
+    ["姓名", role.name || "未命名角色"],
+    ["性别", role.gender || "未填写"],
+    ["身份", role.identity || "未填写"],
+    ["关联世界观", role.worldview || "暂无"],
     ["性格", role.personality || "未填写"],
     ["容貌", role.appearance || "未填写"],
     ["人设", role.persona || "未填写"],
   ];
-  const detailStyle = role.avatar ? { "--role-bg-image": `url(${role.avatar})` } : undefined;
 
   return (
-    <section className="page detail-page character-page role-detail-page" style={detailStyle}>
+    <section className="page detail-page character-page role-detail-page">
       <Header
         title="角色预览"
         onBack={onBack}
         action={<button className="role-edit-button" onClick={onEdit}>编辑</button>}
       />
-      <div className="role-detail-panel">
-        <div className="role-detail-cover">
-          <div className="role-detail-name-card">
-            <div className="role-detail-title-row">
-              <div className="role-inline-avatar">
-                {role.avatar ? <img src={role.avatar} alt="" /> : <span>{role.name.slice(0, 1) || "角"}</span>}
-              </div>
-              <h2>{role.name || "未命名角色"}</h2>
-            </div>
-            <div className="role-detail-chips">
-              <span>性别：{role.gender || "未填写"}</span>
-              <span>关联世界观：{role.worldview || "暂无"}</span>
-              <span>身份：{role.identity || "未填写"}</span>
-            </div>
-          </div>
-        </div>
+      <div className="role-detail-panel settings-group role-form-card">
         <div className="role-detail-list">
           {detailRows.map(([label, value]) => (
             <article className="role-detail-card" key={label}>
@@ -942,8 +934,6 @@ export function App() {
   }, []);
 
   const selectedRole = useMemo(() => roles.find((role) => role.id === selectedRoleId) || null, [roles, selectedRoleId]);
-  const screenStyle = rolePage === "detail" && selectedRole?.avatar ? { "--screen-role-bg-image": `url(${selectedRole.avatar})` } : undefined;
-
   const content = useMemo(() => {
     if (appPage) return <SimplePane title={appPage.label} />;
     if (settingPage) return <SettingDetail page={settingPage} onBack={() => setSettingPage(null)} />;
@@ -1014,7 +1004,7 @@ export function App() {
   }
 
   return (
-    <main className={`screen ${rolePage === "detail" ? "role-preview-screen" : ""}`} style={screenStyle}>
+    <main className="screen">
       {appPage ? (
         <button className="floating-back" onClick={() => setAppPage(null)}>
           返回

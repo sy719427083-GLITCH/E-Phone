@@ -64,14 +64,6 @@ button {
   background: #fff8fa;
 }
 
-.screen.role-preview-screen {
-  --screen-role-bg-image: none;
-  background:
-    linear-gradient(180deg, rgba(255, 238, 246, 0.08), rgba(255, 244, 249, 0.18) 68%, rgba(255, 250, 252, 0.32)),
-    var(--screen-role-bg-image) center top / cover no-repeat,
-    #fff1f7;
-}
-
 .page {
   position: absolute;
   inset: 0;
@@ -925,7 +917,6 @@ button {
   --role-bg-image: none;
   position: relative;
   overflow-y: auto;
-  background: transparent;
   scrollbar-width: none;
 }
 
@@ -1052,16 +1043,16 @@ button {
   position: relative;
   z-index: 1;
   display: grid;
-  gap: 17px;
+  gap: 0;
   padding: 0;
 }
 
 .role-detail-card {
   position: relative;
   display: grid;
-  gap: 7px;
+  gap: 6px;
   min-height: auto;
-  padding: 0;
+  padding: 10px;
   overflow: hidden;
   border: 0;
   border-radius: 0;
@@ -1096,28 +1087,36 @@ button {
 .role-detail-card span {
   display: inline-flex;
   align-items: center;
-  gap: 7px;
-  color: #9e6579;
-  font-size: 14px;
+  gap: 5px;
+  color: #c37f94;
+  font-size: 12px;
   font-weight: 700;
 }
 
 .role-detail-card span::before {
-  width: 5px;
-  height: 5px;
+  width: 7px;
+  height: 7px;
   border-radius: 50%;
-  background: rgba(255, 150, 185, 0.82);
+  background: rgba(255, 169, 188, 0.88);
   box-shadow:
-    0 0 0 3px rgba(255, 206, 224, 0.28),
-    0 0 9px rgba(255, 141, 178, 0.2);
+    0 0 0 3px rgba(255, 217, 227, 0.24),
+    0 0 9px rgba(255, 154, 185, 0.18);
   content: "";
 }
 
 .role-detail-card p {
   margin: 0;
-  color: #6f5a65;
+  min-height: 30px;
+  border: 1px solid rgba(234, 205, 214, 0.68);
+  border-radius: 7px;
+  padding: 7px 9px;
+  color: #4d4147;
+  background: rgba(255, 253, 254, 0.52);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.46),
+    0 6px 14px rgba(214, 162, 181, 0.045);
   font-size: 12px;
-  line-height: 1.62;
+  line-height: 1.45;
   white-space: pre-wrap;
 }
 
@@ -1171,14 +1170,9 @@ button {
   position: relative;
   z-index: 1;
   display: grid;
-  gap: 22px;
-  margin: clamp(14px, 2.8dvh, 26px) 22px max(28px, calc(var(--safe-bottom) + 20px));
-  padding: 24px 20px 22px;
-  border: 0;
-  border-radius: 15px;
-  background: rgba(255, 249, 252, 0.4);
-  box-shadow: 0 22px 42px rgba(108, 68, 86, 0.12);
-  backdrop-filter: blur(2px);
+  gap: 0;
+  margin: clamp(18px, 3dvh, 28px) 0 max(28px, calc(var(--safe-bottom) + 20px));
+  padding: 0;
 }
 
 .character-page {
@@ -1190,7 +1184,10 @@ button {
 }
 
 .character-page.role-detail-page {
-  background: transparent;
+  background:
+    linear-gradient(180deg, rgba(255, 248, 251, 0.02), rgba(255, 248, 251, 0.18) 100%),
+    url("/assets/role-create-clean-a-nocat.png") center top / cover no-repeat,
+    #fff8fa;
 }
 
 .character-page .topbar {
@@ -1544,6 +1541,11 @@ button {
     calc(100% - 16px) 13px;
 }
 
+.role-form-card .field-row select.role-placeholder-select {
+  color: rgba(141, 112, 124, 0.52);
+  font-size: 11px;
+}
+
 .role-form-card .field-row textarea {
   height: 46px;
 }
@@ -1646,5 +1648,9 @@ button {
   .field-row textarea,
   .role-generator-panel input {
     font-size: 16px;
+  }
+
+  .role-form-card .field-row select.role-placeholder-select {
+    font-size: 11px;
   }
 }

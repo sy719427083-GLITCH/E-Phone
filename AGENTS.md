@@ -21,3 +21,5 @@ Current prototype direction:
 - New-role avatar upload should stay clean and circular without a hazy decorative block or frosted overlay behind it.
 - Role overview avatars should not have hazy decorative blocks or frosted highlight overlays.
 - Built-in wallpapers, icons, cats, and UI images should be precached by the PWA so the app remains visible on weak networks and does not reload images from the network every time it opens.
+- Form control text inside role and API input boxes should stay small and delicate; placeholder text should be smaller than entered text.
+- API settings content should sit with extra top breathing room below the page header.

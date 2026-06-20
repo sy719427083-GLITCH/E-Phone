@@ -446,7 +446,7 @@ button {
 }
 
 .api-settings-page > .api-group:first-of-type {
-  margin-top: 18px;
+  margin-top: 30px;
 }
 
 .api-group h2 {
@@ -507,7 +507,7 @@ button {
   padding: 0 9px;
   color: #4d4147;
   background: rgba(255, 252, 253, 0.96);
-  font-size: 12px;
+  font-size: 11px;
 }
 
 .field-row textarea {
@@ -520,12 +520,12 @@ button {
 .api-group .field-row input::placeholder,
 .api-group .field-row textarea::placeholder {
   color: rgba(141, 112, 124, 0.52);
-  font-size: 11px;
+  font-size: 10.5px;
 }
 
 .api-group .field-row select.api-placeholder-select {
   color: rgba(141, 112, 124, 0.52);
-  font-size: 11px;
+  font-size: 10.5px;
 }
 
 .field-row.select-wide select {
@@ -1289,8 +1289,13 @@ button {
   padding: 0 9px;
   color: #5b4850;
   background: rgba(255, 255, 255, 0.54);
-  font-size: 12px;
+  font-size: 11px;
   outline-color: #e5a7b9;
+}
+
+.role-generator-panel input::placeholder {
+  color: rgba(141, 112, 124, 0.52);
+  font-size: 10.5px;
 }
 
 .role-generator-panel button {
@@ -1516,12 +1521,13 @@ button {
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.46),
     0 6px 14px rgba(214, 162, 181, 0.045);
+  font-size: 11px;
 }
 
 .role-form-card .field-row input::placeholder,
 .role-form-card .field-row textarea::placeholder {
   color: rgba(141, 112, 124, 0.52);
-  font-size: 11px;
+  font-size: 10.5px;
 }
 
 .role-form-card .field-row .role-auto-input {
@@ -1548,7 +1554,7 @@ button {
 
 .role-form-card .field-row select.role-placeholder-select {
   color: rgba(141, 112, 124, 0.52);
-  font-size: 11px;
+  font-size: 10.5px;
 }
 
 .role-form-card .field-row textarea {
@@ -1652,14 +1658,14 @@ button {
   .field-row select,
   .field-row textarea,
   .role-generator-panel input {
-    font-size: 16px;
+    font-size: 11px;
   }
 
   .role-form-card .field-row select.role-placeholder-select {
-    font-size: 11px;
+    font-size: 10.5px;
   }
 
   .api-group .field-row select.api-placeholder-select {
-    font-size: 11px;
+    font-size: 10.5px;
   }
 }

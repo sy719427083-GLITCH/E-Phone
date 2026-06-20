@@ -53,12 +53,13 @@ button {
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
   position: relative;
-  width: 100vw;
-  height: 100vh;
-  height: 100dvh;
+  width: min(100vw, calc(100vh * 390 / 844), 430px);
+  width: min(100vw, calc(100dvh * 390 / 844), 430px);
+  height: min(100vh, calc(100vw * 844 / 390), 932px);
+  height: min(100dvh, calc(100vw * 844 / 390), 932px);
   min-height: 0;
-  max-height: none;
-  aspect-ratio: auto;
+  max-height: 100dvh;
+  aspect-ratio: 390 / 844;
   overflow: hidden;
   background: #fff8fa;
 }
@@ -1578,7 +1579,7 @@ button {
   padding-top: 0;
 }
 
-@media (max-width: 430px) {
+@media (max-width: 430px), (hover: none) and (pointer: coarse) {
   .screen {
     width: 100vw;
     height: 100vh;

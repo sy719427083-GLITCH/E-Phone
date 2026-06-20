@@ -523,6 +523,11 @@ button {
   font-size: 11px;
 }
 
+.api-group .field-row select.api-placeholder-select {
+  color: rgba(141, 112, 124, 0.52);
+  font-size: 11px;
+}
+
 .field-row.select-wide select {
   appearance: none;
   grid-column: 2 / 4;
@@ -1651,6 +1656,10 @@ button {
   }
 
   .role-form-card .field-row select.role-placeholder-select {
+    font-size: 11px;
+  }
+
+  .api-group .field-row select.api-placeholder-select {
     font-size: 11px;
   }
 }

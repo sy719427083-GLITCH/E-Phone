@@ -20,3 +20,4 @@ Current prototype direction:
 - Disable mobile tap gray highlights and avoid pressed-state dimming on app controls.
 - New-role avatar upload should stay clean and circular without a hazy decorative block or frosted overlay behind it.
 - Role overview avatars should not have hazy decorative blocks or frosted highlight overlays.
+- Built-in wallpapers, icons, cats, and UI images should be precached by the PWA so the app remains visible on weak networks and does not reload images from the network every time it opens.

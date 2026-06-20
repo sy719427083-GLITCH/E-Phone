@@ -437,6 +437,7 @@ function CharacterCreatePage({ initialRole = null, onBack, onSave }) {
           <div className="settings-group role-form-card">
             <Field label="关联世界观" className="select-wide">
               <select
+                className={!draft.worldview ? "role-placeholder-select" : ""}
                 value={draft.worldview}
                 onChange={(event) => updateRole("worldview", event.target.value)}
               >
@@ -698,6 +699,7 @@ function ApiSettings({ onBack }) {
         {secondaryEnabled && (
           <Field label="副API选择" className="select-wide">
             <select
+              className={!secondarySelectionValue ? "api-placeholder-select" : ""}
               value={secondarySelectionValue}
               onChange={(event) => setSecondaryConfigId(event.target.value)}
             >

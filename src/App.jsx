@@ -10,30 +10,32 @@ import {
 import { parseGeneratedRole } from "./lib/roleGenerator.js";
 import { createRoleDraft, RoleStore } from "./lib/roleStore.js";
 
+const assetPath = (path) => `${import.meta.env.BASE_URL}${path.replace(/^\/+/, "")}`;
+
 const appItems = [
-  { key: "chat", label: "微聊", icon: "/assets/app-icons/chat.png" },
-  { key: "forum", label: "论坛", icon: "/assets/app-icons/forum.png" },
-  { key: "rednote", label: "小红书", icon: "/assets/app-icons/rednote.png" },
-  { key: "wallet", label: "钱包", icon: "/assets/app-icons/wallet.png" },
-  { key: "game", label: "游戏", icon: "/assets/app-icons/game.png" },
-  { key: "beauty", label: "美化", icon: "/assets/app-icons/beauty.png" },
-  { key: "world", label: "世界观", icon: "/assets/app-icons/world.png" },
-  { key: "preset", label: "预设", icon: "/assets/app-icons/preset.png" },
-  { key: "food", label: "外卖", icon: "/assets/app-icons/food.png" },
-  { key: "outing", label: "外出", icon: "/assets/app-icons/outing.png" },
-  { key: "diary", label: "日记", icon: "/assets/app-icons/diary.png" },
-  { key: "couple", label: "情侣空间", icon: "/assets/app-icons/couple.png" },
+  { key: "chat", label: "微聊", icon: assetPath("assets/app-icons/chat.png") },
+  { key: "forum", label: "论坛", icon: assetPath("assets/app-icons/forum.png") },
+  { key: "rednote", label: "小红书", icon: assetPath("assets/app-icons/rednote.png") },
+  { key: "wallet", label: "钱包", icon: assetPath("assets/app-icons/wallet.png") },
+  { key: "game", label: "游戏", icon: assetPath("assets/app-icons/game.png") },
+  { key: "beauty", label: "美化", icon: assetPath("assets/app-icons/beauty.png") },
+  { key: "world", label: "世界观", icon: assetPath("assets/app-icons/world.png") },
+  { key: "preset", label: "预设", icon: assetPath("assets/app-icons/preset.png") },
+  { key: "food", label: "外卖", icon: assetPath("assets/app-icons/food.png") },
+  { key: "outing", label: "外出", icon: assetPath("assets/app-icons/outing.png") },
+  { key: "diary", label: "日记", icon: assetPath("assets/app-icons/diary.png") },
+  { key: "couple", label: "情侣空间", icon: assetPath("assets/app-icons/couple.png") },
 ];
 
 const settingsItems = [
-  ["api", "API设置", "接口、模型、测试", "/assets/settings-icons/api.png"],
-  ["sound", "声音设置", "音色、提示音、静音", "/assets/settings-icons/sound.png"],
-  ["image", "画面生图", "画面模型与质量", "/assets/settings-icons/image.png"],
-  ["appearance", "外观设置", "壁纸、屏保、图标", "/assets/settings-icons/appearance.png"],
-  ["time", "时间设置", "日期与剧情时间", "/assets/settings-icons/time.png"],
-  ["notice", "通知开关", "消息与提醒", "/assets/settings-icons/notice.png"],
-  ["data", "数据管理", "导入、备份、清理", "/assets/settings-icons/data.png"],
-  ["system", "系统设置", "PWA与缓存", "/assets/settings-icons/system.png"],
+  ["api", "API设置", "接口、模型、测试", assetPath("assets/settings-icons/api.png")],
+  ["sound", "声音设置", "音色、提示音、静音", assetPath("assets/settings-icons/sound.png")],
+  ["image", "画面生图", "画面模型与质量", assetPath("assets/settings-icons/image.png")],
+  ["appearance", "外观设置", "壁纸、屏保、图标", assetPath("assets/settings-icons/appearance.png")],
+  ["time", "时间设置", "日期与剧情时间", assetPath("assets/settings-icons/time.png")],
+  ["notice", "通知开关", "消息与提醒", assetPath("assets/settings-icons/notice.png")],
+  ["data", "数据管理", "导入、备份、清理", assetPath("assets/settings-icons/data.png")],
+  ["system", "系统设置", "PWA与缓存", assetPath("assets/settings-icons/system.png")],
 ];
 
 const tabItems = [
@@ -427,7 +429,7 @@ function CharacterCreatePage({ initialRole = null, onBack, onSave }) {
         </div>
 
         <div className="role-form-stack">
-          <img className="role-form-cat" src="/assets/role-form-cat.png" alt="" draggable="false" />
+          <img className="role-form-cat" src={assetPath("assets/role-form-cat.png")} alt="" draggable="false" />
           <div className="settings-group role-form-card role-card-two">
             <Field label="姓名" className="control-wide">
               <input
@@ -987,7 +989,7 @@ export function App() {
 
   useEffect(() => {
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("/sw.js").catch(() => {});
+      navigator.serviceWorker.register(`${import.meta.env.BASE_URL}sw.js`).catch(() => {});
     }
   }, []);
 

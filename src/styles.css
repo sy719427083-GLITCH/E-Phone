@@ -1857,8 +1857,6 @@ button {
 
 .chat-swipe {
   position: relative;
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 62px;
   overflow: hidden;
   touch-action: pan-y;
 }
@@ -1871,12 +1869,15 @@ button {
 }
 
 .chat-swipe.is-open .chat-row {
-  transform: none;
+  transform: translateX(-72px);
 }
 
 .chat-delete-action {
-  position: static;
-  width: 100%;
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 72px;
   color: #fff;
   background: rgba(208, 102, 130, 0.72);
   font-size: 12px;

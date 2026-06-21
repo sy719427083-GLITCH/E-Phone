@@ -25,6 +25,13 @@ function mergeIdentity(identity = {}) {
   return { ...createIdentityDraft(), ...identity };
 }
 
+function storageError(error) {
+  const reason = error?.name === "QuotaExceededError"
+    ? "浏览器本地存储空间不足，请换小一点的头像或删除旧数据。"
+    : error?.message || "浏览器本地存储写入失败。";
+  return new Error(`保存失败：${reason}`);
+}
+
 export class IdentityStore {
   constructor(storage = globalThis.localStorage) {
     this.storage = storage;
@@ -56,20 +63,35 @@ export class IdentityStore {
       name: identity.name?.trim() || "未命名身份",
     });
     const index = this.identities.findIndex((item) => item.id === next.id);
+    const previousIdentities = this.identities;
+    const nextIdentities = [...this.identities];
     if (index >= 0) {
-      this.identities[index] = next;
+      nextIdentities[index] = next;
     } else {
-      this.identities.push(next);
+      nextIdentities.push(next);
     }
-    this.persist();
+    this.identities = nextIdentities;
+    try {
+      this.persist();
+    } catch (error) {
+      this.identities = previousIdentities;
+      throw storageError(error);
+    }
     return next;
   }
 
   remove(id) {
     const originalLength = this.identities.length;
-    this.identities = this.identities.filter((identity) => identity.id !== id);
-    if (this.identities.length === originalLength) return false;
-    this.persist();
+    const nextIdentities = this.identities.filter((identity) => identity.id !== id);
+    if (nextIdentities.length === originalLength) return false;
+    const previousIdentities = this.identities;
+    this.identities = nextIdentities;
+    try {
+      this.persist();
+    } catch (error) {
+      this.identities = previousIdentities;
+      throw storageError(error);
+    }
     return true;
   }
 }

@@ -94,6 +94,42 @@ test("records contact request history", () => {
   assert.equal(restored.listContactRequests()[0].roleName, "林以");
 });
 
+test("rolls back accepted contacts when browser storage is full", () => {
+  const storage = createMemoryStorage();
+  const store = new ChatStore(storage);
+  storage.setItem = () => {
+    const error = new Error("full");
+    error.name = "QuotaExceededError";
+    throw error;
+  };
+
+  assert.throws(
+    () => store.requestContact(role, () => 0.9),
+    /本地存储空间不足/,
+  );
+
+  assert.equal(store.listContacts().length, 0);
+  assert.equal(store.listContactRequests().length, 0);
+});
+
+test("rolls back chat messages when browser storage is full", () => {
+  const storage = createMemoryStorage();
+  const store = new ChatStore(storage);
+  const conversation = store.startConversation(role);
+  storage.setItem = () => {
+    const error = new Error("full");
+    error.name = "QuotaExceededError";
+    throw error;
+  };
+
+  assert.throws(
+    () => store.addMessage(conversation.id, createChatMessage({ role: "user", content: "你好" })),
+    /本地存储空间不足/,
+  );
+
+  assert.equal(store.get(conversation.id).messages.length, 0);
+});
+
 test("saves generated moments posts", () => {
   const storage = createMemoryStorage();
   const store = new ChatStore(storage);

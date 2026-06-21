@@ -60,3 +60,21 @@ test("deletes a saved identity and persists the list", () => {
   assert.deepEqual(restored.list().map((identity) => identity.id), [second.id]);
   assert.equal(restored.list()[0].name, "剧情分身");
 });
+
+test("rolls back identity saves when browser storage is full", () => {
+  const storage = createMemoryStorage();
+  const store = new IdentityStore(storage);
+  const saved = store.save({ ...createIdentityDraft(), name: "玩家本人" });
+  storage.setItem = () => {
+    const error = new Error("full");
+    error.name = "QuotaExceededError";
+    throw error;
+  };
+
+  assert.throws(
+    () => store.save({ ...saved, name: "玩家本人改" }),
+    /本地存储空间不足/,
+  );
+
+  assert.equal(store.list()[0].name, "玩家本人");
+});

@@ -33,6 +33,17 @@ const assetPath = (path) => `${import.meta.env.BASE_URL}${path.replace(/^\/+/, "
 
 const wait = (ms) => new Promise((resolve) => window.setTimeout(resolve, ms));
 
+function MomentReplyText({ authorName, content }) {
+  return (
+    <>
+      <span>{authorName || "角色"}</span>
+      回复了
+      <span>我</span>
+      {String(content || "").trim()}
+    </>
+  );
+}
+
 const appItems = [
   { key: "chat", label: "微聊", icon: assetPath("assets/app-icons/chat.png") },
   { key: "forum", label: "论坛", icon: assetPath("assets/app-icons/forum.png") },
@@ -797,7 +808,7 @@ function MicroChatMoments({
                       <span>{comment.authorName}：</span>{comment.content}
                       {comment.replies?.map((reply) => (
                         <div className="moment-reply" key={reply.id}>
-                          {formatMomentReplyText(reply.authorName, reply.content)}
+                          <MomentReplyText authorName={reply.authorName} content={reply.content} />
                         </div>
                       ))}
                     </div>
@@ -1796,6 +1807,33 @@ export function App() {
       window.history.replaceState(null, "", currentUrl);
     }
 
+    let versionCheckTimer = 0;
+    let reloadingForVersion = false;
+    const checkRemoteVersion = async () => {
+      if (reloadingForVersion) return;
+      try {
+        const response = await fetch(`${import.meta.env.BASE_URL}version.json?ts=${Date.now()}`, {
+          cache: "no-store",
+        });
+        const payload = await response.json();
+        if (payload?.version && payload.version !== APP_VERSION) {
+          reloadingForVersion = true;
+          const nextUrl = new URL(window.location.href);
+          nextUrl.searchParams.set("v", payload.version);
+          window.location.replace(nextUrl);
+        }
+      } catch {
+        // Version checks are best-effort so offline launches still work.
+      }
+    };
+    const checkOnVisible = () => {
+      if (document.visibilityState === "visible") checkRemoteVersion();
+    };
+    window.addEventListener("pageshow", checkRemoteVersion);
+    document.addEventListener("visibilitychange", checkOnVisible);
+    versionCheckTimer = window.setInterval(checkRemoteVersion, 90_000);
+    checkRemoteVersion();
+
     if ("serviceWorker" in navigator) {
       let refreshing = false;
       const reloadOnUpdate = () => {
@@ -1807,9 +1845,18 @@ export function App() {
       navigator.serviceWorker.register(`${import.meta.env.BASE_URL}sw.js?v=${APP_VERSION}`)
         .then((registration) => registration.update().catch(() => {}))
         .catch(() => {});
-      return () => navigator.serviceWorker.removeEventListener("controllerchange", reloadOnUpdate);
+      return () => {
+        window.clearInterval(versionCheckTimer);
+        window.removeEventListener("pageshow", checkRemoteVersion);
+        document.removeEventListener("visibilitychange", checkOnVisible);
+        navigator.serviceWorker.removeEventListener("controllerchange", reloadOnUpdate);
+      };
     }
-    return undefined;
+    return () => {
+      window.clearInterval(versionCheckTimer);
+      window.removeEventListener("pageshow", checkRemoteVersion);
+      document.removeEventListener("visibilitychange", checkOnVisible);
+    };
   }, []);
 
   const selectedRole = useMemo(() => roles.find((role) => role.id === selectedRoleId) || null, [roles, selectedRoleId]);

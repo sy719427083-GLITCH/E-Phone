@@ -35,7 +35,7 @@ test("keeps partial moment results when a later request hits provider quota", ()
 });
 
 test("formats role replies to my moment comments", () => {
-  assert.equal(formatMomentReplyText("陆斯年", "刚看到。"), "陆斯年回复了我 刚看到。");
+  assert.equal(formatMomentReplyText("陆斯年", "刚看到。"), "陆斯年回复了我刚看到。");
 });
 
 test("delays role replies to comments so they do not feel instant", () => {

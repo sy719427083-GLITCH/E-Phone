@@ -2669,6 +2669,11 @@ button {
   color: #6f6268;
 }
 
+.moment-reply span {
+  color: #bf6f89;
+  font-weight: 500;
+}
+
 .moment-comment-form {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 48px;

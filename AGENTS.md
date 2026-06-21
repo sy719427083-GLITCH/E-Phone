@@ -22,6 +22,7 @@ Current prototype direction:
 - Role overview avatars should not have hazy decorative blocks or frosted highlight overlays.
 - Built-in wallpapers, icons, cats, and UI images should be precached by the PWA so the app remains visible on weak networks and does not reload images from the network every time it opens.
 - The PWA manifest start URL and service-worker registration should both use the current app version query so iOS home-screen launches do not keep using an older app shell.
+- The app should also fetch a small version manifest on foreground/visibility changes and periodically while open, then reload itself when the remote version changes. This preserves PWA data while avoiding stale desktop/home-screen app code.
 - Form control text inside role and API input boxes should stay small and delicate; placeholder text should be smaller than entered text.
 - API settings content should sit with extra top breathing room below the page header.
 - The "me" tab should support identity profiles: new/edit identity uses the same form structure and interaction style as new/edit role, but identities have separate storage and a separately drawn low-saturation pink background.
@@ -46,7 +47,7 @@ Current prototype direction:
 - Moments random generation means the user requests random role/contact-generated posts, excluding the user's own identity. Moment copy may reference that role's recent chat context, today's/current time, schedule, observations, or current mood.
 - Moments posts should support lightweight WeChat-like likes and comments. User comments may receive probabilistic API-generated replies from the post author, and these interactions should persist with the post.
 - Moments post actions should use icon-like controls: likes use a heart, comments use a drawn/SVG comment symbol, and the user's Moments profile block should keep the name on the left with the avatar on the right.
-- Moments comment boxes should close immediately after the user sends a comment. Role replies to user comments should arrive after a short delay and display as "角色名回复了我 内容".
+- Moments comment boxes should close immediately after the user sends a comment. Role replies to user comments should arrive after a short delay and display as "角色名回复了我内容"; the role name and "我" should use a distinct accent color while the rest remains normal text color.
 - Role chats should bind the currently selected "me" identity into the conversation prompt so replies can respond to the user's saved identity/profile.
 - Micro Chat back buttons should use the same round translucent style as the Moments back button.
 - API quota/rate-limit errors should not retry the same API repeatedly; if a distinct secondary API exists, fail over once, otherwise show the provider error with model and HTTP status so the user can diagnose the selected model/channel.

@@ -1857,6 +1857,8 @@ button {
 
 .chat-swipe {
   position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 62px;
   overflow: hidden;
   touch-action: pan-y;
 }
@@ -1869,15 +1871,12 @@ button {
 }
 
 .chat-swipe.is-open .chat-row {
-  transform: translateX(-72px);
+  transform: none;
 }
 
 .chat-delete-action {
-  position: absolute;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  width: 72px;
+  position: static;
+  width: 100%;
   color: #fff;
   background: rgba(208, 102, 130, 0.72);
   font-size: 12px;
@@ -2136,8 +2135,11 @@ button {
 }
 
 .microchat-feature-row {
-  grid-template-columns: 34px minmax(0, 1fr);
+  grid-template-columns: 34px minmax(0, 1fr) auto;
   gap: 10px;
+  width: 100%;
+  color: #4d4349;
+  text-align: left;
 }
 
 .microchat-feature-row span,
@@ -2157,6 +2159,69 @@ button {
 .microchat-settings-row b {
   color: #4d4349;
   font-size: 13px;
+}
+
+.microchat-feature-row em {
+  display: grid;
+  place-items: center;
+  min-width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  color: #fff;
+  background: rgba(208, 102, 130, 0.78);
+  font-size: 10px;
+  font-style: normal;
+}
+
+.incoming-request-card {
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr) 44px 44px;
+  gap: 8px;
+  align-items: center;
+  min-height: 58px;
+  padding: 9px 10px;
+  background: rgba(255, 255, 255, 0.84);
+}
+
+.incoming-request-card .chat-avatar {
+  width: 42px;
+  height: 42px;
+}
+
+.incoming-request-card span {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.incoming-request-card b {
+  overflow: hidden;
+  color: #4d4349;
+  font-size: 13px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.incoming-request-card small {
+  overflow: hidden;
+  color: #9b8d94;
+  font-size: 11px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.incoming-request-card button {
+  min-height: 28px;
+  border-radius: 7px;
+  color: #aa6078;
+  background: rgba(255, 232, 240, 0.72);
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.incoming-request-card button:disabled,
+.contact-add-panel .chat-row:disabled {
+  opacity: 0.64;
 }
 
 .contact-list {

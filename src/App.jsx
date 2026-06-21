@@ -340,15 +340,59 @@ function SwipeChatRow({ conversation, lastMessage, onOpen, onDelete }) {
 function MicroChatContacts({ roles, contacts, onStartChat, onAddContact }) {
   const [adding, setAdding] = useState(false);
   const [message, setMessage] = useState("");
+  const [pendingRoleId, setPendingRoleId] = useState("");
+  const [incomingRole, setIncomingRole] = useState(null);
+  const [incomingBusy, setIncomingBusy] = useState(false);
   const contactIds = new Set(contacts.map((contact) => contact.id));
   const availableRoles = roles.filter((role) => !contactIds.has(role.id));
 
+  useEffect(() => {
+    if (availableRoles.length === 0 || incomingRole) return undefined;
+    const timer = window.setTimeout(() => {
+      if (Math.random() < 0.42) {
+        const role = availableRoles[Math.floor(Math.random() * availableRoles.length)];
+        setIncomingRole(role || null);
+        if (role) setMessage(`${role.name || "有角色"}想添加你为好友。`);
+      }
+    }, 1500);
+    return () => window.clearTimeout(timer);
+  }, [availableRoles, incomingRole]);
+
   const requestAdd = (role) => {
-    const result = onAddContact(role);
-    setMessage(result.accepted
-      ? `${role.name || "角色"}已通过你的好友申请。`
-      : result.reason || `${role.name || "角色"}拒绝了你的添加请求。`);
-    if (result.accepted) setAdding(false);
+    if (pendingRoleId) return;
+    setPendingRoleId(role.id);
+    setMessage(`正在等待${role.name || "对方"}确认...`);
+    window.setTimeout(() => {
+      const result = onAddContact(role);
+      setMessage(result.accepted
+        ? `${role.name || "角色"}已通过你的好友申请。`
+        : result.reason || `${role.name || "角色"}拒绝了你的添加请求。`);
+      setPendingRoleId("");
+      if (result.accepted) setAdding(false);
+    }, 1200);
+  };
+
+  const acceptIncoming = () => {
+    if (!incomingRole || incomingBusy) return;
+    setIncomingBusy(true);
+    setMessage(`正在通过${incomingRole.name || "对方"}的好友申请...`);
+    window.setTimeout(() => {
+      onAddContact(incomingRole, () => 1);
+      setMessage(`你已添加${incomingRole.name || "角色"}。`);
+      setIncomingRole(null);
+      setIncomingBusy(false);
+    }, 800);
+  };
+
+  const rejectIncoming = () => {
+    if (!incomingRole || incomingBusy) return;
+    setIncomingBusy(true);
+    setMessage(`正在处理${incomingRole.name || "对方"}的好友申请...`);
+    window.setTimeout(() => {
+      setMessage(`已拒绝${incomingRole.name || "角色"}的好友申请。`);
+      setIncomingRole(null);
+      setIncomingBusy(false);
+    }, 900);
   };
 
   return (
@@ -362,6 +406,28 @@ function MicroChatContacts({ roles, contacts, onStartChat, onAddContact }) {
         </button>
       </div>
       {message ? <p className="contact-request-message">{message}</p> : null}
+      <div className="microchat-feature-list">
+        <button className="microchat-feature-row" onClick={() => setAdding((value) => !value)}>
+          <span>新</span>
+          <b>新的好友</b>
+          {incomingRole ? <em>1</em> : null}
+        </button>
+        {incomingRole ? (
+          <div className="incoming-request-card">
+            <ChatAvatar conversation={{ title: incomingRole.name || "角色", avatar: incomingRole.avatar }} />
+            <span>
+              <b>{incomingRole.name || "未命名角色"}</b>
+              <small>{incomingRole.identity || incomingRole.personality || "请求添加你为好友"}</small>
+            </span>
+            <button onClick={acceptIncoming} disabled={incomingBusy}>通过</button>
+            <button onClick={rejectIncoming} disabled={incomingBusy}>拒绝</button>
+          </div>
+        ) : null}
+        <button className="microchat-feature-row">
+          <span>群</span>
+          <b>群聊</b>
+        </button>
+      </div>
       {adding ? (
         <div className="contact-add-panel">
           <div className="chat-section-title">
@@ -372,13 +438,13 @@ function MicroChatContacts({ roles, contacts, onStartChat, onAddContact }) {
             <p>没有可添加的角色，或者角色已经在通讯录里。</p>
           ) : (
             availableRoles.map((role) => (
-              <button className="chat-row" key={role.id} onClick={() => requestAdd(role)}>
+              <button className="chat-row" key={role.id} onClick={() => requestAdd(role)} disabled={Boolean(pendingRoleId)}>
                 <ChatAvatar conversation={{ title: role.name || "角色", avatar: role.avatar }} />
                 <span className="chat-row-main">
                   <b>{role.name || "未命名角色"}</b>
-                  <small>{role.identity || role.personality || "发送好友申请"}</small>
+                  <small>{pendingRoleId === role.id ? "等待对方确认..." : role.identity || role.personality || "发送好友申请"}</small>
                 </span>
-                <span className="contact-apply">申请</span>
+                <span className="contact-apply">{pendingRoleId === role.id ? "等待" : "申请"}</span>
               </button>
             ))
           )}
@@ -1400,8 +1466,8 @@ export function App() {
             setConversations(chatStore.list());
             setSelectedChatId(conversation.id);
           }}
-          onAddContact={(role) => {
-            const result = chatStore.requestContact(role);
+          onAddContact={(role, random) => {
+            const result = chatStore.requestContact(role, random);
             setContacts(chatStore.listContacts());
             return result;
           }}

@@ -231,10 +231,13 @@ function MicroChatApp({
     moments: "朋友圈",
     settings: "设置",
   };
+  const showMicroTabs = !contactPage && chatTab !== "moments";
+  const showMicroHeader = chatTab !== "moments";
+  const headerBack = chatTab === "chats" ? onBack : null;
 
   return (
     <section className="page chat-page microchat-shell">
-      <Header title={tabTitles[chatTab]} onBack={onBack} />
+      {showMicroHeader ? <Header title={tabTitles[chatTab]} onBack={headerBack} /> : null}
       <div className="microchat-content">
         {chatTab === "chats" ? (
           <MicroChatList conversations={conversations} onOpenChat={onOpenChat} onDeleteChat={onDeleteChat} />
@@ -257,10 +260,10 @@ function MicroChatApp({
           <MicroChatSettings conversations={conversations} roles={roles} contacts={contacts} />
         ) : null}
       </div>
-      {contactPage ? null : <MicroChatTabs active={chatTab} setActive={(key) => {
+      {showMicroTabs ? <MicroChatTabs active={chatTab} setActive={(key) => {
         setContactPage(null);
         setChatTab(key);
-      }} />}
+      }} /> : null}
     </section>
   );
 }
@@ -540,8 +543,41 @@ function MicroChatContacts({
 }
 
 function MicroChatMoments({ myProfile }) {
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [mode, setMode] = useState("random");
+  const [count, setCount] = useState(3);
+  const [specified, setSpecified] = useState("");
+
   return (
     <div className="moments-page">
+      <button className="moments-action" onClick={() => setMenuOpen((value) => !value)} aria-label="朋友圈生成设置">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M12 5.5v13M5.5 12h13" />
+        </svg>
+      </button>
+      {menuOpen ? (
+        <div className="moments-menu">
+          <b>生成动态</b>
+          <label>
+            <span>自选</span>
+            <select value={mode} onChange={(event) => setMode(event.target.value)}>
+              <option value="random">随机</option>
+              <option value="specified">指定</option>
+            </select>
+          </label>
+          {mode === "specified" ? (
+            <label>
+              <span>指定</span>
+              <input value={specified} placeholder="填写角色或主题" onChange={(event) => setSpecified(event.target.value)} />
+            </label>
+          ) : null}
+          <label>
+            <span>条数</span>
+            <input type="number" min="1" max="9" value={count} onChange={(event) => setCount(event.target.value)} />
+          </label>
+          <button>生成动态</button>
+        </div>
+      ) : null}
       <div className="moments-cover">
         <div className="moments-my-card">
           <span className="moments-my-avatar">

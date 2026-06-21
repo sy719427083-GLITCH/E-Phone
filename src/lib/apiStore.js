@@ -348,6 +348,47 @@ export async function requestChatCompletion(api, prompt, fetcher = fetch, option
   return content;
 }
 
+export async function requestChatCompletionViaProxy(proxyUrl, api, prompt, fetcher = fetch, options = {}) {
+  validateApi(api);
+  if (!proxyUrl?.trim()) throw new Error("缺少朋友圈代理地址。");
+
+  const requestId = makeRequestId();
+  const response = await fetcher(withRequestNonce(proxyUrl.trim(), requestId), {
+    method: "POST",
+    cache: "no-store",
+    credentials: "omit",
+    headers: {
+      "Content-Type": "application/json",
+      "X-EPhone-Request-Id": requestId,
+    },
+    body: JSON.stringify({
+      api: {
+        apiUrl: api.apiUrl,
+        apiKey: api.apiKey,
+        model: api.model,
+        temperature: api.temperature,
+      },
+      prompt,
+      options,
+    }),
+  });
+
+  const payload = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    const detail = payload?.error?.message || payload?.message || payload?.error || `HTTP ${response.status}`;
+    const status = response.status ? `HTTP ${response.status}` : "HTTP error";
+    const model = api.model?.trim() ? `模型：${api.model.trim()}` : "模型未知";
+    throw new Error(`朋友圈代理返回：${detail}（${model}，${status}）`);
+  }
+
+  const content = String(payload?.content || extractCompletionText(payload) || "").trim();
+  if (!content) {
+    const model = api.model?.trim() ? `模型：${api.model.trim()}` : "模型未知";
+    throw new Error(`朋友圈代理没有返回内容（${model}，HTTP ${response.status || 200}）`);
+  }
+  return content;
+}
+
 export async function fetchModelList(api, fetcher = fetch) {
   if (!api?.apiUrl?.trim()) throw new Error("请先填写 API 地址。");
   if (!api?.apiKey?.trim()) throw new Error("请先填写 API Key。");

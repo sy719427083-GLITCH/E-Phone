@@ -7,6 +7,7 @@ import {
   fetchModelList,
   isQuotaOrRateLimitError,
   requestChatCompletion,
+  requestChatCompletionViaProxy,
   resolveApiSelection,
 } from "./lib/apiStore.js";
 import { ChatStore, createChatMessage } from "./lib/chatStore.js";
@@ -33,6 +34,7 @@ import { createRoleDraft, RoleStore } from "./lib/roleStore.js";
 import { APP_VERSION } from "./lib/appVersion.js";
 
 const assetPath = (path) => `${import.meta.env.BASE_URL}${path.replace(/^\/+/, "")}`;
+const MOMENTS_PROXY_URL = "https://e-phone-tf8s.vercel.app/api/chat";
 
 const wait = (ms) => new Promise((resolve) => window.setTimeout(resolve, ms));
 
@@ -60,6 +62,13 @@ function withApiDiagnostics(error, config, requestLabel = "朋友圈") {
   const requestInfo = message.includes("请求:") ? "" : `；请求:${requestLabel}`;
   const runtimeInfo = message.includes("版本:") ? "" : `；${describeAppRuntime()}`;
   return `${message}${apiInfo}${requestInfo}${runtimeInfo}`;
+}
+
+function requestMomentChatCompletion(api, prompt, options = {}) {
+  if (isStandalonePwa()) {
+    return requestChatCompletionViaProxy(MOMENTS_PROXY_URL, api, prompt, fetch, options);
+  }
+  return requestChatCompletion(api, prompt, fetch, options);
 }
 
 function MomentReplyText({ authorName, content }) {
@@ -1999,13 +2008,13 @@ export function App() {
                   let reply = "";
                   try {
                     reply = await callWithRetryAndFallback(config, ({ api }) =>
-                      requestChatCompletion(api, prompt, fetch, { maxTokens: 60 }),
+                      requestMomentChatCompletion(api, prompt, { maxTokens: 60 }),
                     );
                   } catch (error) {
                     if (isStandalonePwa() && isQuotaOrRateLimitError(error)) {
                       const retryPrompt = buildStandaloneMomentRetryPrompt({ author: currentAuthor, context, nowText });
                       reply = await callWithRetryAndFallback(config, ({ api }) =>
-                        requestChatCompletion(api, retryPrompt, fetch, { maxTokens: 120 }),
+                        requestMomentChatCompletion(api, retryPrompt, { maxTokens: 120 }),
                       );
                     } else if (shouldKeepPartialMomentResults(error, generated.length)) {
                       break;
@@ -2031,7 +2040,7 @@ export function App() {
                 let reply = "";
                 try {
                   reply = await callWithRetryAndFallback(config, ({ api }) =>
-                    requestChatCompletion(api, prompt, fetch, { maxTokens }),
+                    requestMomentChatCompletion(api, prompt, { maxTokens }),
                   );
                 } catch (error) {
                   throw new Error(`${error.message || "生成失败"}；${describeApiUsage(config)}；请求:图文；${describeAppRuntime()}`);

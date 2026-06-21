@@ -58,3 +58,4 @@ Current prototype direction:
 - On iOS home-screen/standalone PWA, Moments must not run automatic spontaneous background posting; keep API calls tied to explicit user actions there so Safari and PWA behavior do not diverge.
 
 - Moments manual generation should default to 1 post; the 1-5 slider is opt-in so users do not accidentally trigger multiple API calls from one tap, especially in home-screen PWAs.
+- On iOS home-screen/standalone PWA, manual Moments generation should use the Vercel server-side proxy instead of direct provider requests; browser mode and normal chat can keep their existing request paths.

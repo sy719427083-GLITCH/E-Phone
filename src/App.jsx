@@ -210,7 +210,6 @@ function MicroChatApp({
   myProfile,
   momentPosts,
   conversations,
-  apiUsage,
   selectedChatId,
   onBack,
   onStartChat,
@@ -274,14 +273,13 @@ function MicroChatApp({
             contacts={contacts}
             posts={momentPosts}
             myProfile={myProfile}
-            apiUsage={apiUsage}
             onBack={() => setChatTab("chats")}
             onGenerate={onGenerateMoments}
             generating={generatingMoments}
           />
         ) : null}
         {chatTab === "settings" ? (
-          <MicroChatSettings conversations={conversations} roles={roles} contacts={contacts} apiUsage={apiUsage} />
+          <MicroChatSettings conversations={conversations} roles={roles} contacts={contacts} />
         ) : null}
       </div>
       {showMicroTabs ? <MicroChatTabs active={chatTab} setActive={(key) => {
@@ -580,7 +578,7 @@ function MicroChatContacts({
   );
 }
 
-function MicroChatMoments({ contacts, posts, myProfile, apiUsage, onBack, onGenerate, generating }) {
+function MicroChatMoments({ contacts, posts, myProfile, onBack, onGenerate, generating }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [mode, setMode] = useState("random");
   const [postType, setPostType] = useState("text");
@@ -612,7 +610,6 @@ function MicroChatMoments({ contacts, posts, myProfile, apiUsage, onBack, onGene
       {menuOpen ? (
         <div className="moments-menu">
           <b>生成动态</b>
-          <p className="moments-api-usage">{apiUsage}</p>
           <label>
             <span>自选</span>
             <select value={mode} onChange={(event) => setMode(event.target.value)}>
@@ -675,7 +672,7 @@ function MicroChatMoments({ contacts, posts, myProfile, apiUsage, onBack, onGene
   );
 }
 
-function MicroChatSettings({ conversations, roles, contacts, apiUsage }) {
+function MicroChatSettings({ conversations, roles, contacts }) {
   return (
     <div className="microchat-pane">
       <div className="microchat-profile-card">
@@ -692,7 +689,7 @@ function MicroChatSettings({ conversations, roles, contacts, apiUsage }) {
         </div>
         <div className="microchat-settings-row">
           <b>角色回复</b>
-          <span>{apiUsage}</span>
+          <span>使用 API 设置</span>
         </div>
         <div className="microchat-settings-row">
           <b>界面风格</b>
@@ -1638,7 +1635,6 @@ export function App() {
     () => identities.find((identity) => identity.id === selectedIdentityId) || null,
     [identities, selectedIdentityId],
   );
-  const apiUsage = describeApiUsage(new ApiConfigStore().getSelected());
   const content = useMemo(() => {
     if (appPage?.key === "chat") {
       return (
@@ -1649,7 +1645,6 @@ export function App() {
           myProfile={identities[0] || null}
           momentPosts={momentPosts}
           conversations={conversations}
-          apiUsage={apiUsage}
           selectedChatId={selectedChatId}
           sendingChatId={sendingChatId}
           onBack={() => {
@@ -1745,9 +1740,6 @@ export function App() {
               }
               const limit = normalizedPostType === "text" ? 1 : Math.max(1, Math.min(9, Number(count) || 1));
               const generated = parseMomentPosts(reply, [author]).slice(0, limit);
-              if (generated.length === 0 || generated.every((post) => post.content === "连接正常")) {
-                throw new Error(`API没有返回朋友圈正文；${describeApiUsage(config)}；原始返回:${String(reply || "空")}`);
-              }
               generated.forEach((post) => {
                 chatStore.addMomentPost({
                   authorName: post.authorName || author.name,
@@ -1869,7 +1861,6 @@ export function App() {
     return <SimplePane title={tab === "roles" ? "角色" : "我"} />;
   }, [
     appPage,
-    apiUsage,
     chatStore,
     contacts,
     contactRequests,

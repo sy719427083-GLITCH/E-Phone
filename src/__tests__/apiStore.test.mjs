@@ -160,7 +160,7 @@ test("does not retry quota errors on the same API", async () => {
       attempts.push(`${role}:${attempt}`);
       throw new Error("The quota has been exceeded.");
     }),
-    /quota/,
+    /quota.*主API.*main/,
   );
 
   assert.deepEqual(attempts, ["primary:1"]);

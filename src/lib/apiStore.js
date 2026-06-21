@@ -88,6 +88,14 @@ export function isQuotaOrRateLimitError(error) {
     || message.includes("insufficient");
 }
 
+function withAttemptContext(error, role, attempt, api = {}) {
+  const label = role === "secondary" ? "副API" : "主API";
+  const model = api.model?.trim() || "模型未知";
+  const message = error?.message || "API 请求失败";
+  if (message.includes("主API") || message.includes("副API")) return error;
+  return new Error(`${message}（${label}，模型:${model}，尝试:${attempt}）`);
+}
+
 export function resolveApiSelection(config, primaryConfig, secondaryConfig = null) {
   const normalized = mergeConfig(config);
   const selectedPrimary = mergeConfig(primaryConfig || normalized);
@@ -204,11 +212,11 @@ export async function callWithRetryAndFallback(config, requestFn) {
       });
     } catch (error) {
       if (isQuotaOrRateLimitError(error)) {
-        if (!canFallbackToSecondary) throw error;
+        if (!canFallbackToSecondary) throw withAttemptContext(error, "primary", attempt, normalized.primary);
         break;
       }
       if (attempt === primaryAttempts && !canFallbackToSecondary) {
-        throw error;
+        throw withAttemptContext(error, "primary", attempt, normalized.primary);
       }
     }
   }
@@ -217,12 +225,16 @@ export async function callWithRetryAndFallback(config, requestFn) {
     throw new Error("Primary API failed");
   }
 
-  return requestFn({
-    role: "secondary",
-    attempt: 1,
-    model: normalized.secondary.model,
-    api: normalized.secondary,
-  });
+  try {
+    return await requestFn({
+      role: "secondary",
+      attempt: 1,
+      model: normalized.secondary.model,
+      api: normalized.secondary,
+    });
+  } catch (error) {
+    throw withAttemptContext(error, "secondary", 1, normalized.secondary);
+  }
 }
 
 export function buildApiUrl(api, endpoint) {

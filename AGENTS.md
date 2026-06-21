@@ -26,3 +26,4 @@ Current prototype direction:
 - The "me" tab should support identity profiles: new/edit identity uses the same form structure and interaction style as new/edit role, but identities have separate storage and a separately drawn low-saturation pink background.
 - New/edit identity wallpaper should be very pale and low-saturation; use a separate PNG kitten overlay that clearly lies on the top edge of the name/gender form card.
 - Do not show a separate role preview page; tapping a role card should open editing directly.
+- Role overview layout, card structure, and density should stay stable; visual updates should be light polish such as soft highlights, subtle magazine accents, and low-saturation pink effects.

@@ -42,8 +42,8 @@ const settingsItems = [
 
 const tabItems = [
   { key: "home", label: "主页", icon: "home" },
-  { key: "roles", label: "角色", icon: "roles" },
-  { key: "me", label: "我", icon: "profile" },
+  { key: "roles", label: "角色档案", icon: "roles" },
+  { key: "me", label: "身份", icon: "profile" },
   { key: "settings", label: "设置", icon: "sliders" },
 ];
 

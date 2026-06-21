@@ -283,6 +283,33 @@ test("requests a real chat completion payload", async () => {
   assert.equal(JSON.parse(request.options.body).model, "gpt-real");
 });
 
+test("reads compatible completion text formats", async () => {
+  const api = {
+    apiUrl: "https://api.example/v1",
+    apiKey: "secret",
+    model: "gpt-real",
+  };
+
+  const fromText = await requestChatCompletion(api, "ping", async () => ({
+    ok: true,
+    json: async () => ({ choices: [{ text: "plain text reply" }] }),
+  }));
+  const fromOutputText = await requestChatCompletion(api, "ping", async () => ({
+    ok: true,
+    json: async () => ({ output_text: "output text reply" }),
+  }));
+  const fromContentParts = await requestChatCompletion(api, "ping", async () => ({
+    ok: true,
+    json: async () => ({
+      choices: [{ message: { content: [{ type: "text", text: "part reply" }] } }],
+    }),
+  }));
+
+  assert.equal(fromText, "plain text reply");
+  assert.equal(fromOutputText, "output text reply");
+  assert.equal(fromContentParts, "part reply");
+});
+
 test("includes model and status in API error messages", async () => {
   await assert.rejects(
     () => requestChatCompletion(

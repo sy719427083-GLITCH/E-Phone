@@ -225,6 +225,26 @@ export function validateApi(api) {
   if (!api?.model?.trim()) throw new Error("请选择或填写模型。");
 }
 
+function extractContentText(content) {
+  if (typeof content === "string") return content;
+  if (Array.isArray(content)) {
+    return content.map((part) => {
+      if (typeof part === "string") return part;
+      return part?.text || part?.content || "";
+    }).join("");
+  }
+  return "";
+}
+
+function extractCompletionText(payload = {}) {
+  const choice = payload?.choices?.[0] || {};
+  return extractContentText(choice.message?.content)
+    || extractContentText(choice.delta?.content)
+    || extractContentText(choice.text)
+    || extractContentText(payload.output_text)
+    || extractContentText(payload.content);
+}
+
 export async function requestChatCompletion(api, prompt, fetcher = fetch, options = {}) {
   validateApi(api);
   const response = await fetcher(buildApiUrl(api, "chat/completions"), {
@@ -249,7 +269,7 @@ export async function requestChatCompletion(api, prompt, fetcher = fetch, option
     throw new Error(`API返回：${detail}（${model}，${status}）`);
   }
 
-  return payload?.choices?.[0]?.message?.content || "连接正常";
+  return extractCompletionText(payload) || "连接正常";
 }
 
 export async function fetchModelList(api, fetcher = fetch) {

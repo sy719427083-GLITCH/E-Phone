@@ -9,6 +9,7 @@ import {
 } from "./lib/apiStore.js";
 import { ChatStore, createChatMessage } from "./lib/chatStore.js";
 import { createIdentityDraft, IdentityStore } from "./lib/identityStore.js";
+import { buildMomentsPrompt, getMomentMaxTokens, parseMomentPosts } from "./lib/moments.js";
 import { parseGeneratedRole } from "./lib/roleGenerator.js";
 import { createRoleDraft, RoleStore } from "./lib/roleStore.js";
 
@@ -191,47 +192,6 @@ function buildRoleReplyPrompt(conversation, userText) {
     recentMessages ? `最近聊天：\n${recentMessages}` : "",
     `用户新消息：${userText}`,
   ].filter(Boolean).join("\n");
-}
-
-function buildMomentsPrompt({ contacts, mode, selectedRoleId, count }) {
-  const selected = selectedRoleId
-    ? contacts.filter((contact) => contact.id === selectedRoleId)
-    : contacts;
-  const roster = selected.length > 0 ? selected : contacts;
-  const roleLines = roster.map((contact) => (
-    `- ${contact.name || "未命名角色"}：${contact.identity || "身份未填"}；性格：${contact.personality || "未填"}`
-  )).join("\n");
-
-  return [
-    "你正在为一个中文角色朋友圈生成动态。请只返回 JSON 数组，不要 Markdown，不要解释。",
-    `生成条数：${Math.max(1, Math.min(9, Number(count) || 1))}`,
-    `生成模式：${mode === "specified" ? "指定角色" : "随机角色"}`,
-    "每条格式固定为：{\"authorName\":\"角色名\",\"content\":\"朋友圈正文\"}。",
-    "正文要像真实朋友圈，1-2句，生活化、有角色感，不要太长。",
-    "可用角色：",
-    roleLines || "- 暂无角色",
-  ].join("\n");
-}
-
-function parseMomentPosts(raw, contacts) {
-  const text = String(raw || "").trim();
-  const jsonText = text.match(/```json\s*([\s\S]*?)```/)?.[1] || text.match(/```\s*([\s\S]*?)```/)?.[1] || text;
-  try {
-    const parsed = JSON.parse(jsonText);
-    const items = Array.isArray(parsed) ? parsed : [parsed];
-    return items.map((item) => ({
-      authorName: String(item.authorName || item.name || "").trim(),
-      content: String(item.content || item.text || "").trim(),
-    })).filter((item) => item.authorName && item.content);
-  } catch {
-    return text.split(/\n+/).map((line, index) => {
-      const contact = contacts[index % Math.max(contacts.length, 1)] || {};
-      return {
-        authorName: contact.name || "角色",
-        content: line.replace(/^[-*\d.\s]+/, "").trim(),
-      };
-    }).filter((item) => item.content);
-  }
 }
 
 function MicroChatApp({
@@ -1697,7 +1657,7 @@ export function App() {
               const config = new ApiConfigStore().getSelected();
               const prompt = buildMomentsPrompt({ contacts, mode, selectedRoleId, count });
               const reply = await callWithRetryAndFallback(config, ({ api }) =>
-                requestChatCompletion(api, prompt, fetch, { maxTokens: 1200 }),
+                requestChatCompletion(api, prompt, fetch, { maxTokens: getMomentMaxTokens(count) }),
               );
               const limit = Math.max(1, Math.min(9, Number(count) || 1));
               const generated = parseMomentPosts(reply, contacts).slice(0, limit);

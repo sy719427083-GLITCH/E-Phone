@@ -2308,9 +2308,7 @@ button {
   min-height: clamp(232px, 32dvh, 290px);
   margin: 0 -12px;
   color: #55464d;
-  background:
-    linear-gradient(180deg, rgba(255, 246, 250, 0.02), rgba(255, 255, 255, 0.08) 58%, rgba(255, 255, 255, 0.22)),
-    url("/assets/pink-cat-home-wallpaper-clean.png") center / cover no-repeat;
+  background: url("/assets/pink-cat-home-wallpaper-clean.png") center / cover no-repeat;
 }
 
 .moments-back {
@@ -2415,6 +2413,7 @@ button {
   position: absolute;
   right: 18px;
   bottom: -34px;
+  z-index: 4;
   display: grid;
   grid-template-columns: minmax(0, auto) 64px;
   gap: 10px;
@@ -2451,10 +2450,10 @@ button {
 
 .moments-blank {
   position: relative;
-  z-index: 2;
+  z-index: 1;
   min-height: calc(100dvh - clamp(232px, 32dvh, 290px));
   margin: 0 -12px;
-  padding: 52px 18px 34px;
+  padding: 58px 18px 34px;
   background: #fff;
 }
 

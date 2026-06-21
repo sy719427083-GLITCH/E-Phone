@@ -19,6 +19,7 @@ import {
   parseMomentPosts,
   pickMomentAuthor,
   pickMomentAuthors,
+  shouldGenerateSpontaneousMoment,
 } from "./lib/moments.js";
 import { parseGeneratedRole } from "./lib/roleGenerator.js";
 import { createRoleDraft, RoleStore } from "./lib/roleStore.js";
@@ -226,7 +227,45 @@ function MicroChatApp({
 }) {
   const [chatTab, setChatTab] = useState("chats");
   const [contactPage, setContactPage] = useState(null);
+  const lastSpontaneousMomentAt = useRef(0);
+  const generateMomentsRef = useRef(onGenerateMoments);
   const selectedConversation = conversations.find((conversation) => conversation.id === selectedChatId) || null;
+
+  useEffect(() => {
+    generateMomentsRef.current = onGenerateMoments;
+  }, [onGenerateMoments]);
+
+  useEffect(() => {
+    if (contacts.length === 0) return undefined;
+    let cancelled = false;
+
+    const tryGenerate = () => {
+      const now = Date.now();
+      if (!shouldGenerateSpontaneousMoment({
+        contacts,
+        lastGeneratedAt: lastSpontaneousMomentAt.current,
+        now,
+      })) return;
+      lastSpontaneousMomentAt.current = now;
+      generateMomentsRef.current({
+        mode: "spontaneous",
+        postType: "text",
+        selectedRoleId: "",
+        count: 1,
+        spontaneous: true,
+      }).catch(() => {
+        if (!cancelled) lastSpontaneousMomentAt.current = Date.now();
+      });
+    };
+
+    const firstTimer = window.setTimeout(tryGenerate, 12_000);
+    const interval = window.setInterval(tryGenerate, 60_000);
+    return () => {
+      cancelled = true;
+      window.clearTimeout(firstTimer);
+      window.clearInterval(interval);
+    };
+  }, [contacts]);
 
   if (selectedConversation) {
     return (
@@ -612,10 +651,10 @@ function MicroChatMoments({ contacts, posts, myProfile, onBack, onGenerate, gene
         <div className="moments-menu">
           <b>生成动态</b>
           <label>
-            <span>自选</span>
+            <span>对象</span>
             <select value={mode} onChange={(event) => setMode(event.target.value)}>
-              <option value="random">随机</option>
-              <option value="specified">指定</option>
+              <option value="random">随机角色</option>
+              <option value="specified">指定角色</option>
             </select>
           </label>
           <label>
@@ -638,7 +677,17 @@ function MicroChatMoments({ contacts, posts, myProfile, onBack, onGenerate, gene
           ) : null}
           <label>
             <span>条数</span>
-            <input type="number" min="1" max="9" value={count} onChange={(event) => setCount(event.target.value)} />
+            <span className="moments-count-control">
+              <input
+                type="range"
+                min="1"
+                max="5"
+                step="1"
+                value={count}
+                onChange={(event) => setCount(Number(event.target.value))}
+              />
+              <output>{count}条</output>
+            </span>
           </label>
           <button onClick={generate} disabled={generating || (mode === "specified" && !selectedRoleId)}>
             {generating ? "生成中..." : "生成动态"}
@@ -1705,12 +1754,12 @@ export function App() {
               setConversations(chatStore.list());
             }
           }}
-          onGenerateMoments={async ({ mode, postType, selectedRoleId, count }) => {
+          onGenerateMoments={async ({ mode, postType, selectedRoleId, count, spontaneous = false }) => {
             setGeneratingMoments(true);
             try {
               const config = new ApiConfigStore().getSelected();
               const normalizedPostType = normalizeMomentPostType(postType);
-              const limit = Math.max(1, Math.min(9, Number(count) || 1));
+              const limit = Math.max(1, Math.min(5, Number(count) || 1));
               const authors = pickMomentAuthors({
                 contacts,
                 selectedRoleId,
@@ -1730,7 +1779,7 @@ export function App() {
                 ? buildTinyMomentPrompt({ author, context, nowText })
                 : buildMomentsPrompt({
                   contacts: authors.length > 0 ? authors : contacts,
-                  mode,
+                  mode: spontaneous ? "spontaneous" : mode,
                   postType: normalizedPostType,
                   selectedRoleId,
                   count: limit,

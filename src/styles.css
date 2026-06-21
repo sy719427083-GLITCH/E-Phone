@@ -2400,6 +2400,60 @@ button {
   font-size: 11px;
 }
 
+.moments-count-control {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 30px;
+  gap: 8px;
+  align-items: center;
+}
+
+.moments-count-control input[type="range"] {
+  height: 24px;
+  padding: 0;
+  background: transparent;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+.moments-count-control input[type="range"]::-webkit-slider-runnable-track {
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(244, 209, 221, 0.8);
+}
+
+.moments-count-control input[type="range"]::-webkit-slider-thumb {
+  width: 18px;
+  height: 18px;
+  margin-top: -6px;
+  border: 0;
+  border-radius: 999px;
+  background: #f4c9d8;
+  box-shadow: 0 4px 10px rgba(170, 96, 120, 0.18);
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+.moments-count-control input[type="range"]::-moz-range-track {
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(244, 209, 221, 0.8);
+}
+
+.moments-count-control input[type="range"]::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border: 0;
+  border-radius: 999px;
+  background: #f4c9d8;
+  box-shadow: 0 4px 10px rgba(170, 96, 120, 0.18);
+}
+
+.moments-count-control output {
+  color: #8d7580;
+  font-size: 11px;
+  text-align: right;
+}
+
 .moments-menu button {
   min-height: 30px;
   border-radius: 8px;

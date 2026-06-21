@@ -1,5 +1,5 @@
 function normalizeMomentCount(count) {
-  return Math.max(1, Math.min(9, Number(count) || 1));
+  return Math.max(1, Math.min(5, Number(count) || 1));
 }
 
 export function normalizeMomentPostType(postType) {
@@ -11,6 +11,17 @@ export function getMomentMaxTokens(count, postType = "text") {
   return normalizeMomentPostType(postType) === "image_text"
     ? Math.min(420, 120 + limit * 40)
     : Math.min(260, 60 + (limit - 1) * 40);
+}
+
+export function shouldGenerateSpontaneousMoment({
+  contacts = [],
+  lastGeneratedAt = 0,
+  now = Date.now(),
+  random = Math.random,
+} = {}) {
+  if (contacts.length === 0) return false;
+  if (now - Number(lastGeneratedAt || 0) < 60_000) return false;
+  return random() < 0.35;
 }
 
 function getMomentCandidates(contacts = [], myProfile = null) {
@@ -91,7 +102,7 @@ export function buildMomentsPrompt({
         "为中文角色朋友圈生成动态。只返回 JSON 数组，不要 Markdown。",
         `条数:${limit};模式:${mode === "specified" ? "指定" : "随机"};类型:纯文字`,
         '格式:[{"authorName":"角色名","content":"朋友圈正文"}]',
-        "每条只写一句，像真实朋友圈，可以像角色自发发布，内容可结合聊天、当天行程、所见所得或此刻心情。",
+        "每条1-100字，像真实朋友圈，可以像角色自发发布，内容可结合聊天、当天行程、所见所得或此刻心情。",
         `现在:${nowText || "当前时间"}`,
         context ? `聊天内容:${context}` : "",
         `角色:${roleLines || `${contact.name || "角色"}:${contact.identity || "身份未填"};${contact.personality || "性格未填"}`}`,
@@ -101,7 +112,7 @@ export function buildMomentsPrompt({
       "只回一句朋友圈正文，不要解释。",
       "类型:纯文字",
       `角色:${contact.name || "角色"};${contact.identity || "身份未填"};${contact.personality || "性格未填"}`,
-      `参考:可结合聊天内容、今天行程、所见所得或现在心情。${nowText ? `现在:${nowText}` : ""}`,
+      `要求:1-100字。参考:可结合聊天内容、今天行程、所见所得或现在心情。${nowText ? `现在:${nowText}` : ""}`,
       context ? `聊天内容:${context}` : "",
     ].join("\n");
   }
@@ -110,7 +121,7 @@ export function buildMomentsPrompt({
     "为中文角色朋友圈生成动态。只返回 JSON 数组，不要 Markdown。",
     `条数:${limit};模式:${mode === "specified" ? "指定" : "随机"};类型:${normalizedPostType === "image_text" ? "图文" : "纯文字"}`,
     '格式:[{"authorName":"角色名","content":"朋友圈正文"}]',
-    "正文每条1句，生活化，有角色感。",
+    "正文每条1-100字，生活化，有角色感。",
     `角色:${roleLines || "暂无"}`,
   ].join("\n");
 }
@@ -118,7 +129,7 @@ export function buildMomentsPrompt({
 export function buildTinyMomentPrompt({ author = null, context = "", nowText = "" } = {}) {
   const role = author || {};
   return [
-    "只回一句朋友圈，10字以内。",
+    "只回一句朋友圈，正文1-100字，像角色自发发布。",
     `角色:${role.name || "角色"};${role.identity || ""};${role.personality || ""}`,
     context ? `参考:${context.slice(0, 36)}` : "",
     nowText ? `现在:${nowText}` : "",
@@ -133,14 +144,14 @@ export function parseMomentPosts(raw, contacts = []) {
     const items = Array.isArray(parsed) ? parsed : [parsed];
     return items.map((item) => ({
       authorName: String(item.authorName || item.name || "").trim(),
-      content: String(item.content || item.text || "").trim(),
+      content: String(item.content || item.text || "").trim().slice(0, 100),
     })).filter((item) => item.authorName && item.content);
   } catch {
     return text.split(/\n+/).map((line, index) => {
       const contact = contacts[index % Math.max(contacts.length, 1)] || {};
       return {
         authorName: contact.name || "角色",
-        content: line.replace(/^[-*\d.\s]+/, "").trim(),
+        content: line.replace(/^[-*\d.\s]+/, "").trim().slice(0, 100),
       };
     }).filter((item) => item.content);
   }

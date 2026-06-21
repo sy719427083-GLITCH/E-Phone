@@ -8,13 +8,14 @@ import {
   parseMomentPosts,
   pickMomentAuthor,
   pickMomentAuthors,
+  shouldGenerateSpontaneousMoment,
 } from "../lib/moments.js";
 
 test("uses a compact token budget for moments generation", () => {
   assert.equal(getMomentMaxTokens(1, "text"), 60);
   assert.equal(getMomentMaxTokens(3, "text"), 140);
   assert.equal(getMomentMaxTokens(3, "image_text"), 240);
-  assert.equal(getMomentMaxTokens(9, "image_text"), 420);
+  assert.equal(getMomentMaxTokens(9, "image_text"), 320);
 });
 
 test("builds a compact moments prompt from added contacts", () => {
@@ -55,6 +56,7 @@ test("builds a multi-post text prompt when more than one moment is requested", (
 
   assert.match(prompt, /只返回 JSON 数组/);
   assert.match(prompt, /条数:3/);
+  assert.match(prompt, /1-100字/);
   assert.match(prompt, /纯文字/);
   assert.match(prompt, /陆斯年/);
   assert.match(prompt, /沈棠/);
@@ -68,7 +70,7 @@ test("builds an ultra tiny fallback prompt for text moments", () => {
     nowText: "6月21日 18:00",
   });
 
-  assert.match(prompt, /10字以内/);
+  assert.match(prompt, /1-100字/);
   assert.match(prompt, /陆斯年/);
   assert.ok(prompt.length < 120);
 });
@@ -99,6 +101,34 @@ test("picks multiple moment authors from added roles without my profile", () => 
   });
 
   assert.deepEqual(authors.map((author) => author.name), ["陆斯年", "沈棠", "陆斯年"]);
+
+  const capped = pickMomentAuthors({
+    contacts: [{ id: "a", name: "陆斯年" }],
+    count: 9,
+  });
+
+  assert.equal(capped.length, 5);
+});
+
+test("decides when a role may spontaneously post a moment", () => {
+  assert.equal(shouldGenerateSpontaneousMoment({
+    contacts: [{ id: "a" }],
+    lastGeneratedAt: 1_000,
+    now: 80_000,
+    random: () => 0.2,
+  }), true);
+  assert.equal(shouldGenerateSpontaneousMoment({
+    contacts: [{ id: "a" }],
+    lastGeneratedAt: 78_000,
+    now: 80_000,
+    random: () => 0.2,
+  }), false);
+  assert.equal(shouldGenerateSpontaneousMoment({
+    contacts: [],
+    lastGeneratedAt: 1_000,
+    now: 80_000,
+    random: () => 0,
+  }), false);
 });
 
 test("builds moment context from role conversation", () => {
@@ -133,4 +163,8 @@ test("parses generated moments from json or plain text", () => {
 
   const fromText = parseMomentPosts("今天风很轻。", [{ name: "沈棠" }]);
   assert.deepEqual(fromText, [{ authorName: "沈棠", content: "今天风很轻。" }]);
+
+  const longText = "很".repeat(120);
+  const capped = parseMomentPosts(`[{"authorName":"陆斯年","content":"${longText}"}]`, []);
+  assert.equal(capped[0].content.length, 100);
 });

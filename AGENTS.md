@@ -37,8 +37,10 @@ Current prototype direction:
 - Moments specified generation must choose only from already-added contacts, and generated moments should be real API-generated posts that are saved and shown in the feed.
 - Moments generation should use compact prompts and a modest token budget so it behaves closer to chat requests and avoids triggering provider quota checks from an oversized max_tokens value.
 - Moments generation controls should include "纯文字" and "图文"; image-text moments should use existing contact/avatar imagery first and must not trigger an extra image-generation API call unless explicitly requested later.
-- Moments "纯文字" generation should be the lightest possible API call: generate only one post, ask for one plain sentence, avoid JSON formatting, and use a very small max token budget.
-- Moments random generation means a random role/contact posts one moment, excluding the user's own identity. Moment copy may reference that role's recent chat context, today's/current time, schedule, observations, or current mood.
+- Moments manual generation and role spontaneous posting are separate concepts: manual random/specified controls are for user-requested generation, while roles may independently and automatically post pure-text moments in the background.
+- Moments pure-text copy should be 1-100 Chinese characters, never forced into ultra-short text. If a model returns longer text, trim before saving.
+- Moments manual pure-text generation should use a horizontal count slider from 1 to 5, with 5 as the maximum generated in one request.
+- Moments random generation means the user requests random role/contact-generated posts, excluding the user's own identity. Moment copy may reference that role's recent chat context, today's/current time, schedule, observations, or current mood.
 - API quota/rate-limit errors should not retry the same API repeatedly; if a distinct secondary API exists, fail over once, otherwise show the provider error with model and HTTP status so the user can diagnose the selected model/channel.
 - Micro Chat friend-request delays should feel quick: proactive incoming requests should appear shortly after opening contacts, and accept/reject/request confirmation waits should be brief rather than multi-second.
 - Micro Chat friend-request waiting states must always resolve with a success, rejection, or visible failure message; never leave "waiting for confirmation" stuck indefinitely.

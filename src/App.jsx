@@ -40,6 +40,17 @@ function isStandalonePwa() {
   );
 }
 
+function describeAppRuntime() {
+  return `版本:${APP_VERSION}，运行:${isStandalonePwa() ? "桌面PWA" : "浏览器"}`;
+}
+
+function withMomentDiagnostics(error, requestLabel = "朋友圈") {
+  const message = error?.message || "请检查 API 设置。";
+  const requestInfo = message.includes("请求:") ? "" : `；请求:${requestLabel}`;
+  const runtimeInfo = message.includes("版本:") ? "" : `；${describeAppRuntime()}`;
+  return `${message}${requestInfo}${runtimeInfo}`;
+}
+
 function MomentReplyText({ authorName, content }) {
   return [
     <span key="author">{authorName || "角色"}</span>,
@@ -697,7 +708,7 @@ function MicroChatMoments({
       setMessage(result ? `已生成 ${result} 条动态。` : "没有生成到可用动态。");
       if (result) setMenuOpen(false);
     } catch (error) {
-      setMessage(`生成失败：${error.message || "请检查 API 设置。"}`);
+      setMessage(`生成失败：${withMomentDiagnostics(error)}`);
     }
   };
 
@@ -1980,7 +1991,7 @@ export function App() {
                     );
                   } catch (error) {
                     if (shouldKeepPartialMomentResults(error, generated.length)) break;
-                    throw new Error(`${error.message || "生成失败"}；${describeApiUsage(config)}；请求:纯文字轻量`);
+                    throw new Error(`${error.message || "生成失败"}；${describeApiUsage(config)}；请求:纯文字轻量；${describeAppRuntime()}`);
                   }
                   generated.push(...parseMomentPosts(reply, [currentAuthor]).slice(0, 1));
                 }
@@ -2003,7 +2014,7 @@ export function App() {
                     requestChatCompletion(api, prompt, fetch, { maxTokens }),
                   );
                 } catch (error) {
-                  throw new Error(`${error.message || "生成失败"}；${describeApiUsage(config)}；请求:图文`);
+                  throw new Error(`${error.message || "生成失败"}；${describeApiUsage(config)}；请求:图文；${describeAppRuntime()}`);
                 }
                 generated = parseMomentPosts(reply, authors.length > 0 ? authors : [author]).slice(0, limit);
               }

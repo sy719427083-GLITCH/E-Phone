@@ -292,6 +292,7 @@ export async function requestChatCompletion(api, prompt, fetcher = fetch, option
   validateApi(api);
   const response = await fetcher(buildApiUrl(api, "chat/completions"), {
     method: "POST",
+    cache: "no-store",
     headers: {
       "Content-Type": "application/json",
       Authorization: `Bearer ${api.apiKey.trim()}`,

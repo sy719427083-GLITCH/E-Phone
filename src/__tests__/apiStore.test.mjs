@@ -303,6 +303,7 @@ test("requests a real chat completion payload", async () => {
 
   assert.equal(content, "pong");
   assert.equal(request.url, "https://api.example/v1/chat/completions");
+  assert.equal(request.options.cache, "no-store");
   assert.equal(request.options.headers.Authorization, "Bearer secret");
   assert.equal(JSON.parse(request.options.body).model, "gpt-real");
 });

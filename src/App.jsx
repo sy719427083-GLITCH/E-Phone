@@ -196,11 +196,14 @@ function buildRoleReplyPrompt(conversation, userText) {
 function MicroChatApp({
   roles,
   contacts,
+  contactRequests,
+  myProfile,
   conversations,
   selectedChatId,
   onBack,
   onStartChat,
   onAddContact,
+  onRecordContactRequest,
   onOpenChat,
   onDeleteChat,
   onCloseChat,
@@ -208,6 +211,7 @@ function MicroChatApp({
   sendingChatId,
 }) {
   const [chatTab, setChatTab] = useState("chats");
+  const [contactPage, setContactPage] = useState(null);
   const selectedConversation = conversations.find((conversation) => conversation.id === selectedChatId) || null;
 
   if (selectedConversation) {
@@ -223,7 +227,7 @@ function MicroChatApp({
 
   const tabTitles = {
     chats: "微聊",
-    contacts: "通讯录",
+    contacts: contactPage === "newFriends" ? "新的好友" : "通讯录",
     moments: "朋友圈",
     settings: "设置",
   };
@@ -239,16 +243,24 @@ function MicroChatApp({
           <MicroChatContacts
             roles={roles}
             contacts={contacts}
+            requests={contactRequests}
+            page={contactPage}
+            onOpenNewFriends={() => setContactPage("newFriends")}
+            onBackToContacts={() => setContactPage(null)}
             onStartChat={onStartChat}
             onAddContact={onAddContact}
+            onRecordContactRequest={onRecordContactRequest}
           />
         ) : null}
-        {chatTab === "moments" ? <MicroChatMoments roles={roles} /> : null}
+        {chatTab === "moments" ? <MicroChatMoments myProfile={myProfile} /> : null}
         {chatTab === "settings" ? (
           <MicroChatSettings conversations={conversations} roles={roles} contacts={contacts} />
         ) : null}
       </div>
-      <MicroChatTabs active={chatTab} setActive={setChatTab} />
+      {contactPage ? null : <MicroChatTabs active={chatTab} setActive={(key) => {
+        setContactPage(null);
+        setChatTab(key);
+      }} />}
     </section>
   );
 }
@@ -337,7 +349,17 @@ function SwipeChatRow({ conversation, lastMessage, onOpen, onDelete }) {
   );
 }
 
-function MicroChatContacts({ roles, contacts, onStartChat, onAddContact }) {
+function MicroChatContacts({
+  roles,
+  contacts,
+  requests,
+  page,
+  onOpenNewFriends,
+  onBackToContacts,
+  onStartChat,
+  onAddContact,
+  onRecordContactRequest,
+}) {
   const [adding, setAdding] = useState(false);
   const [message, setMessage] = useState("");
   const [pendingRoleId, setPendingRoleId] = useState("");
@@ -356,7 +378,7 @@ function MicroChatContacts({ roles, contacts, onStartChat, onAddContact }) {
       }
     }, 1500);
     return () => window.clearTimeout(timer);
-  }, [availableRoles, incomingRole]);
+  }, [availableRoles.length, incomingRole]);
 
   const requestAdd = (role) => {
     if (pendingRoleId) return;
@@ -389,11 +411,60 @@ function MicroChatContacts({ roles, contacts, onStartChat, onAddContact }) {
     setIncomingBusy(true);
     setMessage(`正在处理${incomingRole.name || "对方"}的好友申请...`);
     window.setTimeout(() => {
+      onRecordContactRequest(incomingRole, { direction: "incoming", status: "rejected" });
       setMessage(`已拒绝${incomingRole.name || "角色"}的好友申请。`);
       setIncomingRole(null);
       setIncomingBusy(false);
     }, 900);
   };
+
+  if (page === "newFriends") {
+    const history = [
+      ...(incomingRole ? [{
+        id: "incoming-now",
+        roleName: incomingRole.name || "未命名角色",
+        avatar: incomingRole.avatar,
+        identity: incomingRole.identity,
+        personality: incomingRole.personality,
+        direction: "incoming",
+        status: "pending",
+      }] : []),
+      ...requests,
+    ];
+
+    return (
+      <div className="microchat-pane new-friends-page">
+        <button className="new-friends-back" onClick={onBackToContacts}>‹ 通讯录</button>
+        <div className="chat-search">搜索</div>
+        <div className="chat-conversation-list contact-list">
+          {history.length === 0 ? (
+            <div className="chat-empty compact">
+              <h2>暂无新的好友</h2>
+              <p>之前加过的角色会显示在这里。</p>
+            </div>
+          ) : (
+            history.map((request) => (
+              <div className="new-friend-row" key={request.id}>
+                <ChatAvatar conversation={{ title: request.roleName || "角色", avatar: request.avatar }} />
+                <span>
+                  <b>{request.roleName || "未命名角色"}</b>
+                  <small>{request.identity || request.personality || (request.direction === "incoming" ? "请求添加你为好友" : "好友申请")}</small>
+                </span>
+                {request.status === "pending" ? (
+                  <>
+                    <button onClick={acceptIncoming} disabled={incomingBusy}>通过</button>
+                    <button onClick={rejectIncoming} disabled={incomingBusy}>拒绝</button>
+                  </>
+                ) : (
+                  <em>{request.status === "accepted" ? "已添加" : "已拒绝"}</em>
+                )}
+              </div>
+            ))
+          )}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="microchat-pane">
@@ -407,22 +478,11 @@ function MicroChatContacts({ roles, contacts, onStartChat, onAddContact }) {
       </div>
       {message ? <p className="contact-request-message">{message}</p> : null}
       <div className="microchat-feature-list">
-        <button className="microchat-feature-row" onClick={() => setAdding((value) => !value)}>
+        <button className="microchat-feature-row" onClick={onOpenNewFriends}>
           <span>新</span>
           <b>新的好友</b>
           {incomingRole ? <em>1</em> : null}
         </button>
-        {incomingRole ? (
-          <div className="incoming-request-card">
-            <ChatAvatar conversation={{ title: incomingRole.name || "角色", avatar: incomingRole.avatar }} />
-            <span>
-              <b>{incomingRole.name || "未命名角色"}</b>
-              <small>{incomingRole.identity || incomingRole.personality || "请求添加你为好友"}</small>
-            </span>
-            <button onClick={acceptIncoming} disabled={incomingBusy}>通过</button>
-            <button onClick={rejectIncoming} disabled={incomingBusy}>拒绝</button>
-          </div>
-        ) : null}
         <button className="microchat-feature-row">
           <span>群</span>
           <b>群聊</b>
@@ -479,30 +539,18 @@ function MicroChatContacts({ roles, contacts, onStartChat, onAddContact }) {
   );
 }
 
-function MicroChatMoments({ roles }) {
+function MicroChatMoments({ myProfile }) {
   return (
-    <div className="microchat-pane moments-pane">
+    <div className="moments-page">
       <div className="moments-cover">
-        <b>朋友圈</b>
-        <span>角色动态</span>
-      </div>
-      {roles.length === 0 ? (
-        <div className="chat-empty compact">
-          <h2>还没有动态</h2>
-          <p>创建角色后，这里会显示角色朋友圈。</p>
+        <div className="moments-my-card">
+          <span className="moments-my-avatar">
+            {myProfile?.avatar ? <img src={myProfile.avatar} alt="" /> : (myProfile?.name?.slice(0, 1) || "我")}
+          </span>
+          <b>{myProfile?.name || "我的头像"}</b>
         </div>
-      ) : (
-        roles.slice(0, 6).map((role) => (
-          <article className="moment-card" key={role.id}>
-            <ChatAvatar conversation={{ title: role.name || "角色", avatar: role.avatar }} />
-            <div>
-              <b>{role.name || "未命名角色"}</b>
-              <p>{role.personality || role.persona || "今天也在等你发来第一条消息。"}</p>
-              <small>{role.identity || "角色档案"} · 刚刚</small>
-            </div>
-          </article>
-        ))
-      )}
+      </div>
+      <div className="moments-blank" />
     </div>
   );
 }
@@ -1435,6 +1483,7 @@ export function App() {
   const [identities, setIdentities] = useState(() => identityStore.list());
   const [conversations, setConversations] = useState(() => chatStore.list());
   const [contacts, setContacts] = useState(() => chatStore.listContacts());
+  const [contactRequests, setContactRequests] = useState(() => chatStore.listContactRequests());
   const clock = useClock();
 
   useEffect(() => {
@@ -1454,6 +1503,8 @@ export function App() {
         <MicroChatApp
           roles={roles}
           contacts={contacts}
+          contactRequests={contactRequests}
+          myProfile={identities[0] || null}
           conversations={conversations}
           selectedChatId={selectedChatId}
           sendingChatId={sendingChatId}
@@ -1469,7 +1520,13 @@ export function App() {
           onAddContact={(role, random) => {
             const result = chatStore.requestContact(role, random);
             setContacts(chatStore.listContacts());
+            setContactRequests(chatStore.listContactRequests());
             return result;
+          }}
+          onRecordContactRequest={(role, options) => {
+            const request = chatStore.recordContactRequest(role, options);
+            setContactRequests(chatStore.listContactRequests());
+            return request;
           }}
           onOpenChat={(id) => {
             chatStore.markRead(id);
@@ -1615,6 +1672,7 @@ export function App() {
     appPage,
     chatStore,
     contacts,
+    contactRequests,
     clock,
     conversations,
     identities,

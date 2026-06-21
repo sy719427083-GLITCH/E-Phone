@@ -77,3 +77,19 @@ test("keeps contacts empty until a role accepts the add request", () => {
   const restored = new ChatStore(storage);
   assert.equal(restored.listContacts()[0].id, "role-lu");
 });
+
+test("records contact request history", () => {
+  const storage = createMemoryStorage();
+  const store = new ChatStore(storage);
+
+  store.requestContact(role, () => 0.1);
+  store.requestContact({ ...role, id: "role-accepted", name: "林以" }, () => 0.9);
+
+  const requests = store.listContactRequests();
+  assert.equal(requests.length, 2);
+  assert.equal(requests[0].status, "accepted");
+  assert.equal(requests[1].status, "rejected");
+
+  const restored = new ChatStore(storage);
+  assert.equal(restored.listContactRequests()[0].roleName, "林以");
+});

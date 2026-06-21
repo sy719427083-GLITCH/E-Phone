@@ -42,6 +42,20 @@ export function createContactDraft(role) {
   };
 }
 
+export function createContactRequest(role, { direction = "outgoing", status = "pending" } = {}) {
+  return {
+    id: makeChatId("request"),
+    roleId: role?.id || "",
+    roleName: role?.name || "未命名角色",
+    avatar: role?.avatar || "",
+    identity: role?.identity || "",
+    personality: role?.personality || "",
+    direction,
+    status,
+    createdAt: Date.now(),
+  };
+}
+
 function makeChatId(prefix) {
   if (typeof crypto !== "undefined" && crypto.randomUUID) {
     return `${prefix}-${crypto.randomUUID()}`;
@@ -82,11 +96,22 @@ function mergeContact(contact = {}) {
   };
 }
 
+function mergeContactRequest(request = {}) {
+  const draft = createContactRequest();
+  return {
+    ...draft,
+    ...request,
+    roleName: request.roleName || request.name || draft.roleName,
+    createdAt: Number(request.createdAt) || Date.now(),
+  };
+}
+
 export class ChatStore {
   constructor(storage = globalThis.localStorage) {
     this.storage = storage;
     this.conversations = [];
     this.contacts = [];
+    this.contactRequests = [];
     this.load();
   }
 
@@ -99,16 +124,24 @@ export class ChatStore {
       this.contacts = Array.isArray(parsed.contacts)
         ? parsed.contacts.map(mergeContact)
         : [];
+      this.contactRequests = Array.isArray(parsed.contactRequests)
+        ? parsed.contactRequests.map(mergeContactRequest)
+        : [];
     } catch {
       this.conversations = [];
       this.contacts = [];
+      this.contactRequests = [];
     }
   }
 
   persist() {
     this.storage?.setItem(
       CHAT_STORAGE_KEY,
-      JSON.stringify({ conversations: this.conversations, contacts: this.contacts }),
+      JSON.stringify({
+        conversations: this.conversations,
+        contacts: this.contacts,
+        contactRequests: this.contactRequests,
+      }),
     );
   }
 
@@ -162,17 +195,36 @@ export class ChatStore {
     return [...this.contacts].sort((a, b) => b.addedAt - a.addedAt);
   }
 
+  listContactRequests() {
+    return this.contactRequests
+      .map((request, index) => ({ request, index }))
+      .sort((a, b) => (b.request.createdAt - a.request.createdAt) || (b.index - a.index))
+      .map(({ request }) => request);
+  }
+
+  recordContactRequest(role, options) {
+    const request = createContactRequest(role, options);
+    this.contactRequests.push(request);
+    this.persist();
+    return request;
+  }
+
   requestContact(role, random = Math.random) {
     const id = role?.id || "";
     const existing = id ? this.contacts.find((contact) => contact.id === id) : null;
     if (existing) return { accepted: true, contact: existing, alreadyAdded: true };
 
     const accepted = random() >= 0.3;
-    if (!accepted) return { accepted: false, contact: null, reason: `${role?.name || "对方"}拒绝了你的添加请求。` };
+    if (!accepted) {
+      const request = this.recordContactRequest(role, { direction: "outgoing", status: "rejected" });
+      return { accepted: false, contact: null, request, reason: `${role?.name || "对方"}拒绝了你的添加请求。` };
+    }
 
     const contact = createContactDraft(role);
     this.contacts.push(contact);
+    const request = createContactRequest(role, { direction: "outgoing", status: "accepted" });
+    this.contactRequests.push(request);
     this.persist();
-    return { accepted: true, contact, alreadyAdded: false };
+    return { accepted: true, contact, request, alreadyAdded: false };
   }
 }

@@ -2226,65 +2226,134 @@ button {
   opacity: 0.64;
 }
 
-.contact-list {
-  background: rgba(242, 238, 240, 0.5);
+.new-friends-page {
+  padding-top: 0;
 }
 
-.moments-pane {
-  gap: 10px;
-}
-
-.moments-cover {
-  display: grid;
-  align-content: end;
-  min-height: 128px;
-  border-radius: 10px;
-  padding: 18px;
-  color: #6b5360;
-  background:
-    radial-gradient(circle at 82% 18%, rgba(255, 221, 234, 0.72), transparent 30%),
-    radial-gradient(circle at 16% 16%, rgba(216, 224, 242, 0.36), transparent 34%),
-    linear-gradient(135deg, rgba(255, 255, 255, 0.84), rgba(255, 236, 244, 0.48));
-  box-shadow: 0 14px 26px rgba(194, 154, 169, 0.1);
-}
-
-.moments-cover b {
-  font-size: 22px;
-}
-
-.moments-cover span {
-  color: #9d8792;
+.new-friends-back {
+  justify-self: start;
+  min-height: 28px;
+  padding: 0 2px;
+  color: #b76f87;
+  background: transparent;
   font-size: 12px;
+  font-weight: 400;
 }
 
-.moment-card {
+.new-friend-row {
   display: grid;
-  grid-template-columns: 42px minmax(0, 1fr);
-  gap: 10px;
-  padding: 12px 2px;
-  border-bottom: 1px solid rgba(232, 220, 226, 0.58);
+  grid-template-columns: 42px minmax(0, 1fr) auto auto;
+  gap: 8px;
+  align-items: center;
+  min-height: 62px;
+  padding: 10px;
+  background: #fff;
 }
 
-.moment-card .chat-avatar {
+.new-friend-row .chat-avatar {
   width: 42px;
   height: 42px;
 }
 
-.moment-card b {
-  color: #8f5268;
+.new-friend-row > span {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.new-friend-row b {
+  overflow: hidden;
+  color: #4d4349;
   font-size: 13px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.moment-card p {
-  margin: 5px 0 6px;
-  color: #5a4c53;
-  font-size: 12px;
-  line-height: 1.55;
+.new-friend-row small {
+  overflow: hidden;
+  color: #9b8d94;
+  font-size: 11px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.moment-card small {
-  color: #a99ba2;
-  font-size: 10px;
+.new-friend-row button {
+  min-height: 28px;
+  border-radius: 7px;
+  padding: 0 9px;
+  color: #aa6078;
+  background: rgba(255, 232, 240, 0.72);
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.new-friend-row em {
+  color: #a1939a;
+  font-size: 11px;
+  font-style: normal;
+}
+
+.contact-list {
+  background: rgba(242, 238, 240, 0.5);
+}
+
+.moments-page {
+  min-height: 100%;
+  background: #fff;
+}
+
+.moments-cover {
+  position: relative;
+  min-height: 226px;
+  margin: 0 -12px;
+  color: #55464d;
+  background:
+    linear-gradient(180deg, rgba(255, 246, 250, 0.08), rgba(255, 255, 255, 0.18)),
+    url("/assets/pink-cat-home-wallpaper-clean.png") center 28% / cover no-repeat;
+}
+
+.moments-my-card {
+  position: absolute;
+  right: 18px;
+  bottom: -34px;
+  display: grid;
+  grid-template-columns: minmax(0, auto) 64px;
+  gap: 10px;
+  align-items: center;
+}
+
+.moments-my-card b {
+  color: #55464d;
+  font-size: 14px;
+  font-weight: 500;
+  text-shadow: 0 1px 4px rgba(255, 255, 255, 0.86);
+}
+
+.moments-my-avatar {
+  display: grid;
+  place-items: center;
+  width: 64px;
+  height: 64px;
+  overflow: hidden;
+  border: 3px solid #fff;
+  border-radius: 8px;
+  color: #bc748e;
+  background: #fff4f8;
+  box-shadow: 0 8px 18px rgba(96, 72, 82, 0.16);
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.moments-my-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.moments-blank {
+  min-height: 420px;
+  margin: 46px -12px 0;
+  background: #fff;
 }
 
 .microchat-profile-card {

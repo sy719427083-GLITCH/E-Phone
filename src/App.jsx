@@ -399,7 +399,7 @@ function MicroChatContacts({
         setIncomingRole(role || null);
         if (role) setMessage(`${role.name || "有角色"}想添加你为好友。`);
       }
-    }, 1500);
+    }, 650);
     return () => window.clearTimeout(timer);
   }, [availableRoles.length, incomingRole]);
 
@@ -414,7 +414,7 @@ function MicroChatContacts({
         : result.reason || `${role.name || "角色"}拒绝了你的添加请求。`);
       setPendingRoleId("");
       if (result.accepted) setAdding(false);
-    }, 1200);
+    }, 650);
   };
 
   const acceptIncoming = () => {
@@ -426,7 +426,7 @@ function MicroChatContacts({
       setMessage(`你已添加${incomingRole.name || "角色"}。`);
       setIncomingRole(null);
       setIncomingBusy(false);
-    }, 800);
+    }, 350);
   };
 
   const rejectIncoming = () => {
@@ -438,7 +438,7 @@ function MicroChatContacts({
       setMessage(`已拒绝${incomingRole.name || "角色"}的好友申请。`);
       setIncomingRole(null);
       setIncomingBusy(false);
-    }, 900);
+    }, 350);
   };
 
   if (page === "newFriends") {

@@ -229,11 +229,16 @@ function MicroChatApp({
   const [contactPage, setContactPage] = useState(null);
   const lastSpontaneousMomentAt = useRef(0);
   const generateMomentsRef = useRef(onGenerateMoments);
+  const generatingMomentsRef = useRef(generatingMoments);
   const selectedConversation = conversations.find((conversation) => conversation.id === selectedChatId) || null;
 
   useEffect(() => {
     generateMomentsRef.current = onGenerateMoments;
   }, [onGenerateMoments]);
+
+  useEffect(() => {
+    generatingMomentsRef.current = generatingMoments;
+  }, [generatingMoments]);
 
   useEffect(() => {
     if (contacts.length === 0) return undefined;
@@ -245,6 +250,7 @@ function MicroChatApp({
         contacts,
         lastGeneratedAt: lastSpontaneousMomentAt.current,
         now,
+        isGenerating: generatingMomentsRef.current,
       })) return;
       lastSpontaneousMomentAt.current = now;
       generateMomentsRef.current({
@@ -258,8 +264,8 @@ function MicroChatApp({
       });
     };
 
-    const firstTimer = window.setTimeout(tryGenerate, 12_000);
-    const interval = window.setInterval(tryGenerate, 60_000);
+    const firstTimer = window.setTimeout(tryGenerate, 45_000);
+    const interval = window.setInterval(tryGenerate, 120_000);
     return () => {
       cancelled = true;
       window.clearTimeout(firstTimer);
@@ -1661,6 +1667,7 @@ export function App() {
   const [contactRequests, setContactRequests] = useState(() => chatStore.listContactRequests());
   const [momentPosts, setMomentPosts] = useState(() => chatStore.listMomentPosts());
   const [generatingMoments, setGeneratingMoments] = useState(false);
+  const momentGenerationBusyRef = useRef(false);
   const clock = useClock();
 
   useEffect(() => {
@@ -1755,6 +1762,11 @@ export function App() {
             }
           }}
           onGenerateMoments={async ({ mode, postType, selectedRoleId, count, spontaneous = false }) => {
+            if (momentGenerationBusyRef.current) {
+              if (spontaneous) return 0;
+              throw new Error("正在生成动态，请稍后再试。");
+            }
+            momentGenerationBusyRef.current = true;
             setGeneratingMoments(true);
             try {
               const config = new ApiConfigStore().getSelected();
@@ -1827,6 +1839,7 @@ export function App() {
               setMomentPosts(chatStore.listMomentPosts());
               return generated.length;
             } finally {
+              momentGenerationBusyRef.current = false;
               setGeneratingMoments(false);
             }
           }}

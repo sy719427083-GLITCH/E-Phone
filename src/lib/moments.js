@@ -18,7 +18,9 @@ export function shouldGenerateSpontaneousMoment({
   lastGeneratedAt = 0,
   now = Date.now(),
   random = Math.random,
+  isGenerating = false,
 } = {}) {
+  if (isGenerating) return false;
   if (contacts.length === 0) return false;
   if (now - Number(lastGeneratedAt || 0) < 60_000) return false;
   return random() < 0.35;

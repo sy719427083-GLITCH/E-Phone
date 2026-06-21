@@ -17,12 +17,10 @@ import {
   formatMomentReplyText,
   getMomentMaxTokens,
   getMomentReplyDelayMs,
-  getMomentRequestDelayMs,
   normalizeMomentPostType,
   parseMomentPosts,
   pickMomentAuthor,
   pickMomentAuthors,
-  shouldKeepPartialMomentResults,
   shouldGenerateSpontaneousMoment,
 } from "./lib/moments.js";
 import { parseGeneratedRole } from "./lib/roleGenerator.js";
@@ -34,14 +32,12 @@ const assetPath = (path) => `${import.meta.env.BASE_URL}${path.replace(/^\/+/, "
 const wait = (ms) => new Promise((resolve) => window.setTimeout(resolve, ms));
 
 function MomentReplyText({ authorName, content }) {
-  return (
-    <>
-      <span>{authorName || "角色"}</span>
-      回复了
-      <span>我</span>
-      {String(content || "").trim()}
-    </>
-  );
+  return [
+    <span key="author">{authorName || "角色"}</span>,
+    "回复了",
+    <span key="me">我</span>,
+    String(content || "").trim(),
+  ];
 }
 
 const appItems = [
@@ -1961,9 +1957,32 @@ export function App() {
               let generated = [];
               if (normalizedPostType === "text") {
                 const textAuthors = (authors.length > 0 ? authors : [author]).slice(0, limit);
-                for (const [index, currentAuthor] of textAuthors.entries()) {
-                  const delayMs = getMomentRequestDelayMs(index, normalizedPostType);
-                  if (delayMs) await wait(delayMs);
+                if (limit > 1) {
+                  const context = textAuthors
+                    .map((currentAuthor) => buildMomentContext({ author: currentAuthor, conversations }))
+                    .filter(Boolean)
+                    .join(" | ");
+                  const prompt = buildMomentsPrompt({
+                    contacts: textAuthors,
+                    mode: spontaneous ? "spontaneous" : mode,
+                    postType: normalizedPostType,
+                    selectedRoleId,
+                    count: limit,
+                    author: selectedRoleId ? author : null,
+                    context,
+                    nowText,
+                  });
+                  let reply = "";
+                  try {
+                    reply = await callWithRetryAndFallback(config, ({ api }) =>
+                      requestChatCompletion(api, prompt, fetch, { maxTokens: getMomentMaxTokens(limit, normalizedPostType) }),
+                    );
+                  } catch (error) {
+                    throw new Error(`${error.message || "生成失败"}；${describeApiUsage(config)}；请求:纯文字批量`);
+                  }
+                  generated = parseMomentPosts(reply, textAuthors).slice(0, limit);
+                } else {
+                  const currentAuthor = textAuthors[0] || author;
                   const context = buildMomentContext({ author: currentAuthor, conversations });
                   const prompt = buildTinyMomentPrompt({ author: currentAuthor, context, nowText });
                   let reply = "";
@@ -1972,7 +1991,6 @@ export function App() {
                       requestChatCompletion(api, prompt, fetch, { maxTokens: 60 }),
                     );
                   } catch (error) {
-                    if (shouldKeepPartialMomentResults(error, generated.length)) break;
                     throw new Error(`${error.message || "生成失败"}；${describeApiUsage(config)}；请求:纯文字轻量`);
                   }
                   generated.push(...parseMomentPosts(reply, [currentAuthor]).slice(0, 1));

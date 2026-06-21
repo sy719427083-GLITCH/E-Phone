@@ -42,6 +42,7 @@ Current prototype direction:
 - Moments spontaneous posting must not run concurrently with manual moments generation; background posting should skip when any moments request is already in flight.
 - Moments pure-text copy should be 1-100 Chinese characters, never forced into ultra-short text. If a model returns longer text, trim before saving.
 - Moments manual pure-text generation should use a horizontal count slider from 1 to 5. One user action may generate up to 5 posts, but the implementation should use lightweight one-post text requests rather than a large batch JSON request.
+- Moments manual multi-post pure-text generation should pace repeated API requests so providers do not treat a quick burst as quota/rate-limit abuse. If a later request is quota-limited after earlier posts succeeded, keep and show the partial posts instead of failing the whole generation.
 - Moments random generation means the user requests random role/contact-generated posts, excluding the user's own identity. Moment copy may reference that role's recent chat context, today's/current time, schedule, observations, or current mood.
 - Moments posts should support lightweight WeChat-like likes and comments. User comments may receive probabilistic API-generated replies from the post author, and these interactions should persist with the post.
 - Moments post actions should use icon-like controls: likes use a heart, comments use a drawn/SVG comment symbol, and the user's Moments profile block should keep the name on the left with the avatar on the right.

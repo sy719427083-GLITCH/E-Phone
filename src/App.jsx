@@ -15,16 +15,20 @@ import {
   buildMomentsPrompt,
   buildTinyMomentPrompt,
   getMomentMaxTokens,
+  getMomentRequestDelayMs,
   normalizeMomentPostType,
   parseMomentPosts,
   pickMomentAuthor,
   pickMomentAuthors,
+  shouldKeepPartialMomentResults,
   shouldGenerateSpontaneousMoment,
 } from "./lib/moments.js";
 import { parseGeneratedRole } from "./lib/roleGenerator.js";
 import { createRoleDraft, RoleStore } from "./lib/roleStore.js";
 
 const assetPath = (path) => `${import.meta.env.BASE_URL}${path.replace(/^\/+/, "")}`;
+
+const wait = (ms) => new Promise((resolve) => window.setTimeout(resolve, ms));
 
 const appItems = [
   { key: "chat", label: "微聊", icon: assetPath("assets/app-icons/chat.png") },
@@ -1901,7 +1905,9 @@ export function App() {
               let generated = [];
               if (normalizedPostType === "text") {
                 const textAuthors = (authors.length > 0 ? authors : [author]).slice(0, limit);
-                for (const currentAuthor of textAuthors) {
+                for (const [index, currentAuthor] of textAuthors.entries()) {
+                  const delayMs = getMomentRequestDelayMs(index, normalizedPostType);
+                  if (delayMs) await wait(delayMs);
                   const context = buildMomentContext({ author: currentAuthor, conversations });
                   const prompt = buildTinyMomentPrompt({ author: currentAuthor, context, nowText });
                   let reply = "";
@@ -1910,6 +1916,7 @@ export function App() {
                       requestChatCompletion(api, prompt, fetch, { maxTokens: 60 }),
                     );
                   } catch (error) {
+                    if (shouldKeepPartialMomentResults(error, generated.length)) break;
                     throw new Error(`${error.message || "生成失败"}；${describeApiUsage(config)}；请求:纯文字轻量`);
                   }
                   generated.push(...parseMomentPosts(reply, [currentAuthor]).slice(0, 1));

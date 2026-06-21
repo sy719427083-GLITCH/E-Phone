@@ -13,6 +13,21 @@ export function getMomentMaxTokens(count, postType = "text") {
     : Math.min(260, 60 + (limit - 1) * 40);
 }
 
+export function getMomentRequestDelayMs(index, postType = "text") {
+  if (normalizeMomentPostType(postType) !== "text") return 0;
+  return Number(index) > 0 ? 1100 : 0;
+}
+
+export function shouldKeepPartialMomentResults(error, generatedCount = 0) {
+  const message = String(error?.message || "").toLowerCase();
+  const isQuotaLike = message.includes("quota")
+    || message.includes("rate limit")
+    || message.includes("rate_limit")
+    || message.includes("too many requests")
+    || message.includes("insufficient");
+  return isQuotaLike && Number(generatedCount) > 0;
+}
+
 export function shouldGenerateSpontaneousMoment({
   contacts = [],
   lastGeneratedAt = 0,

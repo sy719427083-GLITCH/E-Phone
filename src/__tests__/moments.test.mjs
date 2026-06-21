@@ -5,6 +5,8 @@ import {
   buildMomentsPrompt,
   buildTinyMomentPrompt,
   getMomentMaxTokens,
+  getMomentRequestDelayMs,
+  shouldKeepPartialMomentResults,
   parseMomentPosts,
   pickMomentAuthor,
   pickMomentAuthors,
@@ -16,6 +18,18 @@ test("uses a compact token budget for moments generation", () => {
   assert.equal(getMomentMaxTokens(3, "text"), 140);
   assert.equal(getMomentMaxTokens(3, "image_text"), 240);
   assert.equal(getMomentMaxTokens(9, "image_text"), 320);
+});
+
+test("paces repeated text moment requests to avoid provider quota bursts", () => {
+  assert.equal(getMomentRequestDelayMs(0, "text"), 0);
+  assert.ok(getMomentRequestDelayMs(1, "text") >= 900);
+  assert.equal(getMomentRequestDelayMs(1, "image_text"), 0);
+});
+
+test("keeps partial moment results when a later request hits provider quota", () => {
+  assert.equal(shouldKeepPartialMomentResults(new Error("The quota has been exceeded."), 1), true);
+  assert.equal(shouldKeepPartialMomentResults(new Error("The quota has been exceeded."), 0), false);
+  assert.equal(shouldKeepPartialMomentResults(new Error("network down"), 1), false);
 });
 
 test("builds a compact moments prompt from added contacts", () => {

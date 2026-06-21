@@ -42,7 +42,7 @@ test("builds a compact moments prompt from added contacts", () => {
   assert.ok(prompt.length < 360);
 });
 
-test("builds a multi-post text prompt when more than one moment is requested", () => {
+test("builds a multi-post text prompt for compatible batch callers", () => {
   const prompt = buildMomentsPrompt({
     contacts: [
       { id: "a", name: "陆斯年", identity: "学生会干部", personality: "外冷内热" },

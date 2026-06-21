@@ -39,7 +39,7 @@ Current prototype direction:
 - Moments generation controls should include "纯文字" and "图文"; image-text moments should use existing contact/avatar imagery first and must not trigger an extra image-generation API call unless explicitly requested later.
 - Moments manual generation and role spontaneous posting are separate concepts: manual random/specified controls are for user-requested generation, while roles may independently and automatically post pure-text moments in the background.
 - Moments pure-text copy should be 1-100 Chinese characters, never forced into ultra-short text. If a model returns longer text, trim before saving.
-- Moments manual pure-text generation should use a horizontal count slider from 1 to 5, with 5 as the maximum generated in one request.
+- Moments manual pure-text generation should use a horizontal count slider from 1 to 5. One user action may generate up to 5 posts, but the implementation should use lightweight one-post text requests rather than a large batch JSON request.
 - Moments random generation means the user requests random role/contact-generated posts, excluding the user's own identity. Moment copy may reference that role's recent chat context, today's/current time, schedule, observations, or current mood.
 - API quota/rate-limit errors should not retry the same API repeatedly; if a distinct secondary API exists, fail over once, otherwise show the provider error with model and HTTP status so the user can diagnose the selected model/channel.
 - Micro Chat friend-request delays should feel quick: proactive incoming requests should appear shortly after opening contacts, and accept/reject/request confirmation waits should be brief rather than multi-second.

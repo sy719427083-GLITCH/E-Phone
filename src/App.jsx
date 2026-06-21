@@ -1772,12 +1772,26 @@ export function App() {
                 myProfile: identities[0] || null,
               });
               if (!author) throw new Error("请先在通讯录添加角色。");
-              const context = buildMomentContext({ author, conversations });
               const nowText = `${clock.date} ${clock.time}`;
-              const useTinyTextPrompt = normalizedPostType === "text" && limit === 1;
-              const prompt = useTinyTextPrompt
-                ? buildTinyMomentPrompt({ author, context, nowText })
-                : buildMomentsPrompt({
+              let generated = [];
+              if (normalizedPostType === "text") {
+                const textAuthors = (authors.length > 0 ? authors : [author]).slice(0, limit);
+                for (const currentAuthor of textAuthors) {
+                  const context = buildMomentContext({ author: currentAuthor, conversations });
+                  const prompt = buildTinyMomentPrompt({ author: currentAuthor, context, nowText });
+                  let reply = "";
+                  try {
+                    reply = await callWithRetryAndFallback(config, ({ api }) =>
+                      requestChatCompletion(api, prompt, fetch, { maxTokens: 60 }),
+                    );
+                  } catch (error) {
+                    throw new Error(`${error.message || "生成失败"}；${describeApiUsage(config)}；请求:纯文字轻量`);
+                  }
+                  generated.push(...parseMomentPosts(reply, [currentAuthor]).slice(0, 1));
+                }
+              } else {
+                const context = buildMomentContext({ author, conversations });
+                const prompt = buildMomentsPrompt({
                   contacts: authors.length > 0 ? authors : contacts,
                   mode: spontaneous ? "spontaneous" : mode,
                   postType: normalizedPostType,
@@ -1787,16 +1801,17 @@ export function App() {
                   context,
                   nowText,
                 });
-              const maxTokens = useTinyTextPrompt ? 60 : getMomentMaxTokens(limit, normalizedPostType);
-              let reply = "";
-              try {
-                reply = await callWithRetryAndFallback(config, ({ api }) =>
-                  requestChatCompletion(api, prompt, fetch, { maxTokens }),
-                );
-              } catch (error) {
-                throw new Error(`${error.message || "生成失败"}；${describeApiUsage(config)}；请求:${normalizedPostType === "text" ? "纯文字极简" : "图文"}`);
+                const maxTokens = getMomentMaxTokens(limit, normalizedPostType);
+                let reply = "";
+                try {
+                  reply = await callWithRetryAndFallback(config, ({ api }) =>
+                    requestChatCompletion(api, prompt, fetch, { maxTokens }),
+                  );
+                } catch (error) {
+                  throw new Error(`${error.message || "生成失败"}；${describeApiUsage(config)}；请求:图文`);
+                }
+                generated = parseMomentPosts(reply, authors.length > 0 ? authors : [author]).slice(0, limit);
               }
-              const generated = parseMomentPosts(reply, authors.length > 0 ? authors : [author]).slice(0, limit);
               generated.forEach((post, index) => {
                 const matchedAuthor = contacts.find((contact) => contact.name === post.authorName)
                   || authors[index % Math.max(authors.length, 1)]

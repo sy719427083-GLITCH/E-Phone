@@ -2231,13 +2231,7 @@ button {
 }
 
 .new-friends-back {
-  justify-self: start;
-  min-height: 28px;
-  padding: 0 2px;
-  color: #b76f87;
-  background: transparent;
-  font-size: 12px;
-  font-weight: 400;
+  margin: 0 0 10px;
 }
 
 .new-friend-row {
@@ -2475,13 +2469,18 @@ button {
 }
 
 .moments-my-card b {
+  grid-column: 1;
+  grid-row: 1;
   color: #55464d;
   font-size: 14px;
   font-weight: 500;
+  text-align: right;
   text-shadow: 0 1px 4px rgba(255, 255, 255, 0.86);
 }
 
 .moments-my-avatar {
+  grid-column: 2;
+  grid-row: 1;
   display: grid;
   place-items: center;
   width: 64px;
@@ -2581,12 +2580,51 @@ button {
 }
 
 .moment-actions button {
+  display: inline-grid;
+  grid-auto-flow: column;
+  gap: 3px;
+  align-items: center;
+  justify-content: center;
+  min-width: 30px;
   min-height: 24px;
   border-radius: 6px;
-  padding: 0 8px;
+  padding: 0 7px;
   color: #9a7180;
   background: rgba(246, 241, 244, 0.78);
   font-size: 11px;
+}
+
+.moment-actions button svg {
+  width: 15px;
+  height: 15px;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.moment-actions button span {
+  min-width: 7px;
+  color: currentColor;
+  font-size: 10px;
+  line-height: 1;
+}
+
+.moment-heart-icon path {
+  fill: transparent;
+}
+
+.moment-actions button.is-liked {
+  color: #cf7895;
+  background: rgba(255, 235, 242, 0.86);
+}
+
+.moment-actions button.is-liked .moment-heart-icon path {
+  fill: currentColor;
+}
+
+.moment-comment-icon path {
+  fill: transparent;
 }
 
 .moment-social-line,

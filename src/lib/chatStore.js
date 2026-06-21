@@ -10,21 +10,26 @@ export function createChatMessage({ role = "user", content = "", status = "sent"
   };
 }
 
-export function createConversationDraft(role) {
+function createProfileSnapshot(profile = {}) {
+  return {
+    name: profile?.name || "",
+    gender: profile?.gender || "",
+    identity: profile?.identity || "",
+    personality: profile?.personality || "",
+    appearance: profile?.appearance || "",
+    worldview: profile?.worldview || "",
+    persona: profile?.persona || "",
+  };
+}
+
+export function createConversationDraft(role, userProfile) {
   return {
     id: role?.id ? `chat-${role.id}` : makeChatId("chat"),
     roleId: role?.id || "",
     title: role?.name || "未命名角色",
     avatar: role?.avatar || "",
-    roleSnapshot: {
-      name: role?.name || "",
-      gender: role?.gender || "",
-      identity: role?.identity || "",
-      personality: role?.personality || "",
-      appearance: role?.appearance || "",
-      worldview: role?.worldview || "",
-      persona: role?.persona || "",
-    },
+    roleSnapshot: createProfileSnapshot(role),
+    userSnapshot: createProfileSnapshot(userProfile),
     messages: [],
     unread: 0,
     updatedAt: Date.now(),
@@ -93,6 +98,10 @@ function mergeConversation(conversation = {}) {
     roleSnapshot: {
       ...draft.roleSnapshot,
       ...(conversation.roleSnapshot || {}),
+    },
+    userSnapshot: {
+      ...draft.userSnapshot,
+      ...(conversation.userSnapshot || {}),
     },
     messages: Array.isArray(conversation.messages) ? conversation.messages.map(mergeMessage) : [],
   };
@@ -223,15 +232,26 @@ export class ChatStore {
     return this.conversations.find((conversation) => conversation.id === id) || null;
   }
 
-  startConversation(role) {
+  startConversation(role, userProfile) {
     const id = role?.id ? `chat-${role.id}` : "";
     const existing = id ? this.get(id) : null;
-    if (existing) return existing;
+    if (existing) {
+      this.bindConversationUser(existing.id, userProfile || existing.userSnapshot);
+      return existing;
+    }
 
-    const next = createConversationDraft(role);
+    const next = createConversationDraft(role, userProfile);
     this.conversations.push(next);
     this.persist();
     return next;
+  }
+
+  bindConversationUser(conversationId, userProfile) {
+    const conversation = this.get(conversationId);
+    if (!conversation) return null;
+    conversation.userSnapshot = createProfileSnapshot(userProfile || conversation.userSnapshot);
+    this.persist();
+    return conversation;
   }
 
   addMessage(conversationId, message) {

@@ -186,8 +186,9 @@ function formatChatTime(timestamp) {
 
 function buildRoleReplyPrompt(conversation, userText) {
   const role = conversation.roleSnapshot || {};
+  const user = conversation.userSnapshot || {};
   const recentMessages = conversation.messages.slice(-8).map((message) => (
-    `${message.role === "user" ? "用户" : role.name || "角色"}：${message.content}`
+    `${message.role === "user" ? user.name || "用户" : role.name || "角色"}：${message.content}`
   )).join("\n");
 
   return [
@@ -199,6 +200,11 @@ function buildRoleReplyPrompt(conversation, userText) {
     `容貌：${role.appearance || "未填写"}`,
     `世界观：${role.worldview || "暂无"}`,
     `人设：${role.persona || "未填写"}`,
+    `用户姓名：${user.name || "我"}`,
+    `用户性别：${user.gender || "未填写"}`,
+    `用户身份：${user.identity || "未填写"}`,
+    `用户性格：${user.personality || "未填写"}`,
+    `用户人设：${user.persona || "未填写"}`,
     "回复要求：像微信聊天一样自然，1-3 句为主；可以有情绪和动作暗示，但不要太长。",
     recentMessages ? `最近聊天：\n${recentMessages}` : "",
     `用户新消息：${userText}`,
@@ -533,7 +539,9 @@ function MicroChatContacts({
 
     return (
       <div className="microchat-pane new-friends-page">
-        <button className="new-friends-back" onClick={onBackToContacts}>‹ 通讯录</button>
+        <button className="back-button new-friends-back" onClick={onBackToContacts} aria-label="返回通讯录">
+          ‹
+        </button>
         <div className="chat-search">搜索</div>
         <div className="chat-conversation-list contact-list">
           {history.length === 0 ? (
@@ -746,9 +754,16 @@ function MicroChatMoments({
               ) : null}
               <div className="moment-actions">
                 <small>刚刚</small>
-                <button type="button" onClick={() => onToggleLike(post.id)}>
-                  {post.likes?.some((like) => like.id === (myProfile?.id || "me")) ? "已赞" : "赞"}
-                  {post.likes?.length ? ` ${post.likes.length}` : ""}
+                <button
+                  className={post.likes?.some((like) => like.id === (myProfile?.id || "me")) ? "is-liked" : ""}
+                  type="button"
+                  onClick={() => onToggleLike(post.id)}
+                  aria-label="点赞"
+                >
+                  <svg className="moment-heart-icon" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M12 20.2s-6.8-4.1-8.7-8.1C1.8 8.8 3.5 5.7 6.7 5.4c1.8-.2 3.3.7 4.2 2.1.2.3.4.3.6 0 1-1.4 2.4-2.3 4.2-2.1 3.2.3 4.9 3.4 3.4 6.7-1.8 4-7.1 8.1-7.1 8.1Z" />
+                  </svg>
+                  {post.likes?.length ? <span>{post.likes.length}</span> : null}
                 </button>
                 <button
                   type="button"
@@ -756,13 +771,16 @@ function MicroChatMoments({
                     ...current,
                     [post.id]: current[post.id] || "",
                   }))}
+                  aria-label="评论"
                 >
-                  评论
+                  <svg className="moment-comment-icon" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M5.2 6.8c1.5-1.4 3.8-2.2 6.8-2.2 5 0 8.2 2.6 8.2 6.4 0 3.9-3.3 6.5-8.1 6.5-.8 0-1.6-.1-2.3-.2L5 19.1c-.4.2-.8-.2-.6-.6l1.3-3.3C4.5 14.1 3.8 12.7 3.8 11c0-1.6.5-3 1.4-4.2Z" />
+                  </svg>
                 </button>
               </div>
               {post.likes?.length ? (
                 <div className="moment-social-line">
-                  <span>赞：</span>{post.likes.map((like) => like.name).join("、")}
+                  <span>♥ </span>{post.likes.map((like) => like.name).join("、")}
                 </div>
               ) : null}
               {post.comments?.length ? (
@@ -1803,7 +1821,7 @@ export function App() {
             setAppPage(null);
           }}
           onStartChat={(role) => {
-            const conversation = chatStore.startConversation(role);
+            const conversation = chatStore.startConversation(role, identities[0] || null);
             setConversations(chatStore.list());
             setSelectedChatId(conversation.id);
           }}
@@ -1830,6 +1848,7 @@ export function App() {
           }}
           onCloseChat={() => setSelectedChatId(null)}
           onSendMessage={async (conversationId, text) => {
+            chatStore.bindConversationUser(conversationId, identities[0] || null);
             chatStore.addMessage(conversationId, createChatMessage({ role: "user", content: text }));
             setConversations(chatStore.list());
             setSendingChatId(conversationId);

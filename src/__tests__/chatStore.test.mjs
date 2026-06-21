@@ -28,6 +28,39 @@ test("creates a conversation draft from a role snapshot", () => {
   assert.deepEqual(conversation.messages, []);
 });
 
+test("stores the selected identity snapshot on conversations", () => {
+  const identity = {
+    id: "identity-me",
+    name: "苏夜",
+    gender: "女",
+    identity: "转学生",
+    personality: "敏感但直接",
+    appearance: "黑发短发",
+    worldview: "校园",
+    persona: "不喜欢被敷衍。",
+  };
+  const conversation = createConversationDraft(role, identity);
+
+  assert.equal(conversation.userSnapshot.name, "苏夜");
+  assert.equal(conversation.userSnapshot.identity, "转学生");
+});
+
+test("updates an existing conversation with the current identity", () => {
+  const storage = createMemoryStorage();
+  const store = new ChatStore(storage);
+  const conversation = store.startConversation(role);
+
+  store.bindConversationUser(conversation.id, {
+    name: "苏夜",
+    identity: "转学生",
+    persona: "不喜欢被敷衍。",
+  });
+
+  const restored = new ChatStore(storage).get(conversation.id);
+  assert.equal(restored.userSnapshot.name, "苏夜");
+  assert.equal(restored.userSnapshot.persona, "不喜欢被敷衍。");
+});
+
 test("starts one conversation per role and persists messages", () => {
   const storage = createMemoryStorage();
   const store = new ChatStore(storage);

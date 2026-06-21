@@ -44,6 +44,9 @@ Current prototype direction:
 - Moments manual pure-text generation should use a horizontal count slider from 1 to 5. One user action may generate up to 5 posts, but the implementation should use lightweight one-post text requests rather than a large batch JSON request.
 - Moments random generation means the user requests random role/contact-generated posts, excluding the user's own identity. Moment copy may reference that role's recent chat context, today's/current time, schedule, observations, or current mood.
 - Moments posts should support lightweight WeChat-like likes and comments. User comments may receive probabilistic API-generated replies from the post author, and these interactions should persist with the post.
+- Moments post actions should use icon-like controls: likes use a heart, comments use a drawn/SVG comment symbol, and the user's Moments profile block should keep the name on the left with the avatar on the right.
+- Role chats should bind the currently selected "me" identity into the conversation prompt so replies can respond to the user's saved identity/profile.
+- The "新的好友" page should use the same back button style as outer app pages.
 - API quota/rate-limit errors should not retry the same API repeatedly; if a distinct secondary API exists, fail over once, otherwise show the provider error with model and HTTP status so the user can diagnose the selected model/channel.
 - Micro Chat friend-request delays should feel quick: proactive incoming requests should appear shortly after opening contacts, and accept/reject/request confirmation waits should be brief rather than multi-second.
 - Micro Chat friend-request waiting states must always resolve with a success, rejection, or visible failure message; never leave "waiting for confirmation" stuck indefinitely.

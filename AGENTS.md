@@ -30,4 +30,5 @@ Current prototype direction:
 - Animated role overview effects should feel fresh and lightweight: floating fine lines, subtle spark points, mist-blue highlights, no heavy saturated pink, and no layout shift.
 - Micro Chat should follow a real WeChat-inspired structure: conversation list, role-based chat entry, single chat thread, local message history, and API-powered role replies while staying in the app's soft pink visual language.
 - Micro Chat should have its own inner four-tab structure: "微聊", "通讯录", "朋友圈", and "微聊设置"; keep it WeChat-inspired without using green accents.
+- Micro Chat contacts are not automatically populated from role files: the contact list starts empty, users add existing roles through an add button, and roles may randomly reject the request.
 - The bottom navigation labels are "主页", "角色档案", "身份", and "设置"; the tab bar should use borderless glassmorphism with soft translucency instead of solid cards.

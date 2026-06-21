@@ -45,3 +45,22 @@ test("starts one conversation per role and persists messages", () => {
   assert.equal(restoredConversation.messages.length, 2);
   assert.equal(restoredConversation.messages[1].content, "晚上好。");
 });
+
+test("keeps contacts empty until a role accepts the add request", () => {
+  const storage = createMemoryStorage();
+  const store = new ChatStore(storage);
+
+  assert.deepEqual(store.listContacts(), []);
+
+  const rejected = store.requestContact(role, () => 0.1);
+  assert.equal(rejected.accepted, false);
+  assert.deepEqual(store.listContacts(), []);
+
+  const accepted = store.requestContact(role, () => 0.9);
+  assert.equal(accepted.accepted, true);
+  assert.equal(store.listContacts().length, 1);
+  assert.equal(store.listContacts()[0].name, "陆斯年");
+
+  const restored = new ChatStore(storage);
+  assert.equal(restored.listContacts()[0].id, "role-lu");
+});

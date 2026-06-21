@@ -195,10 +195,12 @@ function buildRoleReplyPrompt(conversation, userText) {
 
 function MicroChatApp({
   roles,
+  contacts,
   conversations,
   selectedChatId,
   onBack,
   onStartChat,
+  onAddContact,
   onOpenChat,
   onCloseChat,
   onSendMessage,
@@ -230,23 +232,27 @@ function MicroChatApp({
       <Header title={tabTitles[chatTab]} onBack={onBack} />
       <div className="microchat-content">
         {chatTab === "chats" ? (
-          <MicroChatList
+          <MicroChatList conversations={conversations} onOpenChat={onOpenChat} />
+        ) : null}
+        {chatTab === "contacts" ? (
+          <MicroChatContacts
             roles={roles}
-            conversations={conversations}
-            onOpenChat={onOpenChat}
+            contacts={contacts}
             onStartChat={onStartChat}
+            onAddContact={onAddContact}
           />
         ) : null}
-        {chatTab === "contacts" ? <MicroChatContacts roles={roles} onStartChat={onStartChat} /> : null}
         {chatTab === "moments" ? <MicroChatMoments roles={roles} /> : null}
-        {chatTab === "settings" ? <MicroChatSettings conversations={conversations} roles={roles} /> : null}
+        {chatTab === "settings" ? (
+          <MicroChatSettings conversations={conversations} roles={roles} contacts={contacts} />
+        ) : null}
       </div>
       <MicroChatTabs active={chatTab} setActive={setChatTab} />
     </section>
   );
 }
 
-function MicroChatList({ roles, conversations, onOpenChat, onStartChat }) {
+function MicroChatList({ conversations, onOpenChat }) {
   return (
     <div className="chat-list-shell">
       <div className="chat-search">搜索</div>
@@ -258,7 +264,7 @@ function MicroChatList({ roles, conversations, onOpenChat, onStartChat }) {
         {conversations.length === 0 ? (
           <div className="chat-empty">
             <h2>还没有聊天</h2>
-            <p>选择一个角色，开始第一段微聊。</p>
+            <p>去通讯录添加角色后，就可以开始聊天。</p>
           </div>
         ) : (
           conversations.map((conversation) => {
@@ -284,60 +290,80 @@ function MicroChatList({ roles, conversations, onOpenChat, onStartChat }) {
         )}
       </div>
 
-      <div className="chat-section-title role-picker-title">
-        <b>选择角色开聊</b>
-        <span>{roles.length} 个角色</span>
-      </div>
-      <div className="chat-role-grid">
-        {roles.length === 0 ? (
-          <p>先去“角色档案”里新建角色，再回来微聊。</p>
-        ) : (
-          roles.map((role) => (
-            <button className="chat-role-pill" key={role.id} onClick={() => onStartChat(role)}>
-              <span>{role.avatar ? <img src={role.avatar} alt="" /> : role.name.slice(0, 1) || "角"}</span>
-              <b>{role.name || "未命名角色"}</b>
-            </button>
-          ))
-        )}
-      </div>
     </div>
   );
 }
 
-function MicroChatContacts({ roles, onStartChat }) {
+function MicroChatContacts({ roles, contacts, onStartChat, onAddContact }) {
+  const [adding, setAdding] = useState(false);
+  const [message, setMessage] = useState("");
+  const contactIds = new Set(contacts.map((contact) => contact.id));
+  const availableRoles = roles.filter((role) => !contactIds.has(role.id));
+
+  const requestAdd = (role) => {
+    const result = onAddContact(role);
+    setMessage(result.accepted
+      ? `${role.name || "角色"}已通过你的好友申请。`
+      : result.reason || `${role.name || "角色"}拒绝了你的添加请求。`);
+    if (result.accepted) setAdding(false);
+  };
+
   return (
     <div className="microchat-pane">
-      <div className="chat-search">搜索角色</div>
-      <div className="microchat-feature-list">
-        <div className="microchat-feature-row">
-          <span>新</span>
-          <b>新的朋友</b>
-        </div>
-        <div className="microchat-feature-row">
-          <span>群</span>
-          <b>群聊</b>
-        </div>
+      <div className="contacts-head">
+        <div className="chat-search">搜索联系人</div>
+        <button className="contact-add-button" onClick={() => setAdding((value) => !value)} aria-label="添加联系人">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 5v14M5 12h14" />
+          </svg>
+        </button>
       </div>
+      {message ? <p className="contact-request-message">{message}</p> : null}
+      {adding ? (
+        <div className="contact-add-panel">
+          <div className="chat-section-title">
+            <b>添加已有角色</b>
+            <span>{availableRoles.length} 个可添加</span>
+          </div>
+          {availableRoles.length === 0 ? (
+            <p>没有可添加的角色，或者角色已经在通讯录里。</p>
+          ) : (
+            availableRoles.map((role) => (
+              <button className="chat-row" key={role.id} onClick={() => requestAdd(role)}>
+                <ChatAvatar conversation={{ title: role.name || "角色", avatar: role.avatar }} />
+                <span className="chat-row-main">
+                  <b>{role.name || "未命名角色"}</b>
+                  <small>{role.identity || role.personality || "发送好友申请"}</small>
+                </span>
+                <span className="contact-apply">申请</span>
+              </button>
+            ))
+          )}
+        </div>
+      ) : null}
       <div className="chat-section-title">
-        <b>角色通讯录</b>
-        <span>{roles.length} 个角色</span>
+        <b>通讯录</b>
+        <span>{contacts.length} 个联系人</span>
       </div>
       <div className="chat-conversation-list contact-list">
-        {roles.length === 0 ? (
+        {contacts.length === 0 ? (
           <div className="chat-empty compact">
             <h2>还没有联系人</h2>
-            <p>先创建角色档案，角色会出现在通讯录里。</p>
+            <p>点击右上角添加按钮，向已有角色发送好友申请。</p>
           </div>
         ) : (
-          roles.map((role) => (
-            <button className="chat-row" key={role.id} onClick={() => onStartChat(role)}>
-              <ChatAvatar conversation={{ title: role.name || "角色", avatar: role.avatar }} />
+          contacts.map((contact) => {
+            const role = roles.find((item) => item.id === contact.id) || contact;
+            return (
+            <button className="chat-row" key={contact.id} onClick={() => onStartChat(role)}>
+              <ChatAvatar conversation={{ title: contact.name || "角色", avatar: contact.avatar }} />
               <span className="chat-row-main">
-                <b>{role.name || "未命名角色"}</b>
-                <small>{role.identity || role.personality || "点击开始聊天"}</small>
+                <b>{contact.name || "未命名角色"}</b>
+                <small>{contact.identity || contact.personality || "点击开始聊天"}</small>
               </span>
             </button>
-          ))
+            );
+          })
         )}
       </div>
     </div>
@@ -372,14 +398,14 @@ function MicroChatMoments({ roles }) {
   );
 }
 
-function MicroChatSettings({ conversations, roles }) {
+function MicroChatSettings({ conversations, roles, contacts }) {
   return (
     <div className="microchat-pane">
       <div className="microchat-profile-card">
         <span>微</span>
         <div>
           <b>微聊</b>
-          <p>{roles.length} 个角色 · {conversations.length} 个会话</p>
+          <p>{contacts.length} 个联系人 · {conversations.length} 个会话</p>
         </div>
       </div>
       <div className="microchat-settings-list">
@@ -402,10 +428,10 @@ function MicroChatSettings({ conversations, roles }) {
 
 function MicroChatTabs({ active, setActive }) {
   const items = [
-    ["chats", "微聊", "聊"],
-    ["contacts", "通讯录", "录"],
-    ["moments", "朋友圈", "圈"],
-    ["settings", "微聊设置", "设"],
+    ["chats", "微聊", "chat"],
+    ["contacts", "通讯录", "contacts"],
+    ["moments", "朋友圈", "moments"],
+    ["settings", "微聊设置", "settings"],
   ];
 
   return (
@@ -416,11 +442,45 @@ function MicroChatTabs({ active, setActive }) {
           className={active === key ? "active" : ""}
           onClick={() => setActive(key)}
         >
-          <span>{icon}</span>
+          <span><MicroChatIcon name={icon} /></span>
           <b>{label}</b>
         </button>
       ))}
     </nav>
+  );
+}
+
+function MicroChatIcon({ name }) {
+  if (name === "chat") {
+    return (
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M5.5 6.5h13a2 2 0 0 1 2 2v6.2a2 2 0 0 1-2 2H12l-4.4 3v-3H5.5a2 2 0 0 1-2-2V8.5a2 2 0 0 1 2-2Z" />
+        <path d="M8 10.5h8M8 13.5h5" />
+      </svg>
+    );
+  }
+  if (name === "contacts") {
+    return (
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M8.8 11.2a3.2 3.2 0 1 0 0-6.4 3.2 3.2 0 0 0 0 6.4Z" />
+        <path d="M3.8 18.8c.5-3 2.4-4.8 5-4.8s4.5 1.8 5 4.8" />
+        <path d="M16.5 7.2h4M18.5 5.2v4M16.5 14.5h4M16.5 17.5h4" />
+      </svg>
+    );
+  }
+  if (name === "moments") {
+    return (
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <circle cx="12" cy="12" r="4.2" />
+        <path d="M12 2.8v3M12 18.2v3M2.8 12h3M18.2 12h3M5.5 5.5l2.1 2.1M16.4 16.4l2.1 2.1M18.5 5.5l-2.1 2.1M7.6 16.4l-2.1 2.1" />
+      </svg>
+    );
+  }
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M12 8.2a3.8 3.8 0 1 0 0 7.6 3.8 3.8 0 0 0 0-7.6Z" />
+      <path d="M19.4 13.5v-3l-2.1-.5a6.1 6.1 0 0 0-.7-1.6l1.1-1.9-2.1-2.1-1.9 1.1c-.5-.3-1-.5-1.6-.7L11.5 2h-3l-.5 2.1c-.6.2-1.1.4-1.6.7L4.5 3.7 2.4 5.8l1.1 1.9c-.3.5-.5 1-.7 1.6L.7 9.8v3l2.1.5c.2.6.4 1.1.7 1.6l-1.1 1.9 2.1 2.1 1.9-1.1c.5.3 1 .5 1.6.7l.5 2.1h3l.5-2.1c.6-.2 1.1-.4 1.6-.7l1.9 1.1 2.1-2.1-1.1-1.9c.3-.5.5-1 .7-1.6l2.2-.8Z" transform="translate(1.95 .7) scale(.84)" />
+    </svg>
   );
 }
 
@@ -1262,6 +1322,7 @@ export function App() {
   const [roles, setRoles] = useState(() => roleStore.list());
   const [identities, setIdentities] = useState(() => identityStore.list());
   const [conversations, setConversations] = useState(() => chatStore.list());
+  const [contacts, setContacts] = useState(() => chatStore.listContacts());
   const clock = useClock();
 
   useEffect(() => {
@@ -1280,6 +1341,7 @@ export function App() {
       return (
         <MicroChatApp
           roles={roles}
+          contacts={contacts}
           conversations={conversations}
           selectedChatId={selectedChatId}
           sendingChatId={sendingChatId}
@@ -1291,6 +1353,11 @@ export function App() {
             const conversation = chatStore.startConversation(role);
             setConversations(chatStore.list());
             setSelectedChatId(conversation.id);
+          }}
+          onAddContact={(role) => {
+            const result = chatStore.requestContact(role);
+            setContacts(chatStore.listContacts());
+            return result;
           }}
           onOpenChat={(id) => {
             chatStore.markRead(id);
@@ -1430,6 +1497,7 @@ export function App() {
   }, [
     appPage,
     chatStore,
+    contacts,
     clock,
     conversations,
     identities,

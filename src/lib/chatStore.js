@@ -31,6 +31,17 @@ export function createConversationDraft(role) {
   };
 }
 
+export function createContactDraft(role) {
+  return {
+    id: role?.id || makeChatId("contact"),
+    name: role?.name || "未命名角色",
+    avatar: role?.avatar || "",
+    identity: role?.identity || "",
+    personality: role?.personality || "",
+    addedAt: Date.now(),
+  };
+}
+
 function makeChatId(prefix) {
   if (typeof crypto !== "undefined" && crypto.randomUUID) {
     return `${prefix}-${crypto.randomUUID()}`;
@@ -61,10 +72,21 @@ function mergeMessage(message = {}) {
   };
 }
 
+function mergeContact(contact = {}) {
+  const draft = createContactDraft();
+  return {
+    ...draft,
+    ...contact,
+    name: contact.name || draft.name,
+    addedAt: Number(contact.addedAt) || Date.now(),
+  };
+}
+
 export class ChatStore {
   constructor(storage = globalThis.localStorage) {
     this.storage = storage;
     this.conversations = [];
+    this.contacts = [];
     this.load();
   }
 
@@ -74,15 +96,19 @@ export class ChatStore {
       this.conversations = Array.isArray(parsed.conversations)
         ? parsed.conversations.map(mergeConversation)
         : [];
+      this.contacts = Array.isArray(parsed.contacts)
+        ? parsed.contacts.map(mergeContact)
+        : [];
     } catch {
       this.conversations = [];
+      this.contacts = [];
     }
   }
 
   persist() {
     this.storage?.setItem(
       CHAT_STORAGE_KEY,
-      JSON.stringify({ conversations: this.conversations }),
+      JSON.stringify({ conversations: this.conversations, contacts: this.contacts }),
     );
   }
 
@@ -122,5 +148,23 @@ export class ChatStore {
     conversation.unread = 0;
     this.persist();
     return conversation;
+  }
+
+  listContacts() {
+    return [...this.contacts].sort((a, b) => b.addedAt - a.addedAt);
+  }
+
+  requestContact(role, random = Math.random) {
+    const id = role?.id || "";
+    const existing = id ? this.contacts.find((contact) => contact.id === id) : null;
+    if (existing) return { accepted: true, contact: existing, alreadyAdded: true };
+
+    const accepted = random() >= 0.3;
+    if (!accepted) return { accepted: false, contact: null, reason: `${role?.name || "对方"}拒绝了你的添加请求。` };
+
+    const contact = createContactDraft(role);
+    this.contacts.push(contact);
+    this.persist();
+    return { accepted: true, contact, alreadyAdded: false };
   }
 }

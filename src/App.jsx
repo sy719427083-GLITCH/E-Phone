@@ -1729,7 +1729,7 @@ export function App() {
                   context,
                   nowText,
                 });
-              const maxTokens = normalizedPostType === "text" ? 20 : getMomentMaxTokens(count, normalizedPostType);
+              const maxTokens = normalizedPostType === "text" ? 60 : getMomentMaxTokens(count, normalizedPostType);
               let reply = "";
               try {
                 reply = await callWithRetryAndFallback(config, ({ api }) =>

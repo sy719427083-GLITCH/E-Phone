@@ -262,6 +262,32 @@ function extractCompletionText(payload = {}) {
     || extractContentText(payload.content);
 }
 
+function isDeepSeekApi(api = {}) {
+  const model = String(api.model || "").toLowerCase();
+  let host = "";
+  try {
+    host = new URL(api.apiUrl || "").host.toLowerCase();
+  } catch {
+    host = String(api.apiUrl || "").toLowerCase();
+  }
+  return host.includes("deepseek.com") || model.includes("deepseek");
+}
+
+function buildChatCompletionBody(api, prompt, options = {}) {
+  const body = {
+    model: api.model.trim(),
+    messages: [{ role: "user", content: prompt }],
+    temperature: Number(api.temperature) || 0.7,
+    max_tokens: options.maxTokens || 24,
+  };
+
+  if (isDeepSeekApi(api)) {
+    body.thinking = { type: "disabled" };
+  }
+
+  return body;
+}
+
 export async function requestChatCompletion(api, prompt, fetcher = fetch, options = {}) {
   validateApi(api);
   const response = await fetcher(buildApiUrl(api, "chat/completions"), {
@@ -270,12 +296,7 @@ export async function requestChatCompletion(api, prompt, fetcher = fetch, option
       "Content-Type": "application/json",
       Authorization: `Bearer ${api.apiKey.trim()}`,
     },
-    body: JSON.stringify({
-      model: api.model.trim(),
-      messages: [{ role: "user", content: prompt }],
-      temperature: Number(api.temperature) || 0.7,
-      max_tokens: options.maxTokens || 24,
-    }),
+    body: JSON.stringify(buildChatCompletionBody(api, prompt, options)),
   });
 
   const payload = await response.json().catch(() => ({}));

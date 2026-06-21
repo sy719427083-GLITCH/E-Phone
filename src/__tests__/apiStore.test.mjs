@@ -307,6 +307,53 @@ test("requests a real chat completion payload", async () => {
   assert.equal(JSON.parse(request.options.body).model, "gpt-real");
 });
 
+test("disables thinking mode for DeepSeek chat completions", async () => {
+  let body;
+  const content = await requestChatCompletion(
+    {
+      apiUrl: "https://api.deepseek.com",
+      apiKey: "secret",
+      model: "deepseek-v4-pro",
+      temperature: 0.3,
+    },
+    "ping",
+    async (url, options) => {
+      assert.equal(url, "https://api.deepseek.com/chat/completions");
+      body = JSON.parse(options.body);
+      return {
+        ok: true,
+        status: 200,
+        json: async () => ({ choices: [{ message: { content: "pong" } }] }),
+      };
+    },
+  );
+
+  assert.equal(content, "pong");
+  assert.deepEqual(body.thinking, { type: "disabled" });
+});
+
+test("does not add DeepSeek-only thinking options to generic APIs", async () => {
+  let body;
+  await requestChatCompletion(
+    {
+      apiUrl: "https://api.example/v1",
+      apiKey: "secret",
+      model: "gpt-real",
+    },
+    "ping",
+    async (url, options) => {
+      body = JSON.parse(options.body);
+      return {
+        ok: true,
+        status: 200,
+        json: async () => ({ choices: [{ message: { content: "pong" } }] }),
+      };
+    },
+  );
+
+  assert.equal(Object.hasOwn(body, "thinking"), false);
+});
+
 test("reads compatible completion text formats", async () => {
   const api = {
     apiUrl: "https://api.example/v1",

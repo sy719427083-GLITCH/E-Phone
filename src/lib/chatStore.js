@@ -56,6 +56,16 @@ export function createContactRequest(role, { direction = "outgoing", status = "p
   };
 }
 
+export function createMomentPost({ authorName = "", avatar = "", content = "" } = {}) {
+  return {
+    id: makeChatId("moment"),
+    authorName: authorName || "未命名角色",
+    avatar: avatar || "",
+    content: String(content || ""),
+    createdAt: Date.now(),
+  };
+}
+
 function makeChatId(prefix) {
   if (typeof crypto !== "undefined" && crypto.randomUUID) {
     return `${prefix}-${crypto.randomUUID()}`;
@@ -106,12 +116,24 @@ function mergeContactRequest(request = {}) {
   };
 }
 
+function mergeMomentPost(post = {}) {
+  const draft = createMomentPost();
+  return {
+    ...draft,
+    ...post,
+    authorName: post.authorName || draft.authorName,
+    content: String(post.content || ""),
+    createdAt: Number(post.createdAt) || Date.now(),
+  };
+}
+
 export class ChatStore {
   constructor(storage = globalThis.localStorage) {
     this.storage = storage;
     this.conversations = [];
     this.contacts = [];
     this.contactRequests = [];
+    this.momentPosts = [];
     this.load();
   }
 
@@ -127,10 +149,14 @@ export class ChatStore {
       this.contactRequests = Array.isArray(parsed.contactRequests)
         ? parsed.contactRequests.map(mergeContactRequest)
         : [];
+      this.momentPosts = Array.isArray(parsed.momentPosts)
+        ? parsed.momentPosts.map(mergeMomentPost)
+        : [];
     } catch {
       this.conversations = [];
       this.contacts = [];
       this.contactRequests = [];
+      this.momentPosts = [];
     }
   }
 
@@ -141,6 +167,7 @@ export class ChatStore {
         conversations: this.conversations,
         contacts: this.contacts,
         contactRequests: this.contactRequests,
+        momentPosts: this.momentPosts,
       }),
     );
   }
@@ -226,5 +253,19 @@ export class ChatStore {
     this.contactRequests.push(request);
     this.persist();
     return { accepted: true, contact, request, alreadyAdded: false };
+  }
+
+  listMomentPosts() {
+    return this.momentPosts
+      .map((post, index) => ({ post, index }))
+      .sort((a, b) => (b.post.createdAt - a.post.createdAt) || (b.index - a.index))
+      .map(({ post }) => post);
+  }
+
+  addMomentPost(post) {
+    const next = createMomentPost(post);
+    this.momentPosts.push(next);
+    this.persist();
+    return next;
   }
 }

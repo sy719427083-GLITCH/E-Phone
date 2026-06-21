@@ -2299,18 +2299,37 @@ button {
 
 .moments-page {
   position: relative;
-  min-height: 100%;
+  min-height: 100dvh;
   background: #fff;
 }
 
 .moments-cover {
   position: relative;
-  min-height: 100dvh;
+  min-height: clamp(232px, 32dvh, 290px);
   margin: 0 -12px;
   color: #55464d;
   background:
-    linear-gradient(180deg, rgba(255, 246, 250, 0.02), rgba(255, 255, 255, 0.1) 54%, #fff 78%),
+    linear-gradient(180deg, rgba(255, 246, 250, 0.02), rgba(255, 255, 255, 0.08) 58%, rgba(255, 255, 255, 0.22)),
     url("/assets/pink-cat-home-wallpaper-clean.png") center / cover no-repeat;
+}
+
+.moments-back {
+  position: absolute;
+  top: max(28px, calc(var(--safe-top) + 14px));
+  left: 16px;
+  z-index: 5;
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  color: #8b6975;
+  background: rgba(255, 255, 255, 0.62);
+  box-shadow: 0 8px 18px rgba(96, 72, 82, 0.08);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  font-size: 30px;
+  line-height: 1;
 }
 
 .moments-action {
@@ -2395,12 +2414,11 @@ button {
 .moments-my-card {
   position: absolute;
   right: 18px;
-  top: 48%;
+  bottom: -34px;
   display: grid;
   grid-template-columns: minmax(0, auto) 64px;
   gap: 10px;
   align-items: center;
-  transform: translateY(-50%);
 }
 
 .moments-my-card b {
@@ -2434,9 +2452,58 @@ button {
 .moments-blank {
   position: relative;
   z-index: 2;
-  min-height: 44dvh;
-  margin: -18dvh -12px 0;
+  min-height: calc(100dvh - clamp(232px, 32dvh, 290px));
+  margin: 0 -12px;
+  padding: 52px 18px 34px;
   background: #fff;
+}
+
+.moments-message {
+  margin: 0 0 14px;
+  color: #a58e97;
+  font-size: 12px;
+  text-align: center;
+}
+
+.moment-post {
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr);
+  gap: 10px;
+  padding: 14px 0;
+  color: #594d53;
+  background: #fff;
+}
+
+.moment-post + .moment-post {
+  border-top: 1px solid rgba(214, 198, 205, 0.35);
+}
+
+.moment-post .chat-avatar {
+  width: 42px;
+  height: 42px;
+  border-radius: 8px;
+}
+
+.moment-post b {
+  display: block;
+  margin-bottom: 5px;
+  color: #74616a;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.moment-post p {
+  margin: 0;
+  color: #554b50;
+  font-size: 13px;
+  line-height: 1.65;
+}
+
+.moment-post small {
+  display: block;
+  margin-top: 7px;
+  color: #b09fa6;
+  font-size: 11px;
 }
 
 .microchat-profile-card {

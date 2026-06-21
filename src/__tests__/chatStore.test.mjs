@@ -93,3 +93,20 @@ test("records contact request history", () => {
   const restored = new ChatStore(storage);
   assert.equal(restored.listContactRequests()[0].roleName, "林以");
 });
+
+test("saves generated moments posts", () => {
+  const storage = createMemoryStorage();
+  const store = new ChatStore(storage);
+
+  const post = store.addMomentPost({
+    authorName: "陆斯年",
+    avatar: "data:image/png;base64,avatar",
+    content: "今天的风很轻。",
+  });
+
+  assert.equal(store.listMomentPosts().length, 1);
+  assert.equal(post.content, "今天的风很轻。");
+
+  const restored = new ChatStore(storage);
+  assert.equal(restored.listMomentPosts()[0].authorName, "陆斯年");
+});

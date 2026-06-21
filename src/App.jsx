@@ -193,11 +193,53 @@ function buildRoleReplyPrompt(conversation, userText) {
   ].filter(Boolean).join("\n");
 }
 
+function buildMomentsPrompt({ contacts, mode, selectedRoleId, count }) {
+  const selected = selectedRoleId
+    ? contacts.filter((contact) => contact.id === selectedRoleId)
+    : contacts;
+  const roster = selected.length > 0 ? selected : contacts;
+  const roleLines = roster.map((contact) => (
+    `- ${contact.name || "未命名角色"}：${contact.identity || "身份未填"}；性格：${contact.personality || "未填"}`
+  )).join("\n");
+
+  return [
+    "你正在为一个中文角色朋友圈生成动态。请只返回 JSON 数组，不要 Markdown，不要解释。",
+    `生成条数：${Math.max(1, Math.min(9, Number(count) || 1))}`,
+    `生成模式：${mode === "specified" ? "指定角色" : "随机角色"}`,
+    "每条格式固定为：{\"authorName\":\"角色名\",\"content\":\"朋友圈正文\"}。",
+    "正文要像真实朋友圈，1-2句，生活化、有角色感，不要太长。",
+    "可用角色：",
+    roleLines || "- 暂无角色",
+  ].join("\n");
+}
+
+function parseMomentPosts(raw, contacts) {
+  const text = String(raw || "").trim();
+  const jsonText = text.match(/```json\s*([\s\S]*?)```/)?.[1] || text.match(/```\s*([\s\S]*?)```/)?.[1] || text;
+  try {
+    const parsed = JSON.parse(jsonText);
+    const items = Array.isArray(parsed) ? parsed : [parsed];
+    return items.map((item) => ({
+      authorName: String(item.authorName || item.name || "").trim(),
+      content: String(item.content || item.text || "").trim(),
+    })).filter((item) => item.authorName && item.content);
+  } catch {
+    return text.split(/\n+/).map((line, index) => {
+      const contact = contacts[index % Math.max(contacts.length, 1)] || {};
+      return {
+        authorName: contact.name || "角色",
+        content: line.replace(/^[-*\d.\s]+/, "").trim(),
+      };
+    }).filter((item) => item.content);
+  }
+}
+
 function MicroChatApp({
   roles,
   contacts,
   contactRequests,
   myProfile,
+  momentPosts,
   conversations,
   selectedChatId,
   onBack,
@@ -208,7 +250,9 @@ function MicroChatApp({
   onDeleteChat,
   onCloseChat,
   onSendMessage,
+  onGenerateMoments,
   sendingChatId,
+  generatingMoments,
 }) {
   const [chatTab, setChatTab] = useState("chats");
   const [contactPage, setContactPage] = useState(null);
@@ -255,7 +299,16 @@ function MicroChatApp({
             onRecordContactRequest={onRecordContactRequest}
           />
         ) : null}
-        {chatTab === "moments" ? <MicroChatMoments myProfile={myProfile} /> : null}
+        {chatTab === "moments" ? (
+          <MicroChatMoments
+            contacts={contacts}
+            posts={momentPosts}
+            myProfile={myProfile}
+            onBack={() => setChatTab("chats")}
+            onGenerate={onGenerateMoments}
+            generating={generatingMoments}
+          />
+        ) : null}
         {chatTab === "settings" ? (
           <MicroChatSettings conversations={conversations} roles={roles} contacts={contacts} />
         ) : null}
@@ -542,14 +595,29 @@ function MicroChatContacts({
   );
 }
 
-function MicroChatMoments({ myProfile }) {
+function MicroChatMoments({ contacts, posts, myProfile, onBack, onGenerate, generating }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [mode, setMode] = useState("random");
   const [count, setCount] = useState(3);
-  const [specified, setSpecified] = useState("");
+  const [selectedRoleId, setSelectedRoleId] = useState("");
+  const [message, setMessage] = useState("");
+
+  const generate = async () => {
+    setMessage("正在生成动态...");
+    try {
+      const result = await onGenerate({ mode, selectedRoleId, count });
+      setMessage(result ? `已生成 ${result} 条动态。` : "没有生成到可用动态。");
+      if (result) setMenuOpen(false);
+    } catch (error) {
+      setMessage(`生成失败：${error.message || "请检查 API 设置。"}`);
+    }
+  };
 
   return (
     <div className="moments-page">
+      <button className="moments-back" onClick={onBack} aria-label="返回微聊">
+        ‹
+      </button>
       <button className="moments-action" onClick={() => setMenuOpen((value) => !value)} aria-label="朋友圈生成设置">
         <svg viewBox="0 0 24 24" aria-hidden="true">
           <path d="M12 5.5v13M5.5 12h13" />
@@ -568,14 +636,21 @@ function MicroChatMoments({ myProfile }) {
           {mode === "specified" ? (
             <label>
               <span>指定</span>
-              <input value={specified} placeholder="填写角色或主题" onChange={(event) => setSpecified(event.target.value)} />
+              <select value={selectedRoleId} onChange={(event) => setSelectedRoleId(event.target.value)}>
+                <option value="">选择已添加角色</option>
+                {contacts.map((contact) => (
+                  <option key={contact.id} value={contact.id}>{contact.name || "未命名角色"}</option>
+                ))}
+              </select>
             </label>
           ) : null}
           <label>
             <span>条数</span>
             <input type="number" min="1" max="9" value={count} onChange={(event) => setCount(event.target.value)} />
           </label>
-          <button>生成动态</button>
+          <button onClick={generate} disabled={generating || (mode === "specified" && !selectedRoleId)}>
+            {generating ? "生成中..." : "生成动态"}
+          </button>
         </div>
       ) : null}
       <div className="moments-cover">
@@ -586,7 +661,19 @@ function MicroChatMoments({ myProfile }) {
           <b>{myProfile?.name || "我的头像"}</b>
         </div>
       </div>
-      <div className="moments-blank" />
+      <div className="moments-blank">
+        {message ? <p className="moments-message">{message}</p> : null}
+        {posts.length === 0 ? null : posts.map((post) => (
+          <article className="moment-post" key={post.id}>
+            <ChatAvatar conversation={{ title: post.authorName, avatar: post.avatar }} />
+            <div>
+              <b>{post.authorName}</b>
+              <p>{post.content}</p>
+              <small>刚刚</small>
+            </div>
+          </article>
+        ))}
+      </div>
     </div>
   );
 }
@@ -1520,6 +1607,8 @@ export function App() {
   const [conversations, setConversations] = useState(() => chatStore.list());
   const [contacts, setContacts] = useState(() => chatStore.listContacts());
   const [contactRequests, setContactRequests] = useState(() => chatStore.listContactRequests());
+  const [momentPosts, setMomentPosts] = useState(() => chatStore.listMomentPosts());
+  const [generatingMoments, setGeneratingMoments] = useState(false);
   const clock = useClock();
 
   useEffect(() => {
@@ -1541,6 +1630,7 @@ export function App() {
           contacts={contacts}
           contactRequests={contactRequests}
           myProfile={identities[0] || null}
+          momentPosts={momentPosts}
           conversations={conversations}
           selectedChatId={selectedChatId}
           sendingChatId={sendingChatId}
@@ -1601,6 +1691,33 @@ export function App() {
               setConversations(chatStore.list());
             }
           }}
+          onGenerateMoments={async ({ mode, selectedRoleId, count }) => {
+            setGeneratingMoments(true);
+            try {
+              const config = new ApiConfigStore().getSelected();
+              const prompt = buildMomentsPrompt({ contacts, mode, selectedRoleId, count });
+              const reply = await callWithRetryAndFallback(config, ({ api }) =>
+                requestChatCompletion(api, prompt, fetch, { maxTokens: 1200 }),
+              );
+              const limit = Math.max(1, Math.min(9, Number(count) || 1));
+              const generated = parseMomentPosts(reply, contacts).slice(0, limit);
+              generated.forEach((post) => {
+                const contact = contacts.find((item) => item.name === post.authorName)
+                  || contacts.find((item) => item.id === selectedRoleId)
+                  || {};
+                chatStore.addMomentPost({
+                  authorName: post.authorName || contact.name,
+                  avatar: contact.avatar || "",
+                  content: post.content,
+                });
+              });
+              setMomentPosts(chatStore.listMomentPosts());
+              return generated.length;
+            } finally {
+              setGeneratingMoments(false);
+            }
+          }}
+          generatingMoments={generatingMoments}
         />
       );
     }
@@ -1711,9 +1828,11 @@ export function App() {
     contactRequests,
     clock,
     conversations,
+    generatingMoments,
     identities,
     identityPage,
     identityStore,
+    momentPosts,
     rolePage,
     roleStore,
     roles,

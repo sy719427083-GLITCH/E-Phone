@@ -4,6 +4,7 @@ import {
   callWithRetryAndFallback,
   DEFAULT_CONFIG,
   fetchModelList,
+  isQuotaOrRateLimitError,
   requestChatCompletion,
   resolveApiSelection,
 } from "./lib/apiStore.js";
@@ -12,6 +13,7 @@ import { createIdentityDraft, IdentityStore } from "./lib/identityStore.js";
 import {
   buildMomentContext,
   buildMomentsPrompt,
+  buildTinyMomentPrompt,
   getMomentMaxTokens,
   normalizeMomentPostType,
   parseMomentPosts,
@@ -1705,9 +1707,20 @@ export function App() {
                 context,
                 nowText: `${clock.date} ${clock.time}`,
               });
-              const reply = await callWithRetryAndFallback(config, ({ api }) =>
-                requestChatCompletion(api, prompt, fetch, { maxTokens: getMomentMaxTokens(count, normalizedPostType) }),
-              );
+              let reply;
+              try {
+                reply = await callWithRetryAndFallback(config, ({ api }) =>
+                  requestChatCompletion(api, prompt, fetch, { maxTokens: getMomentMaxTokens(count, normalizedPostType) }),
+                );
+              } catch (error) {
+                if (!isQuotaOrRateLimitError(error) || normalizedPostType !== "text") throw error;
+                reply = await requestChatCompletion(
+                  config.primary,
+                  buildTinyMomentPrompt({ author, context, nowText: `${clock.date} ${clock.time}` }),
+                  fetch,
+                  { maxTokens: 20 },
+                );
+              }
               const limit = normalizedPostType === "text" ? 1 : Math.max(1, Math.min(9, Number(count) || 1));
               const generated = parseMomentPosts(reply, [author]).slice(0, limit);
               generated.forEach((post) => {

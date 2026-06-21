@@ -3,6 +3,7 @@ import test from "node:test";
 import {
   buildMomentContext,
   buildMomentsPrompt,
+  buildTinyMomentPrompt,
   getMomentMaxTokens,
   parseMomentPosts,
   pickMomentAuthor,
@@ -37,6 +38,18 @@ test("builds a compact moments prompt from added contacts", () => {
   assert.match(prompt, /昨天聊到天台和钢琴/);
   assert.doesNotMatch(prompt, /沈棠/);
   assert.ok(prompt.length < 240);
+});
+
+test("builds an ultra tiny fallback prompt for text moments", () => {
+  const prompt = buildTinyMomentPrompt({
+    author: { name: "陆斯年", identity: "学生会干部", personality: "外冷内热" },
+    context: "我:今天去天台了吗？ | 陆斯年:去了，风很轻。",
+    nowText: "6月21日 18:00",
+  });
+
+  assert.match(prompt, /10字以内/);
+  assert.match(prompt, /陆斯年/);
+  assert.ok(prompt.length < 120);
 });
 
 test("picks a moment author from roles without using my profile", () => {

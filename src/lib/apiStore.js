@@ -62,7 +62,7 @@ function hasRunnableApi(api = {}) {
   return Boolean(api.apiUrl?.trim() && api.apiKey?.trim() && api.model?.trim());
 }
 
-function isQuotaOrRateLimitError(error) {
+export function isQuotaOrRateLimitError(error) {
   const message = String(error?.message || "").toLowerCase();
   return message.includes("quota")
     || message.includes("rate limit")

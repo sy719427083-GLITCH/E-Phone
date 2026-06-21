@@ -7,6 +7,7 @@ import {
   callWithRetryAndFallback,
   createMemoryStorage,
   fetchModelList,
+  isQuotaOrRateLimitError,
   requestChatCompletion,
   resolveApiSelection,
 } from "../lib/apiStore.js";
@@ -146,6 +147,12 @@ test("does not retry quota errors on the same API", async () => {
   );
 
   assert.deepEqual(attempts, ["primary:1"]);
+});
+
+test("detects provider quota and rate limit errors", () => {
+  assert.equal(isQuotaOrRateLimitError(new Error("The quota has been exceeded.")), true);
+  assert.equal(isQuotaOrRateLimitError(new Error("rate_limit_exceeded")), true);
+  assert.equal(isQuotaOrRateLimitError(new Error("model unavailable")), false);
 });
 
 test("falls back immediately when primary returns a quota error", async () => {

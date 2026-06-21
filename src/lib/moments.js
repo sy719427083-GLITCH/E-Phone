@@ -76,6 +76,16 @@ export function buildMomentsPrompt({
   ].join("\n");
 }
 
+export function buildTinyMomentPrompt({ author = null, context = "", nowText = "" } = {}) {
+  const role = author || {};
+  return [
+    "只回一句朋友圈，10字以内。",
+    `角色:${role.name || "角色"};${role.identity || ""};${role.personality || ""}`,
+    context ? `参考:${context.slice(0, 36)}` : "",
+    nowText ? `现在:${nowText}` : "",
+  ].filter(Boolean).join("\n");
+}
+
 export function parseMomentPosts(raw, contacts = []) {
   const text = String(raw || "").trim();
   const jsonText = text.match(/```json\s*([\s\S]*?)```/)?.[1] || text.match(/```\s*([\s\S]*?)```/)?.[1] || text;

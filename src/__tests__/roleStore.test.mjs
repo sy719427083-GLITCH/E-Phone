@@ -61,21 +61,3 @@ test("deletes a saved role and persists the list", () => {
   assert.deepEqual(restored.list().map((role) => role.id), [second.id]);
   assert.equal(restored.list()[0].name, "陆斯年");
 });
-
-test("rolls back role saves when browser storage is full", () => {
-  const storage = createMemoryStorage();
-  const store = new RoleStore(storage);
-  const saved = store.save({ ...createRoleDraft(), name: "林月" });
-  storage.setItem = () => {
-    const error = new Error("full");
-    error.name = "QuotaExceededError";
-    throw error;
-  };
-
-  assert.throws(
-    () => store.save({ ...saved, name: "林月改" }),
-    /本地存储空间不足/,
-  );
-
-  assert.equal(store.list()[0].name, "林月");
-});

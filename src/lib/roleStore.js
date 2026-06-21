@@ -40,13 +40,6 @@ function mergeRole(role = {}) {
   return { ...createRoleDraft(), ...role };
 }
 
-function storageError(error) {
-  const reason = error?.name === "QuotaExceededError"
-    ? "浏览器本地存储空间不足，请换小一点的头像或删除旧数据。"
-    : error?.message || "浏览器本地存储写入失败。";
-  return new Error(`保存失败：${reason}`);
-}
-
 export class RoleStore {
   constructor(storage = globalThis.localStorage) {
     this.storage = storage;
@@ -78,35 +71,20 @@ export class RoleStore {
       name: role.name?.trim() || "未命名角色",
     });
     const index = this.roles.findIndex((item) => item.id === next.id);
-    const previousRoles = this.roles;
-    const nextRoles = [...this.roles];
     if (index >= 0) {
-      nextRoles[index] = next;
+      this.roles[index] = next;
     } else {
-      nextRoles.push(next);
+      this.roles.push(next);
     }
-    this.roles = nextRoles;
-    try {
-      this.persist();
-    } catch (error) {
-      this.roles = previousRoles;
-      throw storageError(error);
-    }
+    this.persist();
     return next;
   }
 
   remove(id) {
     const originalLength = this.roles.length;
-    const nextRoles = this.roles.filter((role) => role.id !== id);
-    if (nextRoles.length === originalLength) return false;
-    const previousRoles = this.roles;
-    this.roles = nextRoles;
-    try {
-      this.persist();
-    } catch (error) {
-      this.roles = previousRoles;
-      throw storageError(error);
-    }
+    this.roles = this.roles.filter((role) => role.id !== id);
+    if (this.roles.length === originalLength) return false;
+    this.persist();
     return true;
   }
 }

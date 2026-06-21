@@ -131,13 +131,6 @@ function mergeMomentPost(post = {}) {
   };
 }
 
-function storageError(error) {
-  const reason = error?.name === "QuotaExceededError"
-    ? "浏览器本地存储空间不足，请换小一点的头像或删除旧聊天/朋友圈数据。"
-    : error?.message || "浏览器本地存储写入失败。";
-  return new Error(`保存失败：${reason}`);
-}
-
 export class ChatStore {
   constructor(storage = globalThis.localStorage) {
     this.storage = storage;
@@ -197,75 +190,35 @@ export class ChatStore {
     if (existing) return existing;
 
     const next = createConversationDraft(role);
-    const previousConversations = this.conversations;
-    this.conversations = [...this.conversations, next];
-    try {
-      this.persist();
-    } catch (error) {
-      this.conversations = previousConversations;
-      throw storageError(error);
-    }
+    this.conversations.push(next);
+    this.persist();
     return next;
   }
 
   addMessage(conversationId, message) {
-    const index = this.conversations.findIndex((conversation) => conversation.id === conversationId);
-    const conversation = index >= 0 ? this.conversations[index] : null;
+    const conversation = this.get(conversationId);
     if (!conversation) return null;
 
     const nextMessage = mergeMessage(message);
-    const nextConversation = {
-      ...conversation,
-      messages: [...conversation.messages, nextMessage],
-      updatedAt: nextMessage.createdAt,
-    };
-    const previousConversations = this.conversations;
-    this.conversations = [
-      ...this.conversations.slice(0, index),
-      nextConversation,
-      ...this.conversations.slice(index + 1),
-    ];
-    try {
-      this.persist();
-    } catch (error) {
-      this.conversations = previousConversations;
-      throw storageError(error);
-    }
+    conversation.messages = [...conversation.messages, nextMessage];
+    conversation.updatedAt = nextMessage.createdAt;
+    this.persist();
     return nextMessage;
   }
 
   markRead(conversationId) {
-    const index = this.conversations.findIndex((conversation) => conversation.id === conversationId);
-    const conversation = index >= 0 ? this.conversations[index] : null;
+    const conversation = this.get(conversationId);
     if (!conversation) return null;
-    const nextConversation = { ...conversation, unread: 0 };
-    const previousConversations = this.conversations;
-    this.conversations = [
-      ...this.conversations.slice(0, index),
-      nextConversation,
-      ...this.conversations.slice(index + 1),
-    ];
-    try {
-      this.persist();
-    } catch (error) {
-      this.conversations = previousConversations;
-      throw storageError(error);
-    }
+    conversation.unread = 0;
+    this.persist();
     return conversation;
   }
 
   removeConversation(conversationId) {
     const before = this.conversations.length;
-    const nextConversations = this.conversations.filter((conversation) => conversation.id !== conversationId);
-    if (nextConversations.length === before) return false;
-    const previousConversations = this.conversations;
-    this.conversations = nextConversations;
-    try {
-      this.persist();
-    } catch (error) {
-      this.conversations = previousConversations;
-      throw storageError(error);
-    }
+    this.conversations = this.conversations.filter((conversation) => conversation.id !== conversationId);
+    if (this.conversations.length === before) return false;
+    this.persist();
     return true;
   }
 
@@ -282,14 +235,8 @@ export class ChatStore {
 
   recordContactRequest(role, options) {
     const request = createContactRequest(role, options);
-    const previousRequests = this.contactRequests;
-    this.contactRequests = [...this.contactRequests, request];
-    try {
-      this.persist();
-    } catch (error) {
-      this.contactRequests = previousRequests;
-      throw storageError(error);
-    }
+    this.contactRequests.push(request);
+    this.persist();
     return request;
   }
 
@@ -305,18 +252,10 @@ export class ChatStore {
     }
 
     const contact = createContactDraft(role);
+    this.contacts.push(contact);
     const request = createContactRequest(role, { direction: "outgoing", status: "accepted" });
-    const previousContacts = this.contacts;
-    const previousRequests = this.contactRequests;
-    this.contacts = [...this.contacts, contact];
-    this.contactRequests = [...this.contactRequests, request];
-    try {
-      this.persist();
-    } catch (error) {
-      this.contacts = previousContacts;
-      this.contactRequests = previousRequests;
-      throw storageError(error);
-    }
+    this.contactRequests.push(request);
+    this.persist();
     return { accepted: true, contact, request, alreadyAdded: false };
   }
 
@@ -329,14 +268,8 @@ export class ChatStore {
 
   addMomentPost(post) {
     const next = createMomentPost(post);
-    const previousPosts = this.momentPosts;
-    this.momentPosts = [...this.momentPosts, next];
-    try {
-      this.persist();
-    } catch (error) {
-      this.momentPosts = previousPosts;
-      throw storageError(error);
-    }
+    this.momentPosts.push(next);
+    this.persist();
     return next;
   }
 }

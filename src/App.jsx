@@ -955,40 +955,6 @@ function IdentitiesScreen({ identities, onCreate, onOpenIdentity, onDeleteIdenti
   );
 }
 
-function readFileAsDataUrl(file) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(String(reader.result || ""));
-    reader.onerror = () => reject(new Error("头像读取失败。"));
-    reader.readAsDataURL(file);
-  });
-}
-
-async function compressAvatarFile(file) {
-  const fallback = () => readFileAsDataUrl(file);
-  if (typeof document === "undefined" || typeof createImageBitmap === "undefined") {
-    return fallback();
-  }
-
-  try {
-    const bitmap = await createImageBitmap(file);
-    const maxSize = 480;
-    const ratio = Math.min(1, maxSize / Math.max(bitmap.width, bitmap.height));
-    const width = Math.max(1, Math.round(bitmap.width * ratio));
-    const height = Math.max(1, Math.round(bitmap.height * ratio));
-    const canvas = document.createElement("canvas");
-    canvas.width = width;
-    canvas.height = height;
-    const context = canvas.getContext("2d");
-    if (!context) return fallback();
-    context.drawImage(bitmap, 0, 0, width, height);
-    bitmap.close?.();
-    return canvas.toDataURL("image/jpeg", 0.82);
-  } catch {
-    return fallback();
-  }
-}
-
 function CharacterCreatePage({
   initialRole = null,
   onBack,
@@ -1022,29 +988,18 @@ function CharacterCreatePage({
     }));
   };
 
-  const uploadAvatar = async (event) => {
+  const uploadAvatar = (event) => {
     const file = event.target.files?.[0];
     if (!file) return;
-    setMessage("正在处理头像...");
-    try {
-      const avatar = await compressAvatarFile(file);
-      updateRole("avatar", avatar);
-      setMessage("头像已处理完成。");
-    } catch (error) {
-      setMessage(`头像上传失败：${error.message || "请换一张图片。"}`);
-    } finally {
-      event.target.value = "";
-    }
+    const reader = new FileReader();
+    reader.onload = () => updateRole("avatar", String(reader.result || ""));
+    reader.readAsDataURL(file);
   };
 
   const saveRole = () => {
-    try {
-      const saved = onSave(draft);
-      setDraft(saved);
-      setMessage(`已保存${noun}：${saved.name}`);
-    } catch (error) {
-      setMessage(error.message || `保存${noun}失败。`);
-    }
+    const saved = onSave(draft);
+    setDraft(saved);
+    setMessage(`已保存${noun}：${saved.name}`);
   };
 
   const generateRole = async () => {
@@ -1703,10 +1658,10 @@ export function App() {
           }}
           onCloseChat={() => setSelectedChatId(null)}
           onSendMessage={async (conversationId, text) => {
+            chatStore.addMessage(conversationId, createChatMessage({ role: "user", content: text }));
+            setConversations(chatStore.list());
             setSendingChatId(conversationId);
             try {
-              chatStore.addMessage(conversationId, createChatMessage({ role: "user", content: text }));
-              setConversations(chatStore.list());
               const conversation = chatStore.get(conversationId);
               const config = new ApiConfigStore().getSelected();
               const prompt = buildRoleReplyPrompt(conversation, text);
@@ -1715,18 +1670,14 @@ export function App() {
               );
               chatStore.addMessage(conversationId, createChatMessage({ role: "assistant", content: reply }));
             } catch (error) {
-              try {
-                chatStore.addMessage(
-                  conversationId,
-                  createChatMessage({
-                    role: "assistant",
-                    status: "failed",
-                    content: `发送失败：${error.message || "请检查 API 设置。"}`,
-                  }),
-                );
-              } catch {
-                window.alert(`发送失败：${error.message || "请检查 API 设置或浏览器存储空间。"}`);
-              }
+              chatStore.addMessage(
+                conversationId,
+                createChatMessage({
+                  role: "assistant",
+                  status: "failed",
+                  content: `发送失败：${error.message || "请检查 API 设置。"}`,
+                }),
+              );
             } finally {
               setSendingChatId(null);
               setConversations(chatStore.list());

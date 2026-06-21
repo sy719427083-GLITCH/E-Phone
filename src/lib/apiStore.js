@@ -58,6 +58,10 @@ function apiSignature(api = {}) {
   return [api.apiUrl, api.apiKey, api.model].map((value) => String(value || "").trim()).join("\n");
 }
 
+function hasRunnableApi(api = {}) {
+  return Boolean(api.apiUrl?.trim() && api.apiKey?.trim() && api.model?.trim());
+}
+
 export function resolveApiSelection(config, primaryConfig, secondaryConfig = null) {
   const normalized = mergeConfig(config);
   const selectedPrimary = mergeConfig(primaryConfig || normalized);
@@ -160,6 +164,7 @@ export async function callWithRetryAndFallback(config, requestFn) {
   const canFallbackToSecondary = Boolean(
     normalized.secondaryEnabled !== false
       && normalized.fallbackToSecondary
+      && hasRunnableApi(normalized.secondary)
       && apiSignature(normalized.primary) !== apiSignature(normalized.secondary),
   );
 

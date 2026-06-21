@@ -50,8 +50,8 @@ test("retries the primary API and switches to secondary when enabled", async () 
     ...DEFAULT_CONFIG,
     retryCount: 2,
     fallbackToSecondary: true,
-    primary: { ...DEFAULT_CONFIG.primary, apiUrl: "primary", model: "main" },
-    secondary: { ...DEFAULT_CONFIG.secondary, apiUrl: "secondary", model: "summary" },
+    primary: { ...DEFAULT_CONFIG.primary, apiUrl: "primary", apiKey: "main-key", model: "main" },
+    secondary: { ...DEFAULT_CONFIG.secondary, apiUrl: "secondary", apiKey: "secondary-key", model: "summary" },
   };
 
   const result = await callWithRetryAndFallback(config, async ({ role, attempt, model }) => {
@@ -105,6 +105,27 @@ test("does not fallback when secondary API is disabled", async () => {
   );
 
   assert.deepEqual(attempts, ["primary:1", "primary:2"]);
+});
+
+test("does not fallback to an incomplete secondary API", async () => {
+  const attempts = [];
+  const config = {
+    ...DEFAULT_CONFIG,
+    retryCount: 1,
+    fallbackToSecondary: true,
+    primary: { ...DEFAULT_CONFIG.primary, apiUrl: "primary", apiKey: "main-key", model: "main" },
+    secondary: { ...DEFAULT_CONFIG.secondary },
+  };
+
+  await assert.rejects(
+    () => callWithRetryAndFallback(config, async ({ role }) => {
+      attempts.push(role);
+      throw new Error(`${role} failed`);
+    }),
+    /primary failed/,
+  );
+
+  assert.deepEqual(attempts, ["primary"]);
 });
 
 test("resolves empty or same secondary selection as one global API", () => {

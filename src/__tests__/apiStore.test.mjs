@@ -128,6 +128,46 @@ test("does not fallback to an incomplete secondary API", async () => {
   assert.deepEqual(attempts, ["primary"]);
 });
 
+test("does not retry quota errors on the same API", async () => {
+  const attempts = [];
+  const config = {
+    ...DEFAULT_CONFIG,
+    retryCount: 3,
+    fallbackToSecondary: false,
+    primary: { ...DEFAULT_CONFIG.primary, apiUrl: "primary", apiKey: "main-key", model: "main" },
+  };
+
+  await assert.rejects(
+    () => callWithRetryAndFallback(config, async ({ role, attempt }) => {
+      attempts.push(`${role}:${attempt}`);
+      throw new Error("The quota has been exceeded.");
+    }),
+    /quota/,
+  );
+
+  assert.deepEqual(attempts, ["primary:1"]);
+});
+
+test("falls back immediately when primary returns a quota error", async () => {
+  const attempts = [];
+  const config = {
+    ...DEFAULT_CONFIG,
+    retryCount: 3,
+    fallbackToSecondary: true,
+    primary: { ...DEFAULT_CONFIG.primary, apiUrl: "primary", apiKey: "main-key", model: "main" },
+    secondary: { ...DEFAULT_CONFIG.secondary, apiUrl: "secondary", apiKey: "secondary-key", model: "backup" },
+  };
+
+  const result = await callWithRetryAndFallback(config, async ({ role, attempt }) => {
+    attempts.push(`${role}:${attempt}`);
+    if (role === "primary") throw new Error("The quota has been exceeded.");
+    return "secondary ok";
+  });
+
+  assert.equal(result, "secondary ok");
+  assert.deepEqual(attempts, ["primary:1", "secondary:1"]);
+});
+
 test("resolves empty or same secondary selection as one global API", () => {
   const primaryConfig = {
     ...DEFAULT_CONFIG,
@@ -241,6 +281,25 @@ test("requests a real chat completion payload", async () => {
   assert.equal(request.url, "https://api.example/v1/chat/completions");
   assert.equal(request.options.headers.Authorization, "Bearer secret");
   assert.equal(JSON.parse(request.options.body).model, "gpt-real");
+});
+
+test("includes model and status in API error messages", async () => {
+  await assert.rejects(
+    () => requestChatCompletion(
+      {
+        apiUrl: "https://api.example/v1",
+        apiKey: "secret",
+        model: "gpt-real",
+      },
+      "ping",
+      async () => ({
+        ok: false,
+        status: 429,
+        json: async () => ({ error: { message: "The quota has been exceeded." } }),
+      }),
+    ),
+    /gpt-real.*HTTP 429/,
+  );
 });
 
 test("fetches model ids from an API provider", async () => {

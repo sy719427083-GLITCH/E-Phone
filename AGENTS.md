@@ -39,4 +39,5 @@ Current prototype direction:
 - Moments generation controls should include "纯文字" and "图文"; image-text moments should use existing contact/avatar imagery first and must not trigger an extra image-generation API call unless explicitly requested later.
 - Moments "纯文字" generation should be the lightest possible API call: generate only one post, ask for one plain sentence, avoid JSON formatting, and use a very small max token budget.
 - Moments random generation means a random role/contact posts one moment, excluding the user's own identity. Moment copy may reference that role's recent chat context, today's/current time, schedule, observations, or current mood.
+- API quota/rate-limit errors should not retry the same API repeatedly; if a distinct secondary API exists, fail over once, otherwise show the provider error with model and HTTP status so the user can diagnose the selected model/channel.
 - The bottom navigation labels are "主页", "角色档案", "身份", and "设置"; the tab bar should use borderless glassmorphism with soft translucency instead of solid cards.

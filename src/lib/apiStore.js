@@ -62,6 +62,15 @@ function hasRunnableApi(api = {}) {
   return Boolean(api.apiUrl?.trim() && api.apiKey?.trim() && api.model?.trim());
 }
 
+function isQuotaOrRateLimitError(error) {
+  const message = String(error?.message || "").toLowerCase();
+  return message.includes("quota")
+    || message.includes("rate limit")
+    || message.includes("rate_limit")
+    || message.includes("too many requests")
+    || message.includes("insufficient");
+}
+
 export function resolveApiSelection(config, primaryConfig, secondaryConfig = null) {
   const normalized = mergeConfig(config);
   const selectedPrimary = mergeConfig(primaryConfig || normalized);
@@ -177,6 +186,10 @@ export async function callWithRetryAndFallback(config, requestFn) {
         api: normalized.primary,
       });
     } catch (error) {
+      if (isQuotaOrRateLimitError(error)) {
+        if (!canFallbackToSecondary) throw error;
+        break;
+      }
       if (attempt === primaryAttempts && !canFallbackToSecondary) {
         throw error;
       }
@@ -231,7 +244,9 @@ export async function requestChatCompletion(api, prompt, fetcher = fetch, option
   const payload = await response.json().catch(() => ({}));
   if (!response.ok) {
     const detail = payload?.error?.message || payload?.message || `HTTP ${response.status}`;
-    throw new Error(detail);
+    const status = response.status ? `HTTP ${response.status}` : "HTTP error";
+    const model = api.model?.trim() ? `模型：${api.model.trim()}` : "模型未知";
+    throw new Error(`API返回：${detail}（${model}，${status}）`);
   }
 
   return payload?.choices?.[0]?.message?.content || "连接正常";

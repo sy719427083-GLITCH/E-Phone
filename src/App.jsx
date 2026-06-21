@@ -5,7 +5,6 @@ import {
   DEFAULT_CONFIG,
   describeApiUsage,
   fetchModelList,
-  isQuotaOrRateLimitError,
   requestChatCompletion,
   resolveApiSelection,
 } from "./lib/apiStore.js";
@@ -1717,35 +1716,27 @@ export function App() {
               });
               if (!author) throw new Error("请先在通讯录添加角色。");
               const context = buildMomentContext({ author, conversations });
-              const prompt = buildMomentsPrompt({
-                contacts,
-                mode,
-                postType: normalizedPostType,
-                selectedRoleId: author.id,
-                count,
-                author,
-                context,
-                nowText: `${clock.date} ${clock.time}`,
-              });
-              let reply;
+              const nowText = `${clock.date} ${clock.time}`;
+              const prompt = normalizedPostType === "text"
+                ? buildTinyMomentPrompt({ author, context, nowText })
+                : buildMomentsPrompt({
+                  contacts,
+                  mode,
+                  postType: normalizedPostType,
+                  selectedRoleId: author.id,
+                  count,
+                  author,
+                  context,
+                  nowText,
+                });
+              const maxTokens = normalizedPostType === "text" ? 20 : getMomentMaxTokens(count, normalizedPostType);
+              let reply = "";
               try {
                 reply = await callWithRetryAndFallback(config, ({ api }) =>
-                  requestChatCompletion(api, prompt, fetch, { maxTokens: getMomentMaxTokens(count, normalizedPostType) }),
+                  requestChatCompletion(api, prompt, fetch, { maxTokens }),
                 );
               } catch (error) {
-                if (!isQuotaOrRateLimitError(error) || normalizedPostType !== "text") {
-                  throw new Error(`${error.message || "生成失败"}；${describeApiUsage(config)}`);
-                }
-                try {
-                  reply = await requestChatCompletion(
-                    config.primary,
-                    buildTinyMomentPrompt({ author, context, nowText: `${clock.date} ${clock.time}` }),
-                    fetch,
-                    { maxTokens: 20 },
-                  );
-                } catch (tinyError) {
-                  throw new Error(`${tinyError.message || error.message || "生成失败"}；${describeApiUsage(config)}`);
-                }
+                throw new Error(`${error.message || "生成失败"}；${describeApiUsage(config)}；请求:${normalizedPostType === "text" ? "纯文字极简" : "图文"}`);
               }
               const limit = normalizedPostType === "text" ? 1 : Math.max(1, Math.min(9, Number(count) || 1));
               const generated = parseMomentPosts(reply, [author]).slice(0, limit);

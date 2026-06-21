@@ -18,6 +18,14 @@ export function getMomentRequestDelayMs(index, postType = "text") {
   return Number(index) > 0 ? 1100 : 0;
 }
 
+export function getMomentReplyDelayMs(random = Math.random) {
+  return 1800 + Math.round(Math.max(0, Math.min(1, random())) * 1800);
+}
+
+export function formatMomentReplyText(authorName = "角色", content = "") {
+  return `${authorName || "角色"}回复了我 ${String(content || "").trim()}`;
+}
+
 export function shouldKeepPartialMomentResults(error, generatedCount = 0) {
   const message = String(error?.message || "").toLowerCase();
   const isQuotaLike = message.includes("quota")

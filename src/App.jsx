@@ -14,7 +14,9 @@ import {
   buildMomentContext,
   buildMomentsPrompt,
   buildTinyMomentPrompt,
+  formatMomentReplyText,
   getMomentMaxTokens,
+  getMomentReplyDelayMs,
   getMomentRequestDelayMs,
   normalizeMomentPostType,
   parseMomentPosts,
@@ -795,7 +797,7 @@ function MicroChatMoments({
                       <span>{comment.authorName}：</span>{comment.content}
                       {comment.replies?.map((reply) => (
                         <div className="moment-reply" key={reply.id}>
-                          <span>{reply.authorName}：</span>{reply.content}
+                          {formatMomentReplyText(reply.authorName, reply.content)}
                         </div>
                       ))}
                     </div>
@@ -1985,20 +1987,24 @@ export function App() {
             setMomentPosts(chatStore.listMomentPosts());
             if (!comment || Math.random() >= 0.55) return comment;
 
-            try {
-              const config = new ApiConfigStore().getSelected();
-              const prompt = buildMomentReplyPrompt(post, text);
-              const reply = await callWithRetryAndFallback(config, ({ api }) =>
-                requestChatCompletion(api, prompt, fetch, { maxTokens: 80 }),
-              );
-              chatStore.addMomentReply(post.id, comment.id, {
-                authorName: post.authorName,
-                content: reply.slice(0, 80),
-              });
-              setMomentPosts(chatStore.listMomentPosts());
-            } catch {
-              setMomentPosts(chatStore.listMomentPosts());
-            }
+            window.setTimeout(() => {
+              (async () => {
+                try {
+                  const config = new ApiConfigStore().getSelected();
+                  const prompt = buildMomentReplyPrompt(post, text);
+                  const reply = await callWithRetryAndFallback(config, ({ api }) =>
+                    requestChatCompletion(api, prompt, fetch, { maxTokens: 80 }),
+                  );
+                  chatStore.addMomentReply(post.id, comment.id, {
+                    authorName: post.authorName,
+                    content: reply.slice(0, 80),
+                  });
+                  setMomentPosts(chatStore.listMomentPosts());
+                } catch {
+                  setMomentPosts(chatStore.listMomentPosts());
+                }
+              })();
+            }, getMomentReplyDelayMs());
             return comment;
           }}
           generatingMoments={generatingMoments}

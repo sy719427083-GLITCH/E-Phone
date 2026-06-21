@@ -4,7 +4,9 @@ import {
   buildMomentContext,
   buildMomentsPrompt,
   buildTinyMomentPrompt,
+  formatMomentReplyText,
   getMomentMaxTokens,
+  getMomentReplyDelayMs,
   getMomentRequestDelayMs,
   shouldKeepPartialMomentResults,
   parseMomentPosts,
@@ -30,6 +32,15 @@ test("keeps partial moment results when a later request hits provider quota", ()
   assert.equal(shouldKeepPartialMomentResults(new Error("The quota has been exceeded."), 1), true);
   assert.equal(shouldKeepPartialMomentResults(new Error("The quota has been exceeded."), 0), false);
   assert.equal(shouldKeepPartialMomentResults(new Error("network down"), 1), false);
+});
+
+test("formats role replies to my moment comments", () => {
+  assert.equal(formatMomentReplyText("陆斯年", "刚看到。"), "陆斯年回复了我 刚看到。");
+});
+
+test("delays role replies to comments so they do not feel instant", () => {
+  assert.equal(getMomentReplyDelayMs(() => 0), 1800);
+  assert.equal(getMomentReplyDelayMs(() => 1), 3600);
 });
 
 test("builds a compact moments prompt from added contacts", () => {

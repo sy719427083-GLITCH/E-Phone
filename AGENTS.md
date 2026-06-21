@@ -46,8 +46,9 @@ Current prototype direction:
 - Moments random generation means the user requests random role/contact-generated posts, excluding the user's own identity. Moment copy may reference that role's recent chat context, today's/current time, schedule, observations, or current mood.
 - Moments posts should support lightweight WeChat-like likes and comments. User comments may receive probabilistic API-generated replies from the post author, and these interactions should persist with the post.
 - Moments post actions should use icon-like controls: likes use a heart, comments use a drawn/SVG comment symbol, and the user's Moments profile block should keep the name on the left with the avatar on the right.
+- Moments comment boxes should close immediately after the user sends a comment. Role replies to user comments should arrive after a short delay and display as "角色名回复了我 内容".
 - Role chats should bind the currently selected "me" identity into the conversation prompt so replies can respond to the user's saved identity/profile.
-- The "新的好友" page should use the same back button style as outer app pages.
+- Micro Chat back buttons should use the same round translucent style as the Moments back button.
 - API quota/rate-limit errors should not retry the same API repeatedly; if a distinct secondary API exists, fail over once, otherwise show the provider error with model and HTTP status so the user can diagnose the selected model/channel.
 - Micro Chat friend-request delays should feel quick: proactive incoming requests should appear shortly after opening contacts, and accept/reject/request confirmation waits should be brief rather than multi-second.
 - Micro Chat friend-request waiting states must always resolve with a success, rejection, or visible failure message; never leave "waiting for confirmation" stuck indefinitely.

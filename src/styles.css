@@ -1865,6 +1865,7 @@ button {
   position: relative;
   z-index: 1;
   width: 100%;
+  background: #fff;
   transition: transform 0.18s ease;
 }
 
@@ -1892,7 +1893,7 @@ button {
   min-height: 66px;
   padding: 10px;
   color: #403940;
-  background: rgba(255, 255, 255, 0.92);
+  background: #fff;
   text-align: left;
 }
 

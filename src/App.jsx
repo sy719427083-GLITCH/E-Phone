@@ -1607,8 +1607,19 @@ export function App() {
 
   useEffect(() => {
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register(`${import.meta.env.BASE_URL}sw.js`).catch(() => {});
+      let refreshing = false;
+      const reloadOnUpdate = () => {
+        if (refreshing) return;
+        refreshing = true;
+        window.location.reload();
+      };
+      navigator.serviceWorker.addEventListener("controllerchange", reloadOnUpdate);
+      navigator.serviceWorker.register(`${import.meta.env.BASE_URL}sw.js`)
+        .then((registration) => registration.update().catch(() => {}))
+        .catch(() => {});
+      return () => navigator.serviceWorker.removeEventListener("controllerchange", reloadOnUpdate);
     }
+    return undefined;
   }, []);
 
   const selectedRole = useMemo(() => roles.find((role) => role.id === selectedRoleId) || null, [roles, selectedRoleId]);

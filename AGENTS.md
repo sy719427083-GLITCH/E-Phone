@@ -56,3 +56,5 @@ Current prototype direction:
 - The bottom navigation labels are "主页", "角色档案", "身份", and "设置"; the tab bar should use borderless glassmorphism with soft translucency instead of solid cards.
 
 - On iOS home-screen/standalone PWA, Moments must not run automatic spontaneous background posting; keep API calls tied to explicit user actions there so Safari and PWA behavior do not diverge.
+
+- Moments manual generation should default to 1 post; the 1-5 slider is opt-in so users do not accidentally trigger multiple API calls from one tap, especially in home-screen PWAs.

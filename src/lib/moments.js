@@ -2,6 +2,10 @@ function normalizeMomentCount(count) {
   return Math.max(1, Math.min(5, Number(count) || 1));
 }
 
+export function getDefaultMomentCount() {
+  return 1;
+}
+
 export function normalizeMomentPostType(postType) {
   return postType === "image_text" ? "image_text" : "text";
 }

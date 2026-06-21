@@ -15,6 +15,7 @@ import {
   buildMomentsPrompt,
   buildTinyMomentPrompt,
   formatMomentReplyText,
+  getDefaultMomentCount,
   getMomentMaxTokens,
   getMomentReplyDelayMs,
   getMomentRequestDelayMs,
@@ -703,7 +704,7 @@ function MicroChatMoments({
   const [menuOpen, setMenuOpen] = useState(false);
   const [mode, setMode] = useState("random");
   const [postType, setPostType] = useState("text");
-  const [count, setCount] = useState(3);
+  const [count, setCount] = useState(getDefaultMomentCount);
   const [selectedRoleId, setSelectedRoleId] = useState("");
   const [message, setMessage] = useState("");
   const [commentDrafts, setCommentDrafts] = useState({});

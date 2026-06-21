@@ -28,3 +28,4 @@ Current prototype direction:
 - Do not show a separate role preview page; tapping a role card should open editing directly.
 - Role overview layout, card structure, and density should stay stable; visual updates should be scoped to the role tab only and must not change the identity overview cards.
 - Animated role overview effects should feel fresh and lightweight: floating fine lines, subtle spark points, mist-blue highlights, no heavy saturated pink, and no layout shift.
+- Micro Chat should follow a real WeChat-inspired structure: conversation list, role-based chat entry, single chat thread, local message history, and API-powered role replies while staying in the app's soft pink visual language.

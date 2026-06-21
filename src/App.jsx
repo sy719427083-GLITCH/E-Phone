@@ -7,6 +7,7 @@ import {
   requestChatCompletion,
   resolveApiSelection,
 } from "./lib/apiStore.js";
+import { ChatStore, createChatMessage } from "./lib/chatStore.js";
 import { createIdentityDraft, IdentityStore } from "./lib/identityStore.js";
 import { parseGeneratedRole } from "./lib/roleGenerator.js";
 import { createRoleDraft, RoleStore } from "./lib/roleStore.js";
@@ -160,6 +161,180 @@ function SimplePane({ title }) {
         <div className="mini-mark" />
         <h2>{title}</h2>
         <p>这里会承载对应的 AI 聊天扮演功能页面。</p>
+      </div>
+    </section>
+  );
+}
+
+function formatChatTime(timestamp) {
+  if (!timestamp) return "";
+  const date = new Date(timestamp);
+  return date.toLocaleTimeString("zh-CN", { hour: "2-digit", minute: "2-digit", hour12: false });
+}
+
+function buildRoleReplyPrompt(conversation, userText) {
+  const role = conversation.roleSnapshot || {};
+  const recentMessages = conversation.messages.slice(-8).map((message) => (
+    `${message.role === "user" ? "用户" : role.name || "角色"}：${message.content}`
+  )).join("\n");
+
+  return [
+    "你正在一个中文角色扮演聊天软件里回复用户。请只输出角色要发出的消息，不要解释，不要 Markdown。",
+    `角色姓名：${role.name || conversation.title || "未命名角色"}`,
+    `性别：${role.gender || "未填写"}`,
+    `身份：${role.identity || "未填写"}`,
+    `性格：${role.personality || "未填写"}`,
+    `容貌：${role.appearance || "未填写"}`,
+    `世界观：${role.worldview || "暂无"}`,
+    `人设：${role.persona || "未填写"}`,
+    "回复要求：像微信聊天一样自然，1-3 句为主；可以有情绪和动作暗示，但不要太长。",
+    recentMessages ? `最近聊天：\n${recentMessages}` : "",
+    `用户新消息：${userText}`,
+  ].filter(Boolean).join("\n");
+}
+
+function MicroChatApp({
+  roles,
+  conversations,
+  selectedChatId,
+  onBack,
+  onStartChat,
+  onOpenChat,
+  onCloseChat,
+  onSendMessage,
+  sendingChatId,
+}) {
+  const selectedConversation = conversations.find((conversation) => conversation.id === selectedChatId) || null;
+
+  if (selectedConversation) {
+    return (
+      <ChatThread
+        conversation={selectedConversation}
+        onBack={onCloseChat}
+        onSend={(text) => onSendMessage(selectedConversation.id, text)}
+        sending={sendingChatId === selectedConversation.id}
+      />
+    );
+  }
+
+  return (
+    <section className="page chat-page">
+      <Header title="微聊" onBack={onBack} />
+      <div className="chat-list-shell">
+        <div className="chat-search">搜索</div>
+        <div className="chat-section-title">
+          <b>聊天</b>
+          <span>{conversations.length} 个会话</span>
+        </div>
+        <div className="chat-conversation-list">
+          {conversations.length === 0 ? (
+            <div className="chat-empty">
+              <h2>还没有聊天</h2>
+              <p>选择一个角色，开始第一段微聊。</p>
+            </div>
+          ) : (
+            conversations.map((conversation) => {
+              const lastMessage = conversation.messages.at(-1);
+              return (
+                <button
+                  className="chat-row"
+                  key={conversation.id}
+                  onClick={() => onOpenChat(conversation.id)}
+                >
+                  <ChatAvatar conversation={conversation} />
+                  <span className="chat-row-main">
+                    <b>{conversation.title}</b>
+                    <small>{lastMessage?.content || "还没有消息"}</small>
+                  </span>
+                  <span className="chat-row-side">
+                    <time>{formatChatTime(conversation.updatedAt)}</time>
+                    {conversation.unread ? <em>{conversation.unread}</em> : null}
+                  </span>
+                </button>
+              );
+            })
+          )}
+        </div>
+
+        <div className="chat-section-title role-picker-title">
+          <b>选择角色开聊</b>
+          <span>{roles.length} 个角色</span>
+        </div>
+        <div className="chat-role-grid">
+          {roles.length === 0 ? (
+            <p>先去“角色”里新建角色，再回来微聊。</p>
+          ) : (
+            roles.map((role) => (
+              <button className="chat-role-pill" key={role.id} onClick={() => onStartChat(role)}>
+                <span>{role.avatar ? <img src={role.avatar} alt="" /> : role.name.slice(0, 1) || "角"}</span>
+                <b>{role.name || "未命名角色"}</b>
+              </button>
+            ))
+          )}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function ChatAvatar({ conversation }) {
+  return (
+    <span className="chat-avatar">
+      {conversation.avatar ? (
+        <img src={conversation.avatar} alt="" />
+      ) : (
+        <span>{conversation.title?.slice(0, 1) || "聊"}</span>
+      )}
+    </span>
+  );
+}
+
+function ChatThread({ conversation, onBack, onSend, sending }) {
+  const [text, setText] = useState("");
+
+  const send = () => {
+    const value = text.trim();
+    if (!value || sending) return;
+    setText("");
+    onSend(value);
+  };
+
+  return (
+    <section className="page chat-page chat-thread-page">
+      <Header title={conversation.title} onBack={onBack} />
+      <div className="chat-thread">
+        {conversation.messages.length === 0 ? (
+          <div className="chat-day-tip">你们还没有聊天</div>
+        ) : (
+          conversation.messages.map((message) => (
+            <div className={`message-row ${message.role === "user" ? "from-user" : "from-role"}`} key={message.id}>
+              {message.role !== "user" ? <ChatAvatar conversation={conversation} /> : null}
+              <span className={`message-bubble ${message.status === "failed" ? "failed" : ""}`}>
+                {message.content}
+              </span>
+            </div>
+          ))
+        )}
+        {sending ? (
+          <div className="message-row from-role">
+            <ChatAvatar conversation={conversation} />
+            <span className="message-bubble typing">正在输入...</span>
+          </div>
+        ) : null}
+      </div>
+      <div className="chat-composer">
+        <button aria-label="语音">⌕</button>
+        <input
+          value={text}
+          placeholder="发消息"
+          onChange={(event) => setText(event.target.value)}
+          onKeyDown={(event) => {
+            if (event.key === "Enter") send();
+          }}
+        />
+        <button className="chat-send" onClick={send} disabled={!text.trim() || sending}>
+          发送
+        </button>
       </div>
     </section>
   );
@@ -932,10 +1107,14 @@ export function App() {
   const [identityPage, setIdentityPage] = useState(null);
   const [selectedRoleId, setSelectedRoleId] = useState(null);
   const [selectedIdentityId, setSelectedIdentityId] = useState(null);
+  const [selectedChatId, setSelectedChatId] = useState(null);
+  const [sendingChatId, setSendingChatId] = useState(null);
   const [roleStore] = useState(() => new RoleStore());
   const [identityStore] = useState(() => new IdentityStore());
+  const [chatStore] = useState(() => new ChatStore());
   const [roles, setRoles] = useState(() => roleStore.list());
   const [identities, setIdentities] = useState(() => identityStore.list());
+  const [conversations, setConversations] = useState(() => chatStore.list());
   const clock = useClock();
 
   useEffect(() => {
@@ -950,6 +1129,57 @@ export function App() {
     [identities, selectedIdentityId],
   );
   const content = useMemo(() => {
+    if (appPage?.key === "chat") {
+      return (
+        <MicroChatApp
+          roles={roles}
+          conversations={conversations}
+          selectedChatId={selectedChatId}
+          sendingChatId={sendingChatId}
+          onBack={() => {
+            setSelectedChatId(null);
+            setAppPage(null);
+          }}
+          onStartChat={(role) => {
+            const conversation = chatStore.startConversation(role);
+            setConversations(chatStore.list());
+            setSelectedChatId(conversation.id);
+          }}
+          onOpenChat={(id) => {
+            chatStore.markRead(id);
+            setConversations(chatStore.list());
+            setSelectedChatId(id);
+          }}
+          onCloseChat={() => setSelectedChatId(null)}
+          onSendMessage={async (conversationId, text) => {
+            chatStore.addMessage(conversationId, createChatMessage({ role: "user", content: text }));
+            setConversations(chatStore.list());
+            setSendingChatId(conversationId);
+            try {
+              const conversation = chatStore.get(conversationId);
+              const config = new ApiConfigStore().getSelected();
+              const prompt = buildRoleReplyPrompt(conversation, text);
+              const reply = await callWithRetryAndFallback(config, ({ api }) =>
+                requestChatCompletion(api, prompt, fetch, { maxTokens: 900 }),
+              );
+              chatStore.addMessage(conversationId, createChatMessage({ role: "assistant", content: reply }));
+            } catch (error) {
+              chatStore.addMessage(
+                conversationId,
+                createChatMessage({
+                  role: "assistant",
+                  status: "failed",
+                  content: `发送失败：${error.message || "请检查 API 设置。"}`,
+                }),
+              );
+            } finally {
+              setSendingChatId(null);
+              setConversations(chatStore.list());
+            }
+          }}
+        />
+      );
+    }
     if (appPage) return <SimplePane title={appPage.label} />;
     if (settingPage) return <SettingDetail page={settingPage} onBack={() => setSettingPage(null)} />;
     if (rolePage === "create") {
@@ -1052,17 +1282,21 @@ export function App() {
     return <SimplePane title={tab === "roles" ? "角色" : "我"} />;
   }, [
     appPage,
+    chatStore,
     clock,
+    conversations,
     identities,
     identityPage,
     identityStore,
     rolePage,
     roleStore,
     roles,
+    selectedChatId,
     selectedIdentity,
     selectedIdentityId,
     selectedRole,
     selectedRoleId,
+    sendingChatId,
     settingPage,
     tab,
   ]);
@@ -1073,7 +1307,7 @@ export function App() {
 
   return (
     <main className="screen">
-      {appPage ? (
+      {appPage && appPage.key !== "chat" ? (
         <button className="floating-back" onClick={() => setAppPage(null)}>
           返回
         </button>

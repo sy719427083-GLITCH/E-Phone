@@ -204,6 +204,7 @@ function MicroChatApp({
   onSendMessage,
   sendingChatId,
 }) {
+  const [chatTab, setChatTab] = useState("chats");
   const selectedConversation = conversations.find((conversation) => conversation.id === selectedChatId) || null;
 
   if (selectedConversation) {
@@ -217,63 +218,209 @@ function MicroChatApp({
     );
   }
 
-  return (
-    <section className="page chat-page">
-      <Header title="微聊" onBack={onBack} />
-      <div className="chat-list-shell">
-        <div className="chat-search">搜索</div>
-        <div className="chat-section-title">
-          <b>聊天</b>
-          <span>{conversations.length} 个会话</span>
-        </div>
-        <div className="chat-conversation-list">
-          {conversations.length === 0 ? (
-            <div className="chat-empty">
-              <h2>还没有聊天</h2>
-              <p>选择一个角色，开始第一段微聊。</p>
-            </div>
-          ) : (
-            conversations.map((conversation) => {
-              const lastMessage = conversation.messages.at(-1);
-              return (
-                <button
-                  className="chat-row"
-                  key={conversation.id}
-                  onClick={() => onOpenChat(conversation.id)}
-                >
-                  <ChatAvatar conversation={conversation} />
-                  <span className="chat-row-main">
-                    <b>{conversation.title}</b>
-                    <small>{lastMessage?.content || "还没有消息"}</small>
-                  </span>
-                  <span className="chat-row-side">
-                    <time>{formatChatTime(conversation.updatedAt)}</time>
-                    {conversation.unread ? <em>{conversation.unread}</em> : null}
-                  </span>
-                </button>
-              );
-            })
-          )}
-        </div>
+  const tabTitles = {
+    chats: "微聊",
+    contacts: "通讯录",
+    moments: "朋友圈",
+    settings: "微聊设置",
+  };
 
-        <div className="chat-section-title role-picker-title">
-          <b>选择角色开聊</b>
-          <span>{roles.length} 个角色</span>
-        </div>
-        <div className="chat-role-grid">
-          {roles.length === 0 ? (
-            <p>先去“角色”里新建角色，再回来微聊。</p>
-          ) : (
-            roles.map((role) => (
-              <button className="chat-role-pill" key={role.id} onClick={() => onStartChat(role)}>
-                <span>{role.avatar ? <img src={role.avatar} alt="" /> : role.name.slice(0, 1) || "角"}</span>
-                <b>{role.name || "未命名角色"}</b>
+  return (
+    <section className="page chat-page microchat-shell">
+      <Header title={tabTitles[chatTab]} onBack={onBack} />
+      <div className="microchat-content">
+        {chatTab === "chats" ? (
+          <MicroChatList
+            roles={roles}
+            conversations={conversations}
+            onOpenChat={onOpenChat}
+            onStartChat={onStartChat}
+          />
+        ) : null}
+        {chatTab === "contacts" ? <MicroChatContacts roles={roles} onStartChat={onStartChat} /> : null}
+        {chatTab === "moments" ? <MicroChatMoments roles={roles} /> : null}
+        {chatTab === "settings" ? <MicroChatSettings conversations={conversations} roles={roles} /> : null}
+      </div>
+      <MicroChatTabs active={chatTab} setActive={setChatTab} />
+    </section>
+  );
+}
+
+function MicroChatList({ roles, conversations, onOpenChat, onStartChat }) {
+  return (
+    <div className="chat-list-shell">
+      <div className="chat-search">搜索</div>
+      <div className="chat-section-title">
+        <b>聊天</b>
+        <span>{conversations.length} 个会话</span>
+      </div>
+      <div className="chat-conversation-list">
+        {conversations.length === 0 ? (
+          <div className="chat-empty">
+            <h2>还没有聊天</h2>
+            <p>选择一个角色，开始第一段微聊。</p>
+          </div>
+        ) : (
+          conversations.map((conversation) => {
+            const lastMessage = conversation.messages.at(-1);
+            return (
+              <button
+                className="chat-row"
+                key={conversation.id}
+                onClick={() => onOpenChat(conversation.id)}
+              >
+                <ChatAvatar conversation={conversation} />
+                <span className="chat-row-main">
+                  <b>{conversation.title}</b>
+                  <small>{lastMessage?.content || "还没有消息"}</small>
+                </span>
+                <span className="chat-row-side">
+                  <time>{formatChatTime(conversation.updatedAt)}</time>
+                  {conversation.unread ? <em>{conversation.unread}</em> : null}
+                </span>
               </button>
-            ))
-          )}
+            );
+          })
+        )}
+      </div>
+
+      <div className="chat-section-title role-picker-title">
+        <b>选择角色开聊</b>
+        <span>{roles.length} 个角色</span>
+      </div>
+      <div className="chat-role-grid">
+        {roles.length === 0 ? (
+          <p>先去“角色档案”里新建角色，再回来微聊。</p>
+        ) : (
+          roles.map((role) => (
+            <button className="chat-role-pill" key={role.id} onClick={() => onStartChat(role)}>
+              <span>{role.avatar ? <img src={role.avatar} alt="" /> : role.name.slice(0, 1) || "角"}</span>
+              <b>{role.name || "未命名角色"}</b>
+            </button>
+          ))
+        )}
+      </div>
+    </div>
+  );
+}
+
+function MicroChatContacts({ roles, onStartChat }) {
+  return (
+    <div className="microchat-pane">
+      <div className="chat-search">搜索角色</div>
+      <div className="microchat-feature-list">
+        <div className="microchat-feature-row">
+          <span>新</span>
+          <b>新的朋友</b>
+        </div>
+        <div className="microchat-feature-row">
+          <span>群</span>
+          <b>群聊</b>
         </div>
       </div>
-    </section>
+      <div className="chat-section-title">
+        <b>角色通讯录</b>
+        <span>{roles.length} 个角色</span>
+      </div>
+      <div className="chat-conversation-list contact-list">
+        {roles.length === 0 ? (
+          <div className="chat-empty compact">
+            <h2>还没有联系人</h2>
+            <p>先创建角色档案，角色会出现在通讯录里。</p>
+          </div>
+        ) : (
+          roles.map((role) => (
+            <button className="chat-row" key={role.id} onClick={() => onStartChat(role)}>
+              <ChatAvatar conversation={{ title: role.name || "角色", avatar: role.avatar }} />
+              <span className="chat-row-main">
+                <b>{role.name || "未命名角色"}</b>
+                <small>{role.identity || role.personality || "点击开始聊天"}</small>
+              </span>
+            </button>
+          ))
+        )}
+      </div>
+    </div>
+  );
+}
+
+function MicroChatMoments({ roles }) {
+  return (
+    <div className="microchat-pane moments-pane">
+      <div className="moments-cover">
+        <b>朋友圈</b>
+        <span>角色动态</span>
+      </div>
+      {roles.length === 0 ? (
+        <div className="chat-empty compact">
+          <h2>还没有动态</h2>
+          <p>创建角色后，这里会显示角色朋友圈。</p>
+        </div>
+      ) : (
+        roles.slice(0, 6).map((role) => (
+          <article className="moment-card" key={role.id}>
+            <ChatAvatar conversation={{ title: role.name || "角色", avatar: role.avatar }} />
+            <div>
+              <b>{role.name || "未命名角色"}</b>
+              <p>{role.personality || role.persona || "今天也在等你发来第一条消息。"}</p>
+              <small>{role.identity || "角色档案"} · 刚刚</small>
+            </div>
+          </article>
+        ))
+      )}
+    </div>
+  );
+}
+
+function MicroChatSettings({ conversations, roles }) {
+  return (
+    <div className="microchat-pane">
+      <div className="microchat-profile-card">
+        <span>微</span>
+        <div>
+          <b>微聊</b>
+          <p>{roles.length} 个角色 · {conversations.length} 个会话</p>
+        </div>
+      </div>
+      <div className="microchat-settings-list">
+        <div className="microchat-settings-row">
+          <b>聊天记录</b>
+          <span>本机保存</span>
+        </div>
+        <div className="microchat-settings-row">
+          <b>角色回复</b>
+          <span>使用 API 设置</span>
+        </div>
+        <div className="microchat-settings-row">
+          <b>界面风格</b>
+          <span>粉白玻璃</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function MicroChatTabs({ active, setActive }) {
+  const items = [
+    ["chats", "微聊", "聊"],
+    ["contacts", "通讯录", "录"],
+    ["moments", "朋友圈", "圈"],
+    ["settings", "微聊设置", "设"],
+  ];
+
+  return (
+    <nav className="microchat-tabs" aria-label="微聊导航">
+      {items.map(([key, label, icon]) => (
+        <button
+          key={key}
+          className={active === key ? "active" : ""}
+          onClick={() => setActive(key)}
+        >
+          <span>{icon}</span>
+          <b>{label}</b>
+        </button>
+      ))}
+    </nav>
   );
 }
 

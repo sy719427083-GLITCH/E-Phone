@@ -3,9 +3,10 @@ import test from "node:test";
 import { buildMomentsPrompt, getMomentMaxTokens, parseMomentPosts } from "../lib/moments.js";
 
 test("uses a compact token budget for moments generation", () => {
-  assert.equal(getMomentMaxTokens(1), 180);
-  assert.equal(getMomentMaxTokens(3), 300);
-  assert.equal(getMomentMaxTokens(9), 480);
+  assert.equal(getMomentMaxTokens(1, "text"), 110);
+  assert.equal(getMomentMaxTokens(3, "text"), 170);
+  assert.equal(getMomentMaxTokens(3, "image_text"), 240);
+  assert.equal(getMomentMaxTokens(9, "image_text"), 420);
 });
 
 test("builds a compact moments prompt from added contacts", () => {
@@ -15,14 +16,26 @@ test("builds a compact moments prompt from added contacts", () => {
       { id: "b", name: "沈棠", identity: "旧书店店主", personality: "温柔" },
     ],
     mode: "specified",
+    postType: "text",
     selectedRoleId: "a",
     count: 3,
   });
 
   assert.match(prompt, /只返回 JSON 数组/);
+  assert.match(prompt, /纯文字/);
   assert.match(prompt, /陆斯年/);
   assert.doesNotMatch(prompt, /沈棠/);
   assert.ok(prompt.length < 260);
+});
+
+test("builds an image text moments prompt", () => {
+  const prompt = buildMomentsPrompt({
+    contacts: [{ id: "a", name: "陆斯年", identity: "学生会干部", personality: "外冷内热" }],
+    postType: "image_text",
+    count: 1,
+  });
+
+  assert.match(prompt, /图文/);
 });
 
 test("parses generated moments from json or plain text", () => {

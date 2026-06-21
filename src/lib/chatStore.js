@@ -56,12 +56,14 @@ export function createContactRequest(role, { direction = "outgoing", status = "p
   };
 }
 
-export function createMomentPost({ authorName = "", avatar = "", content = "" } = {}) {
+export function createMomentPost({ authorName = "", avatar = "", content = "", image = "", postType = "text" } = {}) {
   return {
     id: makeChatId("moment"),
     authorName: authorName || "未命名角色",
     avatar: avatar || "",
     content: String(content || ""),
+    image: image || "",
+    postType: postType === "image_text" ? "image_text" : "text",
     createdAt: Date.now(),
   };
 }
@@ -123,6 +125,8 @@ function mergeMomentPost(post = {}) {
     ...post,
     authorName: post.authorName || draft.authorName,
     content: String(post.content || ""),
+    image: post.image || "",
+    postType: post.postType === "image_text" ? "image_text" : "text",
     createdAt: Number(post.createdAt) || Date.now(),
   };
 }

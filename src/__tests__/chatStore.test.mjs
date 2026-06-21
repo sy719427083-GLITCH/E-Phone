@@ -102,11 +102,16 @@ test("saves generated moments posts", () => {
     authorName: "陆斯年",
     avatar: "data:image/png;base64,avatar",
     content: "今天的风很轻。",
+    image: "data:image/png;base64,moment",
+    postType: "image_text",
   });
 
   assert.equal(store.listMomentPosts().length, 1);
   assert.equal(post.content, "今天的风很轻。");
+  assert.equal(post.image, "data:image/png;base64,moment");
+  assert.equal(post.postType, "image_text");
 
   const restored = new ChatStore(storage);
   assert.equal(restored.listMomentPosts()[0].authorName, "陆斯年");
+  assert.equal(restored.listMomentPosts()[0].image, "data:image/png;base64,moment");
 });

@@ -2498,6 +2498,16 @@ button {
   line-height: 1.65;
 }
 
+.moment-post-image {
+  display: block;
+  width: min(128px, 48vw);
+  aspect-ratio: 1;
+  margin-top: 9px;
+  border-radius: 4px;
+  object-fit: cover;
+  background: #f7f1f4;
+}
+
 .moment-post small {
   display: block;
   margin-top: 7px;

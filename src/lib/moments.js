@@ -2,12 +2,20 @@ function normalizeMomentCount(count) {
   return Math.max(1, Math.min(9, Number(count) || 1));
 }
 
-export function getMomentMaxTokens(count) {
-  return Math.min(480, 120 + normalizeMomentCount(count) * 60);
+export function normalizeMomentPostType(postType) {
+  return postType === "image_text" ? "image_text" : "text";
 }
 
-export function buildMomentsPrompt({ contacts = [], mode = "random", selectedRoleId = "", count = 1 } = {}) {
+export function getMomentMaxTokens(count, postType = "text") {
   const limit = normalizeMomentCount(count);
+  return normalizeMomentPostType(postType) === "image_text"
+    ? Math.min(420, 120 + limit * 40)
+    : Math.min(260, 80 + limit * 30);
+}
+
+export function buildMomentsPrompt({ contacts = [], mode = "random", postType = "text", selectedRoleId = "", count = 1 } = {}) {
+  const limit = normalizeMomentCount(count);
+  const normalizedPostType = normalizeMomentPostType(postType);
   const selected = selectedRoleId
     ? contacts.filter((contact) => contact.id === selectedRoleId)
     : contacts.slice(0, 8);
@@ -18,7 +26,7 @@ export function buildMomentsPrompt({ contacts = [], mode = "random", selectedRol
 
   return [
     "为中文角色朋友圈生成动态。只返回 JSON 数组，不要 Markdown。",
-    `条数:${limit};模式:${mode === "specified" ? "指定" : "随机"}`,
+    `条数:${limit};模式:${mode === "specified" ? "指定" : "随机"};类型:${normalizedPostType === "image_text" ? "图文" : "纯文字"}`,
     '格式:[{"authorName":"角色名","content":"朋友圈正文"}]',
     "正文每条1句，生活化，有角色感。",
     `角色:${roleLines || "暂无"}`,

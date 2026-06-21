@@ -9,7 +9,7 @@ import {
 } from "./lib/apiStore.js";
 import { ChatStore, createChatMessage } from "./lib/chatStore.js";
 import { createIdentityDraft, IdentityStore } from "./lib/identityStore.js";
-import { buildMomentsPrompt, getMomentMaxTokens, parseMomentPosts } from "./lib/moments.js";
+import { buildMomentsPrompt, getMomentMaxTokens, normalizeMomentPostType, parseMomentPosts } from "./lib/moments.js";
 import { parseGeneratedRole } from "./lib/roleGenerator.js";
 import { createRoleDraft, RoleStore } from "./lib/roleStore.js";
 
@@ -558,6 +558,7 @@ function MicroChatContacts({
 function MicroChatMoments({ contacts, posts, myProfile, onBack, onGenerate, generating }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [mode, setMode] = useState("random");
+  const [postType, setPostType] = useState("text");
   const [count, setCount] = useState(3);
   const [selectedRoleId, setSelectedRoleId] = useState("");
   const [message, setMessage] = useState("");
@@ -565,7 +566,7 @@ function MicroChatMoments({ contacts, posts, myProfile, onBack, onGenerate, gene
   const generate = async () => {
     setMessage("正在生成动态...");
     try {
-      const result = await onGenerate({ mode, selectedRoleId, count });
+      const result = await onGenerate({ mode, postType, selectedRoleId, count });
       setMessage(result ? `已生成 ${result} 条动态。` : "没有生成到可用动态。");
       if (result) setMenuOpen(false);
     } catch (error) {
@@ -591,6 +592,13 @@ function MicroChatMoments({ contacts, posts, myProfile, onBack, onGenerate, gene
             <select value={mode} onChange={(event) => setMode(event.target.value)}>
               <option value="random">随机</option>
               <option value="specified">指定</option>
+            </select>
+          </label>
+          <label>
+            <span>类型</span>
+            <select value={postType} onChange={(event) => setPostType(event.target.value)}>
+              <option value="text">纯文字</option>
+              <option value="image_text">图文</option>
             </select>
           </label>
           {mode === "specified" ? (
@@ -629,6 +637,9 @@ function MicroChatMoments({ contacts, posts, myProfile, onBack, onGenerate, gene
             <div>
               <b>{post.authorName}</b>
               <p>{post.content}</p>
+              {post.postType === "image_text" && post.image ? (
+                <img className="moment-post-image" src={post.image} alt="" />
+              ) : null}
               <small>刚刚</small>
             </div>
           </article>
@@ -1651,13 +1662,14 @@ export function App() {
               setConversations(chatStore.list());
             }
           }}
-          onGenerateMoments={async ({ mode, selectedRoleId, count }) => {
+          onGenerateMoments={async ({ mode, postType, selectedRoleId, count }) => {
             setGeneratingMoments(true);
             try {
               const config = new ApiConfigStore().getSelected();
-              const prompt = buildMomentsPrompt({ contacts, mode, selectedRoleId, count });
+              const normalizedPostType = normalizeMomentPostType(postType);
+              const prompt = buildMomentsPrompt({ contacts, mode, postType: normalizedPostType, selectedRoleId, count });
               const reply = await callWithRetryAndFallback(config, ({ api }) =>
-                requestChatCompletion(api, prompt, fetch, { maxTokens: getMomentMaxTokens(count) }),
+                requestChatCompletion(api, prompt, fetch, { maxTokens: getMomentMaxTokens(count, normalizedPostType) }),
               );
               const limit = Math.max(1, Math.min(9, Number(count) || 1));
               const generated = parseMomentPosts(reply, contacts).slice(0, limit);
@@ -1669,6 +1681,8 @@ export function App() {
                   authorName: post.authorName || contact.name,
                   avatar: contact.avatar || "",
                   content: post.content,
+                  image: normalizedPostType === "image_text" ? contact.avatar || "" : "",
+                  postType: normalizedPostType,
                 });
               });
               setMomentPosts(chatStore.listMomentPosts());

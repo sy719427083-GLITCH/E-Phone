@@ -150,6 +150,14 @@ export class ChatStore {
     return conversation;
   }
 
+  removeConversation(conversationId) {
+    const before = this.conversations.length;
+    this.conversations = this.conversations.filter((conversation) => conversation.id !== conversationId);
+    if (this.conversations.length === before) return false;
+    this.persist();
+    return true;
+  }
+
   listContacts() {
     return [...this.contacts].sort((a, b) => b.addedAt - a.addedAt);
   }

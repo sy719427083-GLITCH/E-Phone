@@ -46,6 +46,19 @@ test("starts one conversation per role and persists messages", () => {
   assert.equal(restoredConversation.messages[1].content, "晚上好。");
 });
 
+test("removes a conversation and its messages from storage", () => {
+  const storage = createMemoryStorage();
+  const store = new ChatStore(storage);
+  const conversation = store.startConversation(role);
+  store.addMessage(conversation.id, createChatMessage({ role: "user", content: "删除前" }));
+
+  assert.equal(store.removeConversation(conversation.id), true);
+  assert.equal(store.list().length, 0);
+
+  const restored = new ChatStore(storage);
+  assert.equal(restored.get(conversation.id), null);
+});
+
 test("keeps contacts empty until a role accepts the add request", () => {
   const storage = createMemoryStorage();
   const store = new ChatStore(storage);

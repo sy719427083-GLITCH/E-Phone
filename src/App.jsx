@@ -202,6 +202,7 @@ function MicroChatApp({
   onStartChat,
   onAddContact,
   onOpenChat,
+  onDeleteChat,
   onCloseChat,
   onSendMessage,
   sendingChatId,
@@ -232,7 +233,7 @@ function MicroChatApp({
       <Header title={tabTitles[chatTab]} onBack={onBack} />
       <div className="microchat-content">
         {chatTab === "chats" ? (
-          <MicroChatList conversations={conversations} onOpenChat={onOpenChat} />
+          <MicroChatList conversations={conversations} onOpenChat={onOpenChat} onDeleteChat={onDeleteChat} />
         ) : null}
         {chatTab === "contacts" ? (
           <MicroChatContacts
@@ -252,7 +253,7 @@ function MicroChatApp({
   );
 }
 
-function MicroChatList({ conversations, onOpenChat }) {
+function MicroChatList({ conversations, onOpenChat, onDeleteChat }) {
   return (
     <div className="chat-list-shell">
       <div className="chat-search">搜索</div>
@@ -270,26 +271,68 @@ function MicroChatList({ conversations, onOpenChat }) {
           conversations.map((conversation) => {
             const lastMessage = conversation.messages.at(-1);
             return (
-              <button
-                className="chat-row"
+              <SwipeChatRow
+                conversation={conversation}
                 key={conversation.id}
-                onClick={() => onOpenChat(conversation.id)}
-              >
-                <ChatAvatar conversation={conversation} />
-                <span className="chat-row-main">
-                  <b>{conversation.title}</b>
-                  <small>{lastMessage?.content || "还没有消息"}</small>
-                </span>
-                <span className="chat-row-side">
-                  <time>{formatChatTime(conversation.updatedAt)}</time>
-                  {conversation.unread ? <em>{conversation.unread}</em> : null}
-                </span>
-              </button>
+                lastMessage={lastMessage}
+                onOpen={() => onOpenChat(conversation.id)}
+                onDelete={() => onDeleteChat(conversation.id)}
+              />
             );
           })
         )}
       </div>
 
+    </div>
+  );
+}
+
+function SwipeChatRow({ conversation, lastMessage, onOpen, onDelete }) {
+  const [open, setOpen] = useState(false);
+  const startPoint = useRef({ x: 0, y: 0 });
+  const swiped = useRef(false);
+
+  const onPointerDown = (event) => {
+    startPoint.current = { x: event.clientX, y: event.clientY };
+    swiped.current = false;
+  };
+
+  const onPointerUp = (event) => {
+    const deltaX = event.clientX - startPoint.current.x;
+    const deltaY = event.clientY - startPoint.current.y;
+    if (Math.abs(deltaX) < 28 || Math.abs(deltaX) < Math.abs(deltaY)) return;
+    swiped.current = true;
+    if (deltaX < -34) setOpen(true);
+    if (deltaX > 34) setOpen(false);
+  };
+
+  const deleteChat = (event) => {
+    event.stopPropagation();
+    onDelete();
+  };
+
+  return (
+    <div className={`chat-swipe ${open ? "is-open" : ""}`}>
+      <button className="chat-delete-action" type="button" onClick={deleteChat}>删除</button>
+      <button
+        className="chat-row"
+        type="button"
+        onClick={() => {
+          if (!swiped.current) onOpen();
+        }}
+        onPointerDown={onPointerDown}
+        onPointerUp={onPointerUp}
+      >
+        <ChatAvatar conversation={conversation} />
+        <span className="chat-row-main">
+          <b>{conversation.title}</b>
+          <small>{lastMessage?.content || "还没有消息"}</small>
+        </span>
+        <span className="chat-row-side">
+          <time>{formatChatTime(conversation.updatedAt)}</time>
+          {conversation.unread ? <em>{conversation.unread}</em> : null}
+        </span>
+      </button>
     </div>
   );
 }
@@ -471,15 +514,18 @@ function MicroChatIcon({ name }) {
   if (name === "moments") {
     return (
       <svg viewBox="0 0 24 24" aria-hidden="true">
-        <circle cx="12" cy="12" r="4.2" />
-        <path d="M12 2.8v3M12 18.2v3M2.8 12h3M18.2 12h3M5.5 5.5l2.1 2.1M16.4 16.4l2.1 2.1M18.5 5.5l-2.1 2.1M7.6 16.4l-2.1 2.1" />
+        <rect x="4" y="5" width="16" height="14" rx="3.2" />
+        <path d="m7 15 3.2-3.3 2.5 2.4 2.1-2.2L18 15.2" />
+        <circle cx="15.8" cy="9" r="1.2" />
       </svg>
     );
   }
   return (
     <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M12 8.2a3.8 3.8 0 1 0 0 7.6 3.8 3.8 0 0 0 0-7.6Z" />
-      <path d="M19.4 13.5v-3l-2.1-.5a6.1 6.1 0 0 0-.7-1.6l1.1-1.9-2.1-2.1-1.9 1.1c-.5-.3-1-.5-1.6-.7L11.5 2h-3l-.5 2.1c-.6.2-1.1.4-1.6.7L4.5 3.7 2.4 5.8l1.1 1.9c-.3.5-.5 1-.7 1.6L.7 9.8v3l2.1.5c.2.6.4 1.1.7 1.6l-1.1 1.9 2.1 2.1 1.9-1.1c.5.3 1 .5 1.6.7l.5 2.1h3l.5-2.1c.6-.2 1.1-.4 1.6-.7l1.9 1.1 2.1-2.1-1.1-1.9c.3-.5.5-1 .7-1.6l2.2-.8Z" transform="translate(1.95 .7) scale(.84)" />
+      <path d="M5 7h14M5 12h14M5 17h14" />
+      <circle cx="9" cy="7" r="2" />
+      <circle cx="15" cy="12" r="2" />
+      <circle cx="10.8" cy="17" r="2" />
     </svg>
   );
 }
@@ -1363,6 +1409,11 @@ export function App() {
             chatStore.markRead(id);
             setConversations(chatStore.list());
             setSelectedChatId(id);
+          }}
+          onDeleteChat={(id) => {
+            chatStore.removeConversation(id);
+            setConversations(chatStore.list());
+            if (selectedChatId === id) setSelectedChatId(null);
           }}
           onCloseChat={() => setSelectedChatId(null)}
           onSendMessage={async (conversationId, text) => {

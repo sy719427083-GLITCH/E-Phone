@@ -62,6 +62,23 @@ function hasRunnableApi(api = {}) {
   return Boolean(api.apiUrl?.trim() && api.apiKey?.trim() && api.model?.trim());
 }
 
+function apiHost(apiUrl = "") {
+  try {
+    return new URL(apiUrl).host || "地址未填";
+  } catch {
+    return String(apiUrl || "地址未填").replace(/^https?:\/\//, "").split("/")[0] || "地址未填";
+  }
+}
+
+export function describeApiUsage(config = {}) {
+  const normalized = mergeConfig(config);
+  return [
+    `配置:${normalized.name || "未命名"}`,
+    `模型:${normalized.primary.model || "未填"}`,
+    `地址:${apiHost(normalized.primary.apiUrl)}`,
+  ].join("，");
+}
+
 export function isQuotaOrRateLimitError(error) {
   const message = String(error?.message || "").toLowerCase();
   return message.includes("quota")

@@ -3,6 +3,7 @@ import {
   ApiConfigStore,
   callWithRetryAndFallback,
   DEFAULT_CONFIG,
+  describeApiUsage,
   fetchModelList,
   isQuotaOrRateLimitError,
   requestChatCompletion,
@@ -1315,7 +1316,15 @@ function ApiSettings({ onBack }) {
     setMessage("正在测试 API...");
     try {
       await requestChatCompletion(config[section], "请用四个字回复：连接正常");
-      setMessage("API连接成功。");
+      if (section === "primary" && config.primary.name?.trim()) {
+        const saved = store.save({ ...config, name: config.primary.name.trim() });
+        setConfig(saved);
+        setPrimaryConfigId(saved.id);
+        setSecondaryConfigId(saved.secondaryConfigId || "");
+        setMessage("API连接成功，已自动保存。");
+        return;
+      }
+      setMessage(section === "primary" ? "API连接成功。请填写名称并保存后用于生成。" : "API连接成功。");
     } catch (error) {
       setMessage(`API连接失败：${error.message || "请检查地址、Key 和模型。"}`);
     }
@@ -1724,13 +1733,19 @@ export function App() {
                   requestChatCompletion(api, prompt, fetch, { maxTokens: getMomentMaxTokens(count, normalizedPostType) }),
                 );
               } catch (error) {
-                if (!isQuotaOrRateLimitError(error) || normalizedPostType !== "text") throw error;
-                reply = await requestChatCompletion(
-                  config.primary,
-                  buildTinyMomentPrompt({ author, context, nowText: `${clock.date} ${clock.time}` }),
-                  fetch,
-                  { maxTokens: 20 },
-                );
+                if (!isQuotaOrRateLimitError(error) || normalizedPostType !== "text") {
+                  throw new Error(`${error.message || "生成失败"}；${describeApiUsage(config)}`);
+                }
+                try {
+                  reply = await requestChatCompletion(
+                    config.primary,
+                    buildTinyMomentPrompt({ author, context, nowText: `${clock.date} ${clock.time}` }),
+                    fetch,
+                    { maxTokens: 20 },
+                  );
+                } catch (tinyError) {
+                  throw new Error(`${tinyError.message || error.message || "生成失败"}；${describeApiUsage(config)}`);
+                }
               }
               const limit = normalizedPostType === "text" ? 1 : Math.max(1, Math.min(9, Number(count) || 1));
               const generated = parseMomentPosts(reply, [author]).slice(0, limit);

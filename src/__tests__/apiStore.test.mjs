@@ -6,6 +6,7 @@ import {
   buildApiUrl,
   callWithRetryAndFallback,
   createMemoryStorage,
+  describeApiUsage,
   fetchModelList,
   isQuotaOrRateLimitError,
   requestChatCompletion,
@@ -43,6 +44,22 @@ test("deletes a config and falls back to a default editable config", () => {
 
   assert.equal(store.list().length, 0);
   assert.equal(store.getSelected().name, DEFAULT_CONFIG.name);
+});
+
+test("describes selected API without leaking the key", () => {
+  const description = describeApiUsage({
+    name: "主线",
+    primary: {
+      apiUrl: "https://api.example.com/v1",
+      apiKey: "secret-key",
+      model: "gpt-main",
+    },
+  });
+
+  assert.match(description, /主线/);
+  assert.match(description, /gpt-main/);
+  assert.match(description, /api.example.com/);
+  assert.doesNotMatch(description, /secret-key/);
 });
 
 test("retries the primary API and switches to secondary when enabled", async () => {

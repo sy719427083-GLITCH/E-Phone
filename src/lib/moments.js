@@ -10,21 +10,49 @@ export function getMomentMaxTokens(count, postType = "text") {
   const limit = normalizeMomentCount(count);
   return normalizeMomentPostType(postType) === "image_text"
     ? Math.min(420, 120 + limit * 40)
-    : 60;
+    : Math.min(260, 60 + (limit - 1) * 40);
 }
 
-export function pickMomentAuthor({ contacts = [], selectedRoleId = "", myProfile = null, random = Math.random } = {}) {
-  const filtered = contacts.filter((contact) => {
+function getMomentCandidates(contacts = [], myProfile = null) {
+  return contacts.filter((contact) => {
     const isMeById = myProfile?.id && contact.id === myProfile.id;
     const isMeByName = myProfile?.name && contact.name === myProfile.name;
     return !isMeById && !isMeByName;
   });
+}
+
+export function pickMomentAuthor({ contacts = [], selectedRoleId = "", myProfile = null, random = Math.random } = {}) {
+  const filtered = getMomentCandidates(contacts, myProfile);
   if (selectedRoleId) {
     return filtered.find((contact) => contact.id === selectedRoleId) || null;
   }
   if (filtered.length === 0) return null;
   const index = Math.min(filtered.length - 1, Math.floor(random() * filtered.length));
   return filtered[index];
+}
+
+export function pickMomentAuthors({
+  contacts = [],
+  selectedRoleId = "",
+  count = 1,
+  myProfile = null,
+  random = null,
+} = {}) {
+  const limit = normalizeMomentCount(count);
+  const filtered = getMomentCandidates(contacts, myProfile);
+  if (selectedRoleId) {
+    const selected = filtered.find((contact) => contact.id === selectedRoleId);
+    return selected ? Array.from({ length: limit }, () => selected) : [];
+  }
+  if (filtered.length === 0) return [];
+
+  return Array.from({ length: limit }, (_, index) => {
+    if (typeof random === "function") {
+      const randomIndex = Math.min(filtered.length - 1, Math.floor(random() * filtered.length));
+      return filtered[randomIndex];
+    }
+    return filtered[index % filtered.length];
+  });
 }
 
 export function buildMomentContext({ author = null, conversations = [] } = {}) {
@@ -58,6 +86,17 @@ export function buildMomentsPrompt({
 
   if (normalizedPostType === "text") {
     const contact = author || roster[0] || {};
+    if (limit > 1) {
+      return [
+        "为中文角色朋友圈生成动态。只返回 JSON 数组，不要 Markdown。",
+        `条数:${limit};模式:${mode === "specified" ? "指定" : "随机"};类型:纯文字`,
+        '格式:[{"authorName":"角色名","content":"朋友圈正文"}]',
+        "每条只写一句，像真实朋友圈，可以像角色自发发布，内容可结合聊天、当天行程、所见所得或此刻心情。",
+        `现在:${nowText || "当前时间"}`,
+        context ? `聊天内容:${context}` : "",
+        `角色:${roleLines || `${contact.name || "角色"}:${contact.identity || "身份未填"};${contact.personality || "性格未填"}`}`,
+      ].filter(Boolean).join("\n");
+    }
     return [
       "只回一句朋友圈正文，不要解释。",
       "类型:纯文字",

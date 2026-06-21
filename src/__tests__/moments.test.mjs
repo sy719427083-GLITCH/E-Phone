@@ -7,11 +7,12 @@ import {
   getMomentMaxTokens,
   parseMomentPosts,
   pickMomentAuthor,
+  pickMomentAuthors,
 } from "../lib/moments.js";
 
 test("uses a compact token budget for moments generation", () => {
   assert.equal(getMomentMaxTokens(1, "text"), 60);
-  assert.equal(getMomentMaxTokens(3, "text"), 60);
+  assert.equal(getMomentMaxTokens(3, "text"), 140);
   assert.equal(getMomentMaxTokens(3, "image_text"), 240);
   assert.equal(getMomentMaxTokens(9, "image_text"), 420);
 });
@@ -25,7 +26,7 @@ test("builds a compact moments prompt from added contacts", () => {
     mode: "specified",
     postType: "text",
     selectedRoleId: "a",
-    count: 3,
+    count: 1,
     context: "昨天聊到天台和钢琴。",
     nowText: "6月21日 17:30",
   });
@@ -37,7 +38,27 @@ test("builds a compact moments prompt from added contacts", () => {
   assert.match(prompt, /聊天内容|今天|现在/);
   assert.match(prompt, /昨天聊到天台和钢琴/);
   assert.doesNotMatch(prompt, /沈棠/);
-  assert.ok(prompt.length < 240);
+  assert.ok(prompt.length < 360);
+});
+
+test("builds a multi-post text prompt when more than one moment is requested", () => {
+  const prompt = buildMomentsPrompt({
+    contacts: [
+      { id: "a", name: "陆斯年", identity: "学生会干部", personality: "外冷内热" },
+      { id: "b", name: "沈棠", identity: "旧书店店主", personality: "温柔" },
+    ],
+    mode: "random",
+    postType: "text",
+    count: 3,
+    nowText: "6月21日 20:30",
+  });
+
+  assert.match(prompt, /只返回 JSON 数组/);
+  assert.match(prompt, /条数:3/);
+  assert.match(prompt, /纯文字/);
+  assert.match(prompt, /陆斯年/);
+  assert.match(prompt, /沈棠/);
+  assert.match(prompt, /可以像角色自发发布/);
 });
 
 test("builds an ultra tiny fallback prompt for text moments", () => {
@@ -64,6 +85,20 @@ test("picks a moment author from roles without using my profile", () => {
   });
 
   assert.equal(author.name, "陆斯年");
+});
+
+test("picks multiple moment authors from added roles without my profile", () => {
+  const authors = pickMomentAuthors({
+    contacts: [
+      { id: "me", name: "我" },
+      { id: "a", name: "陆斯年" },
+      { id: "b", name: "沈棠" },
+    ],
+    count: 3,
+    myProfile: { id: "me", name: "我" },
+  });
+
+  assert.deepEqual(authors.map((author) => author.name), ["陆斯年", "沈棠", "陆斯年"]);
 });
 
 test("builds moment context from role conversation", () => {

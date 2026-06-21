@@ -18,6 +18,7 @@ import {
   normalizeMomentPostType,
   parseMomentPosts,
   pickMomentAuthor,
+  pickMomentAuthors,
 } from "./lib/moments.js";
 import { parseGeneratedRole } from "./lib/roleGenerator.js";
 import { createRoleDraft, RoleStore } from "./lib/roleStore.js";
@@ -1709,7 +1710,14 @@ export function App() {
             try {
               const config = new ApiConfigStore().getSelected();
               const normalizedPostType = normalizeMomentPostType(postType);
-              const author = pickMomentAuthor({
+              const limit = Math.max(1, Math.min(9, Number(count) || 1));
+              const authors = pickMomentAuthors({
+                contacts,
+                selectedRoleId,
+                count: limit,
+                myProfile: identities[0] || null,
+              });
+              const author = authors[0] || pickMomentAuthor({
                 contacts,
                 selectedRoleId,
                 myProfile: identities[0] || null,
@@ -1717,19 +1725,20 @@ export function App() {
               if (!author) throw new Error("请先在通讯录添加角色。");
               const context = buildMomentContext({ author, conversations });
               const nowText = `${clock.date} ${clock.time}`;
-              const prompt = normalizedPostType === "text"
+              const useTinyTextPrompt = normalizedPostType === "text" && limit === 1;
+              const prompt = useTinyTextPrompt
                 ? buildTinyMomentPrompt({ author, context, nowText })
                 : buildMomentsPrompt({
-                  contacts,
+                  contacts: authors.length > 0 ? authors : contacts,
                   mode,
                   postType: normalizedPostType,
-                  selectedRoleId: author.id,
-                  count,
-                  author,
+                  selectedRoleId,
+                  count: limit,
+                  author: selectedRoleId ? author : null,
                   context,
                   nowText,
                 });
-              const maxTokens = normalizedPostType === "text" ? 60 : getMomentMaxTokens(count, normalizedPostType);
+              const maxTokens = useTinyTextPrompt ? 60 : getMomentMaxTokens(limit, normalizedPostType);
               let reply = "";
               try {
                 reply = await callWithRetryAndFallback(config, ({ api }) =>
@@ -1738,14 +1747,16 @@ export function App() {
               } catch (error) {
                 throw new Error(`${error.message || "生成失败"}；${describeApiUsage(config)}；请求:${normalizedPostType === "text" ? "纯文字极简" : "图文"}`);
               }
-              const limit = normalizedPostType === "text" ? 1 : Math.max(1, Math.min(9, Number(count) || 1));
-              const generated = parseMomentPosts(reply, [author]).slice(0, limit);
-              generated.forEach((post) => {
+              const generated = parseMomentPosts(reply, authors.length > 0 ? authors : [author]).slice(0, limit);
+              generated.forEach((post, index) => {
+                const matchedAuthor = contacts.find((contact) => contact.name === post.authorName)
+                  || authors[index % Math.max(authors.length, 1)]
+                  || author;
                 chatStore.addMomentPost({
-                  authorName: post.authorName || author.name,
-                  avatar: author.avatar || "",
+                  authorName: post.authorName || matchedAuthor.name,
+                  avatar: matchedAuthor.avatar || "",
                   content: post.content,
-                  image: normalizedPostType === "image_text" ? author.avatar || "" : "",
+                  image: normalizedPostType === "image_text" ? matchedAuthor.avatar || "" : "",
                   postType: normalizedPostType,
                 });
               });

@@ -390,6 +390,7 @@ function MicroChatContacts({
   const [incomingBusy, setIncomingBusy] = useState(false);
   const contactIds = new Set(contacts.map((contact) => contact.id));
   const availableRoles = roles.filter((role) => !contactIds.has(role.id));
+  const wait = (ms) => new Promise((resolve) => window.setTimeout(resolve, ms));
 
   useEffect(() => {
     if (availableRoles.length === 0 || incomingRole) return undefined;
@@ -403,42 +404,55 @@ function MicroChatContacts({
     return () => window.clearTimeout(timer);
   }, [availableRoles.length, incomingRole]);
 
-  const requestAdd = (role) => {
+  const requestAdd = async (role) => {
     if (pendingRoleId) return;
-    setPendingRoleId(role.id);
+    const roleKey = role.id || role.name || "pending-role";
+    setPendingRoleId(roleKey);
     setMessage(`正在等待${role.name || "对方"}确认...`);
-    window.setTimeout(() => {
+    try {
+      await wait(350);
       const result = onAddContact(role);
       setMessage(result.accepted
         ? `${role.name || "角色"}已通过你的好友申请。`
         : result.reason || `${role.name || "角色"}拒绝了你的添加请求。`);
-      setPendingRoleId("");
       if (result.accepted) setAdding(false);
-    }, 650);
+    } catch (error) {
+      setMessage(`添加失败：${error.message || "请稍后再试。"}`);
+    } finally {
+      setPendingRoleId("");
+    }
   };
 
-  const acceptIncoming = () => {
+  const acceptIncoming = async () => {
     if (!incomingRole || incomingBusy) return;
     setIncomingBusy(true);
     setMessage(`正在通过${incomingRole.name || "对方"}的好友申请...`);
-    window.setTimeout(() => {
+    try {
+      await wait(350);
       onAddContact(incomingRole, () => 1);
       setMessage(`你已添加${incomingRole.name || "角色"}。`);
       setIncomingRole(null);
+    } catch (error) {
+      setMessage(`添加失败：${error.message || "请稍后再试。"}`);
+    } finally {
       setIncomingBusy(false);
-    }, 350);
+    }
   };
 
-  const rejectIncoming = () => {
+  const rejectIncoming = async () => {
     if (!incomingRole || incomingBusy) return;
     setIncomingBusy(true);
     setMessage(`正在处理${incomingRole.name || "对方"}的好友申请...`);
-    window.setTimeout(() => {
+    try {
+      await wait(350);
       onRecordContactRequest(incomingRole, { direction: "incoming", status: "rejected" });
       setMessage(`已拒绝${incomingRole.name || "角色"}的好友申请。`);
       setIncomingRole(null);
+    } catch (error) {
+      setMessage(`处理失败：${error.message || "请稍后再试。"}`);
+    } finally {
       setIncomingBusy(false);
-    }, 350);
+    }
   };
 
   if (page === "newFriends") {
@@ -525,9 +539,9 @@ function MicroChatContacts({
                 <ChatAvatar conversation={{ title: role.name || "角色", avatar: role.avatar }} />
                 <span className="chat-row-main">
                   <b>{role.name || "未命名角色"}</b>
-                  <small>{pendingRoleId === role.id ? "等待对方确认..." : role.identity || role.personality || "发送好友申请"}</small>
+                  <small>{pendingRoleId === (role.id || role.name || "pending-role") ? "等待对方确认..." : role.identity || role.personality || "发送好友申请"}</small>
                 </span>
-                <span className="contact-apply">{pendingRoleId === role.id ? "等待" : "申请"}</span>
+                <span className="contact-apply">{pendingRoleId === (role.id || role.name || "pending-role") ? "等待" : "申请"}</span>
               </button>
             ))
           )}

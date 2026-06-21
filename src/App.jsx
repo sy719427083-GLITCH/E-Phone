@@ -25,6 +25,7 @@ import {
 } from "./lib/moments.js";
 import { parseGeneratedRole } from "./lib/roleGenerator.js";
 import { createRoleDraft, RoleStore } from "./lib/roleStore.js";
+import { APP_VERSION } from "./lib/appVersion.js";
 
 const assetPath = (path) => `${import.meta.env.BASE_URL}${path.replace(/^\/+/, "")}`;
 
@@ -1787,6 +1788,12 @@ export function App() {
   const clock = useClock();
 
   useEffect(() => {
+    const currentUrl = new URL(window.location.href);
+    if (currentUrl.searchParams.get("v") !== APP_VERSION) {
+      currentUrl.searchParams.set("v", APP_VERSION);
+      window.history.replaceState(null, "", currentUrl);
+    }
+
     if ("serviceWorker" in navigator) {
       let refreshing = false;
       const reloadOnUpdate = () => {
@@ -1795,7 +1802,7 @@ export function App() {
         window.location.reload();
       };
       navigator.serviceWorker.addEventListener("controllerchange", reloadOnUpdate);
-      navigator.serviceWorker.register(`${import.meta.env.BASE_URL}sw.js`)
+      navigator.serviceWorker.register(`${import.meta.env.BASE_URL}sw.js?v=${APP_VERSION}`)
         .then((registration) => registration.update().catch(() => {}))
         .catch(() => {});
       return () => navigator.serviceWorker.removeEventListener("controllerchange", reloadOnUpdate);

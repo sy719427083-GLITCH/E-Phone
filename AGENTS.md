@@ -37,4 +37,5 @@ Current prototype direction:
 - Moments specified generation must choose only from already-added contacts, and generated moments should be real API-generated posts that are saved and shown in the feed.
 - Moments generation should use compact prompts and a modest token budget so it behaves closer to chat requests and avoids triggering provider quota checks from an oversized max_tokens value.
 - Moments generation controls should include "纯文字" and "图文"; image-text moments should use existing contact/avatar imagery first and must not trigger an extra image-generation API call unless explicitly requested later.
+- Moments "纯文字" generation should be the lightest possible API call: generate only one post, ask for one plain sentence, avoid JSON formatting, and use a very small max token budget.
 - The bottom navigation labels are "主页", "角色档案", "身份", and "设置"; the tab bar should use borderless glassmorphism with soft translucency instead of solid cards.

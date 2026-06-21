@@ -1671,7 +1671,7 @@ export function App() {
               const reply = await callWithRetryAndFallback(config, ({ api }) =>
                 requestChatCompletion(api, prompt, fetch, { maxTokens: getMomentMaxTokens(count, normalizedPostType) }),
               );
-              const limit = Math.max(1, Math.min(9, Number(count) || 1));
+              const limit = normalizedPostType === "text" ? 1 : Math.max(1, Math.min(9, Number(count) || 1));
               const generated = parseMomentPosts(reply, contacts).slice(0, limit);
               generated.forEach((post) => {
                 const contact = contacts.find((item) => item.name === post.authorName)

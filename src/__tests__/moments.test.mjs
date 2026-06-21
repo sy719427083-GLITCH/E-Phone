@@ -3,8 +3,8 @@ import test from "node:test";
 import { buildMomentsPrompt, getMomentMaxTokens, parseMomentPosts } from "../lib/moments.js";
 
 test("uses a compact token budget for moments generation", () => {
-  assert.equal(getMomentMaxTokens(1, "text"), 110);
-  assert.equal(getMomentMaxTokens(3, "text"), 170);
+  assert.equal(getMomentMaxTokens(1, "text"), 60);
+  assert.equal(getMomentMaxTokens(3, "text"), 60);
   assert.equal(getMomentMaxTokens(3, "image_text"), 240);
   assert.equal(getMomentMaxTokens(9, "image_text"), 420);
 });
@@ -21,11 +21,12 @@ test("builds a compact moments prompt from added contacts", () => {
     count: 3,
   });
 
-  assert.match(prompt, /只返回 JSON 数组/);
+  assert.match(prompt, /只回一句朋友圈正文/);
+  assert.doesNotMatch(prompt, /JSON/);
   assert.match(prompt, /纯文字/);
   assert.match(prompt, /陆斯年/);
   assert.doesNotMatch(prompt, /沈棠/);
-  assert.ok(prompt.length < 260);
+  assert.ok(prompt.length < 150);
 });
 
 test("builds an image text moments prompt", () => {

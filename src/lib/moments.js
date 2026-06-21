@@ -10,7 +10,7 @@ export function getMomentMaxTokens(count, postType = "text") {
   const limit = normalizeMomentCount(count);
   return normalizeMomentPostType(postType) === "image_text"
     ? Math.min(420, 120 + limit * 40)
-    : Math.min(260, 80 + limit * 30);
+    : 60;
 }
 
 export function buildMomentsPrompt({ contacts = [], mode = "random", postType = "text", selectedRoleId = "", count = 1 } = {}) {
@@ -23,6 +23,15 @@ export function buildMomentsPrompt({ contacts = [], mode = "random", postType = 
   const roleLines = roster.map((contact) => (
     `${contact.name || "未命名"}:${contact.identity || "身份未填"};${contact.personality || "性格未填"}`
   )).join("|");
+
+  if (normalizedPostType === "text") {
+    const contact = roster[0] || {};
+    return [
+      "只回一句朋友圈正文，不要解释。",
+      "类型:纯文字",
+      `角色:${contact.name || "角色"};${contact.identity || "身份未填"};${contact.personality || "性格未填"}`,
+    ].join("\n");
+  }
 
   return [
     "为中文角色朋友圈生成动态。只返回 JSON 数组，不要 Markdown。",

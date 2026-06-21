@@ -2,15 +2,16 @@
   "name": "E-Phone AI Roleplay",
   "short_name": "E-Phone",
   "description": "粉色 iOS 风 AI 聊天扮演 PWA",
-  "start_url": "./",
-  "scope": "./",
+  "id": "/E-Phone/",
+  "start_url": "/E-Phone/?v=pwa-start-v26",
+  "scope": "/E-Phone/",
   "display": "standalone",
   "background_color": "#fff8fa",
   "theme_color": "#fff8fa",
   "orientation": "portrait",
   "icons": [
     {
-      "src": "assets/pwa-icon.svg",
+      "src": "/E-Phone/assets/pwa-icon.svg",
       "sizes": "any",
       "type": "image/svg+xml",
       "purpose": "any maskable"

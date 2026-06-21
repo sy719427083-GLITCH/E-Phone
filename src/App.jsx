@@ -513,51 +513,6 @@ function CharacterCreatePage({
   );
 }
 
-function RoleDetailPage({ role, onBack, onEdit }) {
-  if (!role) {
-    return (
-      <section className="page detail-page">
-        <Header title="角色详情" onBack={onBack} />
-        <div className="empty-state compact-empty">
-          <div className="mini-mark" />
-          <h2>角色不存在</h2>
-          <p>这个角色可能已经被删除或数据已刷新。</p>
-        </div>
-      </section>
-    );
-  }
-
-  const detailRows = [
-    ["姓名", role.name || "未命名角色"],
-    ["性别", role.gender || "未填写"],
-    ["身份", role.identity || "未填写"],
-    ["关联世界观", role.worldview || "暂无"],
-    ["性格", role.personality || "未填写"],
-    ["容貌", role.appearance || "未填写"],
-    ["人设", role.persona || "未填写"],
-  ];
-
-  return (
-    <section className="page detail-page character-page role-detail-page">
-      <Header
-        title="角色预览"
-        onBack={onBack}
-        action={<button className="role-edit-button" onClick={onEdit}>编辑</button>}
-      />
-      <div className="role-detail-panel settings-group role-form-card">
-        <div className="role-detail-list">
-          {detailRows.map(([label, value]) => (
-            <article className="role-detail-card" key={label}>
-              <span>{label}</span>
-              <p>{value}</p>
-            </article>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
-
 function Header({ title, onBack, action = null }) {
   return (
     <header className="topbar">
@@ -1010,28 +965,18 @@ export function App() {
         />
       );
     }
-    if (rolePage === "detail") {
-      return (
-        <RoleDetailPage
-          role={selectedRole}
-          onBack={() => {
-            setRolePage(null);
-            setSelectedRoleId(null);
-          }}
-          onEdit={() => setRolePage("edit")}
-        />
-      );
-    }
     if (rolePage === "edit") {
       return (
         <CharacterCreatePage
           initialRole={selectedRole}
-          onBack={() => setRolePage("detail")}
+          onBack={() => {
+            setRolePage(null);
+            setSelectedRoleId(null);
+          }}
           onSave={(draft) => {
             const saved = roleStore.save(draft);
             setRoles(roleStore.list());
             setSelectedRoleId(saved.id);
-            setRolePage("detail");
             return saved;
           }}
         />
@@ -1077,7 +1022,7 @@ export function App() {
           onCreate={() => setRolePage("create")}
           onOpenRole={(id) => {
             setSelectedRoleId(id);
-            setRolePage("detail");
+            setRolePage("edit");
           }}
           onDeleteRole={(id) => {
             roleStore.remove(id);

@@ -24,4 +24,5 @@ Current prototype direction:
 - Form control text inside role and API input boxes should stay small and delicate; placeholder text should be smaller than entered text.
 - API settings content should sit with extra top breathing room below the page header.
 - The "me" tab should support identity profiles: new/edit identity uses the same form structure and interaction style as new/edit role, but identities have separate storage and a separately drawn low-saturation pink background.
-- New/edit identity wallpaper should be very pale and low-saturation; use a separate PNG kitten overlay that appears to lie on the top edge of the name/gender form card.
+- New/edit identity wallpaper should be very pale and low-saturation; use a separate PNG kitten overlay that clearly lies on the top edge of the name/gender form card.
+- Do not show a separate role preview page; tapping a role card should open editing directly.

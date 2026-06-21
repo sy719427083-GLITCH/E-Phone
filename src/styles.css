@@ -1458,11 +1458,11 @@ button {
 }
 
 .identity-create-page .role-form-stack {
-  padding-top: 26px;
+  padding-top: 34px;
 }
 
 .identity-form-cat {
-  top: -54px;
+  top: -40px;
   right: 18px;
   width: clamp(154px, 49vw, 204px);
   z-index: 5;

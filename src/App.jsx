@@ -51,6 +51,14 @@ function withMomentDiagnostics(error, requestLabel = "朋友圈") {
   return `${message}${requestInfo}${runtimeInfo}`;
 }
 
+function withApiDiagnostics(error, config, requestLabel = "朋友圈") {
+  const message = error?.message || "生成失败";
+  const apiInfo = message.includes("配置:") ? "" : `；${describeApiUsage(config)}`;
+  const requestInfo = message.includes("请求:") ? "" : `；请求:${requestLabel}`;
+  const runtimeInfo = message.includes("版本:") ? "" : `；${describeAppRuntime()}`;
+  return `${message}${apiInfo}${requestInfo}${runtimeInfo}`;
+}
+
 function MomentReplyText({ authorName, content }) {
   return [
     <span key="author">{authorName || "角色"}</span>,
@@ -1959,8 +1967,9 @@ export function App() {
             }
             momentGenerationBusyRef.current = true;
             setGeneratingMoments(true);
+            let config = null;
             try {
-              const config = new ApiConfigStore().getSelected();
+              config = new ApiConfigStore().getSelected();
               const normalizedPostType = normalizeMomentPostType(postType);
               const limit = Math.max(1, Math.min(5, Number(count) || 1));
               const authors = pickMomentAuthors({
@@ -2032,6 +2041,8 @@ export function App() {
               });
               setMomentPosts(chatStore.listMomentPosts());
               return generated.length;
+            } catch (error) {
+              throw new Error(withApiDiagnostics(error, config, "朋友圈"));
             } finally {
               momentGenerationBusyRef.current = false;
               setGeneratingMoments(false);

@@ -205,6 +205,16 @@ function buildRoleReplyPrompt(conversation, userText) {
   ].filter(Boolean).join("\n");
 }
 
+function buildMomentReplyPrompt(post, commentText) {
+  return [
+    "你正在中文朋友圈里回复用户评论。只输出角色回复内容，不要解释，不要 Markdown。",
+    `发朋友圈的人：${post.authorName || "角色"}`,
+    `朋友圈内容：${post.content || ""}`,
+    `用户评论：${commentText}`,
+    "要求：像真实朋友圈评论区回复，1-40字，自然、有角色感。",
+  ].join("\n");
+}
+
 function MicroChatApp({
   roles,
   contacts,
@@ -222,6 +232,8 @@ function MicroChatApp({
   onCloseChat,
   onSendMessage,
   onGenerateMoments,
+  onToggleMomentLike,
+  onAddMomentComment,
   sendingChatId,
   generatingMoments,
 }) {
@@ -321,6 +333,8 @@ function MicroChatApp({
             myProfile={myProfile}
             onBack={() => setChatTab("chats")}
             onGenerate={onGenerateMoments}
+            onToggleLike={onToggleMomentLike}
+            onAddComment={onAddMomentComment}
             generating={generatingMoments}
           />
         ) : null}
@@ -624,13 +638,24 @@ function MicroChatContacts({
   );
 }
 
-function MicroChatMoments({ contacts, posts, myProfile, onBack, onGenerate, generating }) {
+function MicroChatMoments({
+  contacts,
+  posts,
+  myProfile,
+  onBack,
+  onGenerate,
+  onToggleLike,
+  onAddComment,
+  generating,
+}) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [mode, setMode] = useState("random");
   const [postType, setPostType] = useState("text");
   const [count, setCount] = useState(3);
   const [selectedRoleId, setSelectedRoleId] = useState("");
   const [message, setMessage] = useState("");
+  const [commentDrafts, setCommentDrafts] = useState({});
+  const [replyingPostId, setReplyingPostId] = useState("");
 
   const generate = async () => {
     setMessage("正在生成动态...");
@@ -719,7 +744,76 @@ function MicroChatMoments({ contacts, posts, myProfile, onBack, onGenerate, gene
               {post.postType === "image_text" && post.image ? (
                 <img className="moment-post-image" src={post.image} alt="" />
               ) : null}
-              <small>刚刚</small>
+              <div className="moment-actions">
+                <small>刚刚</small>
+                <button type="button" onClick={() => onToggleLike(post.id)}>
+                  {post.likes?.some((like) => like.id === (myProfile?.id || "me")) ? "已赞" : "赞"}
+                  {post.likes?.length ? ` ${post.likes.length}` : ""}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setCommentDrafts((current) => ({
+                    ...current,
+                    [post.id]: current[post.id] || "",
+                  }))}
+                >
+                  评论
+                </button>
+              </div>
+              {post.likes?.length ? (
+                <div className="moment-social-line">
+                  <span>赞：</span>{post.likes.map((like) => like.name).join("、")}
+                </div>
+              ) : null}
+              {post.comments?.length ? (
+                <div className="moment-comments">
+                  {post.comments.map((comment) => (
+                    <div className="moment-comment" key={comment.id}>
+                      <span>{comment.authorName}：</span>{comment.content}
+                      {comment.replies?.map((reply) => (
+                        <div className="moment-reply" key={reply.id}>
+                          <span>{reply.authorName}：</span>{reply.content}
+                        </div>
+                      ))}
+                    </div>
+                  ))}
+                </div>
+              ) : null}
+              {Object.prototype.hasOwnProperty.call(commentDrafts, post.id) ? (
+                <form
+                  className="moment-comment-form"
+                  onSubmit={async (event) => {
+                    event.preventDefault();
+                    const text = String(commentDrafts[post.id] || "").trim();
+                    if (!text || replyingPostId) return;
+                    setReplyingPostId(post.id);
+                    try {
+                      await onAddComment(post, text);
+                      setCommentDrafts((current) => {
+                        const next = { ...current };
+                        delete next[post.id];
+                        return next;
+                      });
+                    } catch (error) {
+                      setMessage(`评论失败：${error.message || "请稍后再试。"}`);
+                    } finally {
+                      setReplyingPostId("");
+                    }
+                  }}
+                >
+                  <input
+                    value={commentDrafts[post.id] || ""}
+                    placeholder="评论"
+                    onChange={(event) => setCommentDrafts((current) => ({
+                      ...current,
+                      [post.id]: event.target.value,
+                    }))}
+                  />
+                  <button type="submit" disabled={replyingPostId === post.id}>
+                    {replyingPostId === post.id ? "发送中" : "发送"}
+                  </button>
+                </form>
+              ) : null}
             </div>
           </article>
         ))}
@@ -1842,6 +1936,37 @@ export function App() {
               momentGenerationBusyRef.current = false;
               setGeneratingMoments(false);
             }
+          }}
+          onToggleMomentLike={(postId) => {
+            chatStore.toggleMomentLike(postId, {
+              id: identities[0]?.id || "me",
+              name: identities[0]?.name || "我",
+            });
+            setMomentPosts(chatStore.listMomentPosts());
+          }}
+          onAddMomentComment={async (post, text) => {
+            const comment = chatStore.addMomentComment(post.id, {
+              authorName: identities[0]?.name || "我",
+              content: text,
+            });
+            setMomentPosts(chatStore.listMomentPosts());
+            if (!comment || Math.random() >= 0.55) return comment;
+
+            try {
+              const config = new ApiConfigStore().getSelected();
+              const prompt = buildMomentReplyPrompt(post, text);
+              const reply = await callWithRetryAndFallback(config, ({ api }) =>
+                requestChatCompletion(api, prompt, fetch, { maxTokens: 80 }),
+              );
+              chatStore.addMomentReply(post.id, comment.id, {
+                authorName: post.authorName,
+                content: reply.slice(0, 80),
+              });
+              setMomentPosts(chatStore.listMomentPosts());
+            } catch {
+              setMomentPosts(chatStore.listMomentPosts());
+            }
+            return comment;
           }}
           generatingMoments={generatingMoments}
         />

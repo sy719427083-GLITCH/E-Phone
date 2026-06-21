@@ -43,6 +43,7 @@ Current prototype direction:
 - Moments pure-text copy should be 1-100 Chinese characters, never forced into ultra-short text. If a model returns longer text, trim before saving.
 - Moments manual pure-text generation should use a horizontal count slider from 1 to 5. One user action may generate up to 5 posts, but the implementation should use lightweight one-post text requests rather than a large batch JSON request.
 - Moments random generation means the user requests random role/contact-generated posts, excluding the user's own identity. Moment copy may reference that role's recent chat context, today's/current time, schedule, observations, or current mood.
+- Moments posts should support lightweight WeChat-like likes and comments. User comments may receive probabilistic API-generated replies from the post author, and these interactions should persist with the post.
 - API quota/rate-limit errors should not retry the same API repeatedly; if a distinct secondary API exists, fail over once, otherwise show the provider error with model and HTTP status so the user can diagnose the selected model/channel.
 - Micro Chat friend-request delays should feel quick: proactive incoming requests should appear shortly after opening contacts, and accept/reject/request confirmation waits should be brief rather than multi-second.
 - Micro Chat friend-request waiting states must always resolve with a success, rejection, or visible failure message; never leave "waiting for confirmation" stuck indefinitely.

@@ -115,3 +115,30 @@ test("saves generated moments posts", () => {
   assert.equal(restored.listMomentPosts()[0].authorName, "陆斯年");
   assert.equal(restored.listMomentPosts()[0].image, "data:image/png;base64,moment");
 });
+
+test("stores moment likes, comments, and role replies", () => {
+  const storage = createMemoryStorage();
+  const store = new ChatStore(storage);
+  const post = store.addMomentPost({
+    authorName: "陆斯年",
+    avatar: "data:image/png;base64,avatar",
+    content: "今天的风很轻。",
+  });
+
+  const liked = store.toggleMomentLike(post.id, { id: "me", name: "我" });
+  assert.equal(liked.likes.length, 1);
+  assert.equal(liked.likes[0].name, "我");
+
+  const unliked = store.toggleMomentLike(post.id, { id: "me", name: "我" });
+  assert.equal(unliked.likes.length, 0);
+
+  const comment = store.addMomentComment(post.id, { authorName: "我", content: "像你会说的话。" });
+  assert.equal(comment.content, "像你会说的话。");
+
+  const reply = store.addMomentReply(post.id, comment.id, { authorName: "陆斯年", content: "只是实话。" });
+  assert.equal(reply.content, "只是实话。");
+
+  const restoredPost = new ChatStore(storage).listMomentPosts()[0];
+  assert.equal(restoredPost.comments.length, 1);
+  assert.equal(restoredPost.comments[0].replies[0].authorName, "陆斯年");
+});

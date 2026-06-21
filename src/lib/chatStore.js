@@ -56,7 +56,15 @@ export function createContactRequest(role, { direction = "outgoing", status = "p
   };
 }
 
-export function createMomentPost({ authorName = "", avatar = "", content = "", image = "", postType = "text" } = {}) {
+export function createMomentPost({
+  authorName = "",
+  avatar = "",
+  content = "",
+  image = "",
+  postType = "text",
+  likes = [],
+  comments = [],
+} = {}) {
   return {
     id: makeChatId("moment"),
     authorName: authorName || "未命名角色",
@@ -64,6 +72,8 @@ export function createMomentPost({ authorName = "", avatar = "", content = "", i
     content: String(content || ""),
     image: image || "",
     postType: postType === "image_text" ? "image_text" : "text",
+    likes: Array.isArray(likes) ? likes.map(mergeMomentLike) : [],
+    comments: Array.isArray(comments) ? comments.map(mergeMomentComment) : [],
     createdAt: Date.now(),
   };
 }
@@ -127,7 +137,36 @@ function mergeMomentPost(post = {}) {
     content: String(post.content || ""),
     image: post.image || "",
     postType: post.postType === "image_text" ? "image_text" : "text",
+    likes: Array.isArray(post.likes) ? post.likes.map(mergeMomentLike) : [],
+    comments: Array.isArray(post.comments) ? post.comments.map(mergeMomentComment) : [],
     createdAt: Number(post.createdAt) || Date.now(),
+  };
+}
+
+function mergeMomentLike(like = {}) {
+  return {
+    id: like.id || like.name || makeChatId("like"),
+    name: like.name || "我",
+    createdAt: Number(like.createdAt) || Date.now(),
+  };
+}
+
+function mergeMomentComment(comment = {}) {
+  return {
+    id: comment.id || makeChatId("comment"),
+    authorName: comment.authorName || "我",
+    content: String(comment.content || ""),
+    replies: Array.isArray(comment.replies) ? comment.replies.map(mergeMomentReply) : [],
+    createdAt: Number(comment.createdAt) || Date.now(),
+  };
+}
+
+function mergeMomentReply(reply = {}) {
+  return {
+    id: reply.id || makeChatId("reply"),
+    authorName: reply.authorName || "角色",
+    content: String(reply.content || ""),
+    createdAt: Number(reply.createdAt) || Date.now(),
   };
 }
 
@@ -271,5 +310,41 @@ export class ChatStore {
     this.momentPosts.push(next);
     this.persist();
     return next;
+  }
+
+  getMomentPost(postId) {
+    return this.momentPosts.find((post) => post.id === postId) || null;
+  }
+
+  toggleMomentLike(postId, user = {}) {
+    const post = this.getMomentPost(postId);
+    if (!post) return null;
+    const likeId = user.id || user.name || "me";
+    const existing = post.likes.find((like) => like.id === likeId);
+    post.likes = existing
+      ? post.likes.filter((like) => like.id !== likeId)
+      : [...post.likes, mergeMomentLike({ id: likeId, name: user.name || "我" })];
+    this.persist();
+    return post;
+  }
+
+  addMomentComment(postId, comment = {}) {
+    const post = this.getMomentPost(postId);
+    if (!post) return null;
+    const nextComment = mergeMomentComment(comment);
+    post.comments = [...post.comments, nextComment];
+    this.persist();
+    return nextComment;
+  }
+
+  addMomentReply(postId, commentId, reply = {}) {
+    const post = this.getMomentPost(postId);
+    if (!post) return null;
+    const comment = post.comments.find((item) => item.id === commentId);
+    if (!comment) return null;
+    const nextReply = mergeMomentReply(reply);
+    comment.replies = [...comment.replies, nextReply];
+    this.persist();
+    return nextReply;
   }
 }

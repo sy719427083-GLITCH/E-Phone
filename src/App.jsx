@@ -5,6 +5,7 @@ import {
   DEFAULT_CONFIG,
   describeApiUsage,
   fetchModelList,
+  isQuotaOrRateLimitError,
   requestChatCompletion,
   resolveApiSelection,
 } from "./lib/apiStore.js";
@@ -12,6 +13,7 @@ import { ChatStore, createChatMessage } from "./lib/chatStore.js";
 import { createIdentityDraft, IdentityStore } from "./lib/identityStore.js";
 import {
   buildMomentContext,
+  buildStandaloneMomentRetryPrompt,
   buildMomentsPrompt,
   buildTinyMomentPrompt,
   formatMomentReplyText,
@@ -2000,8 +2002,16 @@ export function App() {
                       requestChatCompletion(api, prompt, fetch, { maxTokens: 60 }),
                     );
                   } catch (error) {
-                    if (shouldKeepPartialMomentResults(error, generated.length)) break;
-                    throw new Error(`${error.message || "生成失败"}；${describeApiUsage(config)}；请求:纯文字轻量；${describeAppRuntime()}`);
+                    if (isStandalonePwa() && isQuotaOrRateLimitError(error)) {
+                      const retryPrompt = buildStandaloneMomentRetryPrompt({ author: currentAuthor, context, nowText });
+                      reply = await callWithRetryAndFallback(config, ({ api }) =>
+                        requestChatCompletion(api, retryPrompt, fetch, { maxTokens: 120 }),
+                      );
+                    } else if (shouldKeepPartialMomentResults(error, generated.length)) {
+                      break;
+                    } else {
+                      throw new Error(`${error.message || "生成失败"}；${describeApiUsage(config)}；请求:纯文字轻量；${describeAppRuntime()}`);
+                    }
                   }
                   generated.push(...parseMomentPosts(reply, [currentAuthor]).slice(0, 1));
                 }

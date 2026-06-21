@@ -13,10 +13,42 @@ export function getMomentMaxTokens(count, postType = "text") {
     : 60;
 }
 
-export function buildMomentsPrompt({ contacts = [], mode = "random", postType = "text", selectedRoleId = "", count = 1 } = {}) {
+export function pickMomentAuthor({ contacts = [], selectedRoleId = "", myProfile = null, random = Math.random } = {}) {
+  const filtered = contacts.filter((contact) => {
+    const isMeById = myProfile?.id && contact.id === myProfile.id;
+    const isMeByName = myProfile?.name && contact.name === myProfile.name;
+    return !isMeById && !isMeByName;
+  });
+  if (selectedRoleId) {
+    return filtered.find((contact) => contact.id === selectedRoleId) || null;
+  }
+  if (filtered.length === 0) return null;
+  const index = Math.min(filtered.length - 1, Math.floor(random() * filtered.length));
+  return filtered[index];
+}
+
+export function buildMomentContext({ author = null, conversations = [] } = {}) {
+  if (!author) return "";
+  const conversation = conversations.find((item) => item.roleId === author.id || item.title === author.name);
+  const messages = conversation?.messages || [];
+  return messages.slice(-4).map((message) => (
+    `${message.role === "user" ? "我" : author.name || "角色"}:${String(message.content || "").slice(0, 42)}`
+  )).join(" | ");
+}
+
+export function buildMomentsPrompt({
+  contacts = [],
+  mode = "random",
+  postType = "text",
+  selectedRoleId = "",
+  count = 1,
+  author = null,
+  context = "",
+  nowText = "",
+} = {}) {
   const limit = normalizeMomentCount(count);
   const normalizedPostType = normalizeMomentPostType(postType);
-  const selected = selectedRoleId
+  const selected = author ? [author] : selectedRoleId
     ? contacts.filter((contact) => contact.id === selectedRoleId)
     : contacts.slice(0, 8);
   const roster = (selected.length > 0 ? selected : contacts.slice(0, 8));
@@ -25,11 +57,13 @@ export function buildMomentsPrompt({ contacts = [], mode = "random", postType = 
   )).join("|");
 
   if (normalizedPostType === "text") {
-    const contact = roster[0] || {};
+    const contact = author || roster[0] || {};
     return [
       "只回一句朋友圈正文，不要解释。",
       "类型:纯文字",
       `角色:${contact.name || "角色"};${contact.identity || "身份未填"};${contact.personality || "性格未填"}`,
+      `参考:可结合聊天内容、今天行程、所见所得或现在心情。${nowText ? `现在:${nowText}` : ""}`,
+      context ? `聊天内容:${context}` : "",
     ].join("\n");
   }
 

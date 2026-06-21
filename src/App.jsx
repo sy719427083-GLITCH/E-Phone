@@ -9,7 +9,14 @@ import {
 } from "./lib/apiStore.js";
 import { ChatStore, createChatMessage } from "./lib/chatStore.js";
 import { createIdentityDraft, IdentityStore } from "./lib/identityStore.js";
-import { buildMomentsPrompt, getMomentMaxTokens, normalizeMomentPostType, parseMomentPosts } from "./lib/moments.js";
+import {
+  buildMomentContext,
+  buildMomentsPrompt,
+  getMomentMaxTokens,
+  normalizeMomentPostType,
+  parseMomentPosts,
+  pickMomentAuthor,
+} from "./lib/moments.js";
 import { parseGeneratedRole } from "./lib/roleGenerator.js";
 import { createRoleDraft, RoleStore } from "./lib/roleStore.js";
 
@@ -1667,21 +1674,34 @@ export function App() {
             try {
               const config = new ApiConfigStore().getSelected();
               const normalizedPostType = normalizeMomentPostType(postType);
-              const prompt = buildMomentsPrompt({ contacts, mode, postType: normalizedPostType, selectedRoleId, count });
+              const author = pickMomentAuthor({
+                contacts,
+                selectedRoleId,
+                myProfile: identities[0] || null,
+              });
+              if (!author) throw new Error("请先在通讯录添加角色。");
+              const context = buildMomentContext({ author, conversations });
+              const prompt = buildMomentsPrompt({
+                contacts,
+                mode,
+                postType: normalizedPostType,
+                selectedRoleId: author.id,
+                count,
+                author,
+                context,
+                nowText: `${clock.date} ${clock.time}`,
+              });
               const reply = await callWithRetryAndFallback(config, ({ api }) =>
                 requestChatCompletion(api, prompt, fetch, { maxTokens: getMomentMaxTokens(count, normalizedPostType) }),
               );
               const limit = normalizedPostType === "text" ? 1 : Math.max(1, Math.min(9, Number(count) || 1));
-              const generated = parseMomentPosts(reply, contacts).slice(0, limit);
+              const generated = parseMomentPosts(reply, [author]).slice(0, limit);
               generated.forEach((post) => {
-                const contact = contacts.find((item) => item.name === post.authorName)
-                  || contacts.find((item) => item.id === selectedRoleId)
-                  || {};
                 chatStore.addMomentPost({
-                  authorName: post.authorName || contact.name,
-                  avatar: contact.avatar || "",
+                  authorName: post.authorName || author.name,
+                  avatar: author.avatar || "",
                   content: post.content,
-                  image: normalizedPostType === "image_text" ? contact.avatar || "" : "",
+                  image: normalizedPostType === "image_text" ? author.avatar || "" : "",
                   postType: normalizedPostType,
                 });
               });

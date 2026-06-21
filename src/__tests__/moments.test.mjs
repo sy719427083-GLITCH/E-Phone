@@ -1,6 +1,12 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { buildMomentsPrompt, getMomentMaxTokens, parseMomentPosts } from "../lib/moments.js";
+import {
+  buildMomentContext,
+  buildMomentsPrompt,
+  getMomentMaxTokens,
+  parseMomentPosts,
+  pickMomentAuthor,
+} from "../lib/moments.js";
 
 test("uses a compact token budget for moments generation", () => {
   assert.equal(getMomentMaxTokens(1, "text"), 60);
@@ -19,14 +25,48 @@ test("builds a compact moments prompt from added contacts", () => {
     postType: "text",
     selectedRoleId: "a",
     count: 3,
+    context: "昨天聊到天台和钢琴。",
+    nowText: "6月21日 17:30",
   });
 
   assert.match(prompt, /只回一句朋友圈正文/);
   assert.doesNotMatch(prompt, /JSON/);
   assert.match(prompt, /纯文字/);
   assert.match(prompt, /陆斯年/);
+  assert.match(prompt, /聊天内容|今天|现在/);
+  assert.match(prompt, /昨天聊到天台和钢琴/);
   assert.doesNotMatch(prompt, /沈棠/);
-  assert.ok(prompt.length < 150);
+  assert.ok(prompt.length < 240);
+});
+
+test("picks a moment author from roles without using my profile", () => {
+  const author = pickMomentAuthor({
+    contacts: [
+      { id: "me", name: "我" },
+      { id: "a", name: "陆斯年" },
+    ],
+    selectedRoleId: "",
+    myProfile: { id: "me", name: "我" },
+    random: () => 0,
+  });
+
+  assert.equal(author.name, "陆斯年");
+});
+
+test("builds moment context from role conversation", () => {
+  const context = buildMomentContext({
+    author: { id: "a" },
+    conversations: [{
+      roleId: "a",
+      messages: [
+        { role: "user", content: "今天去天台了吗？" },
+        { role: "assistant", content: "去了，风很轻。" },
+      ],
+    }],
+  });
+
+  assert.match(context, /今天去天台/);
+  assert.match(context, /风很轻/);
 });
 
 test("builds an image text moments prompt", () => {

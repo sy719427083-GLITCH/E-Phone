@@ -1,1 +1,1 @@
-export const APP_VERSION = "pwa-start-v33";
+export const APP_VERSION = "pwa-start-v34";

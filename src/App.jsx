@@ -17,10 +17,12 @@ import {
   formatMomentReplyText,
   getMomentMaxTokens,
   getMomentReplyDelayMs,
+  getMomentRequestDelayMs,
   normalizeMomentPostType,
   parseMomentPosts,
   pickMomentAuthor,
   pickMomentAuthors,
+  shouldKeepPartialMomentResults,
   shouldGenerateSpontaneousMoment,
 } from "./lib/moments.js";
 import { parseGeneratedRole } from "./lib/roleGenerator.js";
@@ -30,6 +32,13 @@ import { APP_VERSION } from "./lib/appVersion.js";
 const assetPath = (path) => `${import.meta.env.BASE_URL}${path.replace(/^\/+/, "")}`;
 
 const wait = (ms) => new Promise((resolve) => window.setTimeout(resolve, ms));
+
+function isStandalonePwa() {
+  return Boolean(
+    window.matchMedia?.("(display-mode: standalone)")?.matches
+      || window.navigator?.standalone,
+  );
+}
 
 function MomentReplyText({ authorName, content }) {
   return [
@@ -262,6 +271,7 @@ function MicroChatApp({
   const lastSpontaneousMomentAt = useRef(0);
   const generateMomentsRef = useRef(onGenerateMoments);
   const generatingMomentsRef = useRef(generatingMoments);
+  const allowSpontaneousMoments = !isStandalonePwa();
   const selectedConversation = conversations.find((conversation) => conversation.id === selectedChatId) || null;
 
   useEffect(() => {
@@ -283,6 +293,7 @@ function MicroChatApp({
         lastGeneratedAt: lastSpontaneousMomentAt.current,
         now,
         isGenerating: generatingMomentsRef.current,
+        allowSpontaneous: allowSpontaneousMoments,
       })) return;
       lastSpontaneousMomentAt.current = now;
       generateMomentsRef.current({
@@ -303,7 +314,7 @@ function MicroChatApp({
       window.clearTimeout(firstTimer);
       window.clearInterval(interval);
     };
-  }, [contacts]);
+  }, [contacts, allowSpontaneousMoments]);
 
   if (selectedConversation) {
     return (
@@ -1957,32 +1968,9 @@ export function App() {
               let generated = [];
               if (normalizedPostType === "text") {
                 const textAuthors = (authors.length > 0 ? authors : [author]).slice(0, limit);
-                if (limit > 1) {
-                  const context = textAuthors
-                    .map((currentAuthor) => buildMomentContext({ author: currentAuthor, conversations }))
-                    .filter(Boolean)
-                    .join(" | ");
-                  const prompt = buildMomentsPrompt({
-                    contacts: textAuthors,
-                    mode: spontaneous ? "spontaneous" : mode,
-                    postType: normalizedPostType,
-                    selectedRoleId,
-                    count: limit,
-                    author: selectedRoleId ? author : null,
-                    context,
-                    nowText,
-                  });
-                  let reply = "";
-                  try {
-                    reply = await callWithRetryAndFallback(config, ({ api }) =>
-                      requestChatCompletion(api, prompt, fetch, { maxTokens: getMomentMaxTokens(limit, normalizedPostType) }),
-                    );
-                  } catch (error) {
-                    throw new Error(`${error.message || "生成失败"}；${describeApiUsage(config)}；请求:纯文字批量`);
-                  }
-                  generated = parseMomentPosts(reply, textAuthors).slice(0, limit);
-                } else {
-                  const currentAuthor = textAuthors[0] || author;
+                for (const [index, currentAuthor] of textAuthors.entries()) {
+                  const delayMs = getMomentRequestDelayMs(index, normalizedPostType);
+                  if (delayMs) await wait(delayMs);
                   const context = buildMomentContext({ author: currentAuthor, conversations });
                   const prompt = buildTinyMomentPrompt({ author: currentAuthor, context, nowText });
                   let reply = "";
@@ -1991,6 +1979,7 @@ export function App() {
                       requestChatCompletion(api, prompt, fetch, { maxTokens: 60 }),
                     );
                   } catch (error) {
+                    if (shouldKeepPartialMomentResults(error, generated.length)) break;
                     throw new Error(`${error.message || "生成失败"}；${describeApiUsage(config)}；请求:纯文字轻量`);
                   }
                   generated.push(...parseMomentPosts(reply, [currentAuthor]).slice(0, 1));

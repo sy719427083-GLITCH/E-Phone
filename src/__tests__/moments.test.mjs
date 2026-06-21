@@ -144,6 +144,13 @@ test("decides when a role may spontaneously post a moment", () => {
   }), true);
   assert.equal(shouldGenerateSpontaneousMoment({
     contacts: [{ id: "a" }],
+    lastGeneratedAt: 1_000,
+    now: 80_000,
+    random: () => 0.2,
+    allowSpontaneous: false,
+  }), false);
+  assert.equal(shouldGenerateSpontaneousMoment({
+    contacts: [{ id: "a" }],
     lastGeneratedAt: 78_000,
     now: 80_000,
     random: () => 0.2,

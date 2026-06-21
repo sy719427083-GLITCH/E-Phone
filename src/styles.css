@@ -2665,7 +2665,7 @@ button {
 
 .moment-reply {
   margin-top: 4px;
-  padding-left: 10px;
+  padding-left: 0;
   color: #6f6268;
 }
 

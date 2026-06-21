@@ -54,3 +54,5 @@ Current prototype direction:
 - Micro Chat friend-request delays should feel quick: proactive incoming requests should appear shortly after opening contacts, and accept/reject/request confirmation waits should be brief rather than multi-second.
 - Micro Chat friend-request waiting states must always resolve with a success, rejection, or visible failure message; never leave "waiting for confirmation" stuck indefinitely.
 - The bottom navigation labels are "主页", "角色档案", "身份", and "设置"; the tab bar should use borderless glassmorphism with soft translucency instead of solid cards.
+
+- On iOS home-screen/standalone PWA, Moments must not run automatic spontaneous background posting; keep API calls tied to explicit user actions there so Safari and PWA behavior do not diverge.

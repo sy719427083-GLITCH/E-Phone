@@ -334,6 +334,24 @@ test("reads compatible completion text formats", async () => {
   assert.equal(fromContentParts, "part reply");
 });
 
+test("throws when completion has no usable text", async () => {
+  await assert.rejects(
+    () => requestChatCompletion(
+      {
+        apiUrl: "https://api.example/v1",
+        apiKey: "secret",
+        model: "gpt-real",
+      },
+      "ping",
+      async () => ({
+        ok: true,
+        json: async () => ({ choices: [{ message: { content: "" } }] }),
+      }),
+    ),
+    /没有返回内容/,
+  );
+});
+
 test("includes model and status in API error messages", async () => {
   await assert.rejects(
     () => requestChatCompletion(

@@ -286,7 +286,12 @@ export async function requestChatCompletion(api, prompt, fetcher = fetch, option
     throw new Error(`API返回：${detail}（${model}，${status}）`);
   }
 
-  return extractCompletionText(payload) || "连接正常";
+  const content = extractCompletionText(payload).trim();
+  if (!content) {
+    const model = api.model?.trim() ? `模型：${api.model.trim()}` : "模型未知";
+    throw new Error(`API没有返回内容（${model}，HTTP ${response.status || 200}）`);
+  }
+  return content;
 }
 
 export async function fetchModelList(api, fetcher = fetch) {

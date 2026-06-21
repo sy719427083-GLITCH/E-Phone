@@ -27,4 +27,4 @@ Current prototype direction:
 - New/edit identity wallpaper should be very pale and low-saturation; use a separate PNG kitten overlay that clearly lies on the top edge of the name/gender form card.
 - Do not show a separate role preview page; tapping a role card should open editing directly.
 - Role overview layout, card structure, and density should stay stable; visual updates should be scoped to the role tab only and must not change the identity overview cards.
-- Animated role overview effects should feel fresh and lightweight: slow glassy sheen, subtle mist-blue highlights, no heavy saturated pink, and no layout shift.
+- Animated role overview effects should feel fresh and lightweight: floating fine lines, subtle spark points, mist-blue highlights, no heavy saturated pink, and no layout shift.

@@ -300,14 +300,34 @@ function buildChatCompletionBody(api, prompt, options = {}) {
   return body;
 }
 
+function makeRequestId() {
+  if (typeof crypto !== "undefined" && crypto.randomUUID) {
+    return `req-${crypto.randomUUID()}`;
+  }
+  return `req-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+}
+
+function withRequestNonce(url, requestId) {
+  try {
+    const next = new URL(url);
+    next.searchParams.set("_", requestId);
+    return next.toString();
+  } catch {
+    return `${url}${url.includes("?") ? "&" : "?"}_=${encodeURIComponent(requestId)}`;
+  }
+}
+
 export async function requestChatCompletion(api, prompt, fetcher = fetch, options = {}) {
   validateApi(api);
-  const response = await fetcher(buildApiUrl(api, "chat/completions"), {
+  const requestId = makeRequestId();
+  const response = await fetcher(withRequestNonce(buildApiUrl(api, "chat/completions"), requestId), {
     method: "POST",
     cache: "no-store",
+    credentials: "omit",
     headers: {
       "Content-Type": "application/json",
       Authorization: `Bearer ${api.apiKey.trim()}`,
+      "X-EPhone-Request-Id": requestId,
     },
     body: JSON.stringify(buildChatCompletionBody(api, prompt, options)),
   });

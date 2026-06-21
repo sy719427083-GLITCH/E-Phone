@@ -302,9 +302,11 @@ test("requests a real chat completion payload", async () => {
   );
 
   assert.equal(content, "pong");
-  assert.equal(request.url, "https://api.example/v1/chat/completions");
+  assert.match(request.url, /^https:\/\/api\.example\/v1\/chat\/completions\?_=/);
   assert.equal(request.options.cache, "no-store");
+  assert.equal(request.options.credentials, "omit");
   assert.equal(request.options.headers.Authorization, "Bearer secret");
+  assert.match(request.options.headers["X-EPhone-Request-Id"], /^req-/);
   assert.equal(JSON.parse(request.options.body).model, "gpt-real");
 });
 
@@ -319,7 +321,7 @@ test("disables thinking mode for DeepSeek chat completions", async () => {
     },
     "ping",
     async (url, options) => {
-      assert.equal(url, "https://api.deepseek.com/chat/completions");
+      assert.match(url, /^https:\/\/api\.deepseek\.com\/chat\/completions\?_=req-/);
       body = JSON.parse(options.body);
       return {
         ok: true,

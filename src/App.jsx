@@ -224,7 +224,7 @@ function MicroChatApp({
     chats: "微聊",
     contacts: "通讯录",
     moments: "朋友圈",
-    settings: "微聊设置",
+    settings: "设置",
   };
 
   return (
@@ -431,7 +431,7 @@ function MicroChatTabs({ active, setActive }) {
     ["chats", "微聊", "chat"],
     ["contacts", "通讯录", "contacts"],
     ["moments", "朋友圈", "moments"],
-    ["settings", "微聊设置", "settings"],
+    ["settings", "设置", "settings"],
   ];
 
   return (

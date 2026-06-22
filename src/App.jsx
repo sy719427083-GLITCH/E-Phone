@@ -737,14 +737,17 @@ function MicroChatMoments({
       <button className="moments-back" onClick={onBack} aria-label="返回微聊">
         ‹
       </button>
-      <button className="moments-action" onClick={() => setMenuOpen((value) => !value)} aria-label="朋友圈生成设置">
+      <button type="button" className="moments-action" onClick={() => setMenuOpen((value) => !value)} aria-label="朋友圈生成设置">
         <svg viewBox="0 0 24 24" aria-hidden="true">
           <path d="M12 5.5v13M5.5 12h13" />
         </svg>
       </button>
       <button
+        type="button"
         className="moments-clear"
-        onClick={() => {
+        onClick={(event) => {
+          event.preventDefault();
+          event.stopPropagation();
           onClearMoments();
           setMessage("朋友圈已清空。");
           setMenuOpen(false);
@@ -753,7 +756,7 @@ function MicroChatMoments({
         aria-label="清空朋友圈"
       >
         <svg viewBox="0 0 24 24" aria-hidden="true">
-          <path d="M8 8.5v9M12 8.5v9M16 8.5v9M5.5 6.2h13M9 6.2l.8-2h4.4l.8 2M7.1 6.2l.8 14.3h8.2l.8-14.3" />
+          <path d="M7.4 8.5v9M12 8.5v9M16.6 8.5v9M4.8 6.2h14.4M8.6 6.2l.9-2h5l.9 2M6.5 6.2l.8 14.3h9.4l.8-14.3" />
         </svg>
       </button>
       {menuOpen ? (
@@ -2118,7 +2121,7 @@ export function App() {
           }}
           onClearMoments={() => {
             chatStore.clearMomentPosts();
-            setMomentPosts(chatStore.listMomentPosts());
+            setMomentPosts([]);
           }}
           generatingMoments={generatingMoments}
         />

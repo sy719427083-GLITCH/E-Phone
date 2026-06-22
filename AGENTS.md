@@ -60,3 +60,6 @@ Current prototype direction:
 - Moments manual generation should default to 1 post; the 1-5 slider is opt-in so users do not accidentally trigger multiple API calls from one tap, especially in home-screen PWAs.
 - Moments generation must direct-connect to the selected user API just like chat; do not route Moments through a Vercel/server proxy.
 - Manual Moments generation should use the same direct API request path in browser and home-screen/standalone PWA; do not add PWA-only retry prompts or fallback request branches.
+- Roles may spontaneously post Moments using the same direct API path, but automatic posts must respect real-world time spacing and recent manual posts so they do not feel frequent or spammy.
+- Moment copy should read like real social feed text and must avoid stage directions, gestures, poses, or parenthetical action descriptions such as "将三枚铜钱收入袖中"; clean generated content before saving if needed.
+- Moment post timestamps should display from each post's real `createdAt` time instead of a fixed "刚刚" label.

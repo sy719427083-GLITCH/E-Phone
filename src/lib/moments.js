@@ -2,6 +2,8 @@ function normalizeMomentCount(count) {
   return Math.max(1, Math.min(5, Number(count) || 1));
 }
 
+export const SPONTANEOUS_MOMENT_MIN_INTERVAL_MS = 25 * 60_000;
+
 export function getDefaultMomentCount() {
   return 1;
 }
@@ -43,6 +45,7 @@ export function shouldKeepPartialMomentResults(error, generatedCount = 0) {
 export function shouldGenerateSpontaneousMoment({
   contacts = [],
   lastGeneratedAt = 0,
+  recentPostAt = 0,
   now = Date.now(),
   random = Math.random,
   isGenerating = false,
@@ -51,8 +54,9 @@ export function shouldGenerateSpontaneousMoment({
   if (!allowSpontaneous) return false;
   if (isGenerating) return false;
   if (contacts.length === 0) return false;
-  if (now - Number(lastGeneratedAt || 0) < 60_000) return false;
-  return random() < 0.35;
+  const lastActivityAt = Math.max(Number(lastGeneratedAt || 0), Number(recentPostAt || 0));
+  if (now - lastActivityAt < SPONTANEOUS_MOMENT_MIN_INTERVAL_MS) return false;
+  return random() < 0.28;
 }
 
 function getMomentCandidates(contacts = [], myProfile = null) {
@@ -133,7 +137,8 @@ export function buildMomentsPrompt({
         "为中文角色生成日常动态短句。只返回 JSON 数组，不要 Markdown。",
         `条数:${limit};模式:${mode === "specified" ? "指定" : "随机"};类型:纯文字`,
         '格式:[{"authorName":"角色名","content":"动态正文"}]',
-        "每条1-100字，生活化，可以像角色自发发布，内容可结合聊天、当天行程、所见所得或此刻心情。",
+        "每条1-100字，像真实社交平台短动态，可以像角色自发发布，内容可结合聊天、当天行程、所见所得或此刻心情。",
+        "不要写动作、手势、姿势、舞台指令或括号描写，例如不要写“将三枚铜钱收入袖中”。",
         `现在:${nowText || "当前时间"}`,
         context ? `聊天内容:${context}` : "",
         `角色:${roleLines || `${contact.name || "角色"}:${contact.identity || "身份未填"};${contact.personality || "性格未填"}`}`,
@@ -143,7 +148,7 @@ export function buildMomentsPrompt({
       "只回一句角色动态正文，不要解释。",
       "类型:纯文字",
       `角色:${contact.name || "角色"};${contact.identity || "身份未填"};${contact.personality || "性格未填"}`,
-      `要求:1-100字。参考:可结合聊天内容、今天行程、所见所得或现在心情。${nowText ? `现在:${nowText}` : ""}`,
+      `要求:1-100字，像真实社交平台短动态；不要写动作、手势、姿势、舞台指令或括号描写。参考:可结合聊天内容、今天行程、所见所得或现在心情。${nowText ? `现在:${nowText}` : ""}`,
       context ? `聊天内容:${context}` : "",
     ].join("\n");
   }
@@ -152,7 +157,7 @@ export function buildMomentsPrompt({
     "为中文角色生成日常动态短句。只返回 JSON 数组，不要 Markdown。",
     `条数:${limit};模式:${mode === "specified" ? "指定" : "随机"};类型:${normalizedPostType === "image_text" ? "图文" : "纯文字"}`,
     '格式:[{"authorName":"角色名","content":"动态正文"}]',
-    "正文每条1-100字，生活化，有角色感。",
+    "正文每条1-100字，像真实社交平台短动态，有角色感。不要写动作、手势、姿势、舞台指令或括号描写。",
     `角色:${roleLines || "暂无"}`,
   ].join("\n");
 }
@@ -160,11 +165,41 @@ export function buildMomentsPrompt({
 export function buildTinyMomentPrompt({ author = null, context = "", nowText = "" } = {}) {
   const role = author || {};
   return [
-    "只回一句角色日常动态，正文1-100字，像角色自发发布。",
+    "只回一句角色日常动态，正文1-100字，像真实社交平台短动态。",
+    "不要写动作、手势、姿势、舞台指令或括号描写。",
     `角色:${role.name || "角色"};${role.identity || ""};${role.personality || ""}`,
     context ? `参考:${context.slice(0, 36)}` : "",
     nowText ? `现在:${nowText}` : "",
   ].filter(Boolean).join("\n");
+}
+
+export function cleanMomentContent(content = "") {
+  return String(content || "")
+    .replace(/[（(][^）)]*[）)]/g, "")
+    .replace(/(?:将|把|伸手|抬手|低头|转身|握住|收起|收入|举起|放下|靠在|站在|坐在|走到|拿起|抬眼|垂眸)[^，。！？；、,.!?;]*/g, "")
+    .replace(/\s+/g, " ")
+    .replace(/\s*([，。！？；、,.!?;])\s*/g, "$1")
+    .replace(/^[，。！？；、,.!?;]+/, "")
+    .replace(/[，,]{2,}/g, "，")
+    .trim();
+}
+
+export function formatMomentTime(timestamp, now = Date.now()) {
+  const time = Number(timestamp) || now;
+  const diff = Math.max(0, Number(now) - time);
+  if (diff < 60_000) return "刚刚";
+  if (diff < 60 * 60_000) return `${Math.floor(diff / 60_000)}分钟前`;
+
+  const date = new Date(time);
+  const current = new Date(now);
+  const sameDay = date.toDateString() === current.toDateString();
+  const timeText = date.toLocaleTimeString("zh-CN", { hour: "2-digit", minute: "2-digit", hour12: false });
+  if (sameDay) return timeText;
+
+  const yesterday = new Date(current);
+  yesterday.setDate(current.getDate() - 1);
+  if (date.toDateString() === yesterday.toDateString()) return `昨天 ${timeText}`;
+  return `${date.getMonth() + 1}月${date.getDate()}日 ${timeText}`;
 }
 
 export function parseMomentPosts(raw, contacts = []) {

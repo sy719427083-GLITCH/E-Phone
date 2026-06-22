@@ -15,7 +15,9 @@ import {
   buildMomentContext,
   buildMomentsPrompt,
   buildTinyMomentPrompt,
+  cleanMomentContent,
   formatMomentReplyText,
+  formatMomentTime,
   getDefaultMomentCount,
   getMomentMaxTokens,
   getMomentReplyDelayMs,
@@ -292,7 +294,8 @@ function MicroChatApp({
   const lastSpontaneousMomentAt = useRef(0);
   const generateMomentsRef = useRef(onGenerateMoments);
   const generatingMomentsRef = useRef(generatingMoments);
-  const allowSpontaneousMoments = !isStandalonePwa();
+  const momentPostsRef = useRef(momentPosts);
+  const allowSpontaneousMoments = true;
   const selectedConversation = conversations.find((conversation) => conversation.id === selectedChatId) || null;
 
   useEffect(() => {
@@ -304,6 +307,10 @@ function MicroChatApp({
   }, [generatingMoments]);
 
   useEffect(() => {
+    momentPostsRef.current = momentPosts;
+  }, [momentPosts]);
+
+  useEffect(() => {
     if (contacts.length === 0) return undefined;
     let cancelled = false;
 
@@ -312,6 +319,7 @@ function MicroChatApp({
       if (!shouldGenerateSpontaneousMoment({
         contacts,
         lastGeneratedAt: lastSpontaneousMomentAt.current,
+        recentPostAt: momentPostsRef.current[0]?.createdAt || 0,
         now,
         isGenerating: generatingMomentsRef.current,
         allowSpontaneous: allowSpontaneousMoments,
@@ -328,8 +336,8 @@ function MicroChatApp({
       });
     };
 
-    const firstTimer = window.setTimeout(tryGenerate, 45_000);
-    const interval = window.setInterval(tryGenerate, 120_000);
+    const firstTimer = window.setTimeout(tryGenerate, 90_000);
+    const interval = window.setInterval(tryGenerate, 5 * 60_000);
     return () => {
       cancelled = true;
       window.clearTimeout(firstTimer);
@@ -799,7 +807,7 @@ function MicroChatMoments({
                 <img className="moment-post-image" src={post.image} alt="" />
               ) : null}
               <div className="moment-actions">
-                <small>刚刚</small>
+                <small>{formatMomentTime(post.createdAt)}</small>
                 <button
                   className={post.likes?.some((like) => like.id === (myProfile?.id || "me")) ? "is-liked" : ""}
                   type="button"
@@ -2039,9 +2047,10 @@ export function App() {
                 chatStore.addMomentPost({
                   authorName: post.authorName || matchedAuthor.name,
                   avatar: matchedAuthor.avatar || "",
-                  content: post.content,
+                  content: cleanMomentContent(post.content),
                   image: normalizedPostType === "image_text" ? matchedAuthor.avatar || "" : "",
                   postType: normalizedPostType,
+                  createdAt: Date.now(),
                 });
               });
               setMomentPosts(chatStore.listMomentPosts());

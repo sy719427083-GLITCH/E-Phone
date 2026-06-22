@@ -4,7 +4,9 @@ import {
   buildMomentContext,
   buildMomentsPrompt,
   buildTinyMomentPrompt,
+  cleanMomentContent,
   formatMomentReplyText,
+  formatMomentTime,
   getMomentMaxTokens,
   getDefaultMomentCount,
   getMomentReplyDelayMs,
@@ -144,20 +146,21 @@ test("decides when a role may spontaneously post a moment", () => {
   assert.equal(shouldGenerateSpontaneousMoment({
     contacts: [{ id: "a" }],
     lastGeneratedAt: 1_000,
-    now: 80_000,
+    now: 1_501_000,
     random: () => 0.2,
   }), true);
   assert.equal(shouldGenerateSpontaneousMoment({
     contacts: [{ id: "a" }],
     lastGeneratedAt: 1_000,
-    now: 80_000,
+    now: 1_501_000,
     random: () => 0.2,
     allowSpontaneous: false,
   }), false);
   assert.equal(shouldGenerateSpontaneousMoment({
     contacts: [{ id: "a" }],
-    lastGeneratedAt: 78_000,
-    now: 80_000,
+    lastGeneratedAt: 1_000_000,
+    recentPostAt: 1_400_000,
+    now: 1_501_000,
     random: () => 0.2,
   }), false);
   assert.equal(shouldGenerateSpontaneousMoment({
@@ -173,6 +176,22 @@ test("decides when a role may spontaneously post a moment", () => {
     now: 80_000,
     random: () => 0,
   }), false);
+});
+
+test("uses real time labels for moment posts", () => {
+  const base = new Date("2026-06-22T10:30:00+08:00").getTime();
+  assert.equal(formatMomentTime(base - 20_000, base), "刚刚");
+  assert.equal(formatMomentTime(base - 8 * 60_000, base), "8分钟前");
+  assert.equal(formatMomentTime(base - 2 * 60 * 60_000, base), "08:30");
+  assert.equal(formatMomentTime(base - 24 * 60 * 60_000, base), "昨天 10:30");
+});
+
+test("cleans stage directions from moment content", () => {
+  assert.equal(
+    cleanMomentContent("今天雨声很好（将三枚铜钱收入袖中），适合慢慢走。"),
+    "今天雨声很好，适合慢慢走。",
+  );
+  assert.equal(cleanMomentContent("把手搭在窗边，想起昨天。"), "想起昨天。");
 });
 
 test("builds moment context from role conversation", () => {

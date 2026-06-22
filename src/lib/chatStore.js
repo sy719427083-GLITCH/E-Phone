@@ -69,6 +69,7 @@ export function createMomentPost({
   postType = "text",
   likes = [],
   comments = [],
+  createdAt = Date.now(),
 } = {}) {
   return {
     id: makeChatId("moment"),
@@ -79,7 +80,7 @@ export function createMomentPost({
     postType: postType === "image_text" ? "image_text" : "text",
     likes: Array.isArray(likes) ? likes.map(mergeMomentLike) : [],
     comments: Array.isArray(comments) ? comments.map(mergeMomentComment) : [],
-    createdAt: Date.now(),
+    createdAt: Number(createdAt) || Date.now(),
   };
 }
 

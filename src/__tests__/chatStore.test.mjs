@@ -137,16 +137,19 @@ test("saves generated moments posts", () => {
     content: "今天的风很轻。",
     image: "data:image/png;base64,moment",
     postType: "image_text",
+    createdAt: 1_778_000_000_000,
   });
 
   assert.equal(store.listMomentPosts().length, 1);
   assert.equal(post.content, "今天的风很轻。");
   assert.equal(post.image, "data:image/png;base64,moment");
   assert.equal(post.postType, "image_text");
+  assert.equal(post.createdAt, 1_778_000_000_000);
 
   const restored = new ChatStore(storage);
   assert.equal(restored.listMomentPosts()[0].authorName, "陆斯年");
   assert.equal(restored.listMomentPosts()[0].image, "data:image/png;base64,moment");
+  assert.equal(restored.listMomentPosts()[0].createdAt, 1_778_000_000_000);
 });
 
 test("stores moment likes, comments, and role replies", () => {

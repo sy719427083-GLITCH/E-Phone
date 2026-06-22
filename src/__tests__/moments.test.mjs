@@ -2,7 +2,6 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import {
   buildMomentContext,
-  buildStandaloneMomentRetryPrompt,
   buildMomentsPrompt,
   buildTinyMomentPrompt,
   formatMomentReplyText,
@@ -101,19 +100,6 @@ test("builds an ultra tiny fallback prompt for text moments", () => {
   assert.match(prompt, /1-100字/);
   assert.match(prompt, /陆斯年/);
   assert.ok(prompt.length < 120);
-});
-
-test("builds a standalone retry prompt that avoids moment-specific wording", () => {
-  const prompt = buildStandaloneMomentRetryPrompt({
-    author: { name: "陆斯年", identity: "学生会干部", personality: "外冷内热" },
-    context: "我:今天去天台了吗？ | 陆斯年:去了，风很轻。",
-    nowText: "6月21日 18:00",
-  });
-
-  assert.match(prompt, /写一句角色动态/);
-  assert.doesNotMatch(prompt, /朋友圈/);
-  assert.doesNotMatch(prompt, /JSON/);
-  assert.ok(prompt.length < 180);
 });
 
 test("picks a moment author from roles without using my profile", () => {

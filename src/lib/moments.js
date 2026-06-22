@@ -167,16 +167,6 @@ export function buildTinyMomentPrompt({ author = null, context = "", nowText = "
   ].filter(Boolean).join("\n");
 }
 
-export function buildStandaloneMomentRetryPrompt({ author = null, context = "", nowText = "" } = {}) {
-  const role = author || {};
-  return [
-    "写一句角色动态，1-100字，只输出正文。",
-    `角色:${role.name || "角色"};${role.identity || ""};${role.personality || ""}`,
-    context ? `参考:${context.slice(0, 40)}` : "",
-    nowText ? `现在:${nowText}` : "",
-  ].filter(Boolean).join("\n");
-}
-
 export function parseMomentPosts(raw, contacts = []) {
   const text = String(raw || "").trim();
   const jsonText = text.match(/```json\s*([\s\S]*?)```/)?.[1] || text.match(/```\s*([\s\S]*?)```/)?.[1] || text;

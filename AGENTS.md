@@ -59,3 +59,4 @@ Current prototype direction:
 
 - Moments manual generation should default to 1 post; the 1-5 slider is opt-in so users do not accidentally trigger multiple API calls from one tap, especially in home-screen PWAs.
 - Moments generation must direct-connect to the selected user API just like chat; do not route Moments through a Vercel/server proxy.
+- Manual Moments generation should use the same direct API request path in browser and home-screen/standalone PWA; do not add PWA-only retry prompts or fallback request branches.

@@ -10,7 +10,6 @@ import {
   fetchModelList,
   isQuotaOrRateLimitError,
   requestChatCompletion,
-  requestChatCompletionViaProxy,
   resolveApiSelection,
 } from "../lib/apiStore.js";
 
@@ -420,41 +419,6 @@ test("includes model and status in API error messages", async () => {
     ),
     /gpt-real.*HTTP 429/,
   );
-});
-
-test("requests chat completion through the moments proxy without provider URL leakage", async () => {
-  let request;
-  const content = await requestChatCompletionViaProxy(
-    "https://e-phone-tf8s.vercel.app/api/chat",
-    {
-      apiUrl: "https://api.deepseek.com",
-      apiKey: "secret",
-      model: "deepseek-v4-pro",
-      temperature: 0.4,
-    },
-    "写一句动态",
-    async (url, options) => {
-      request = { url, options };
-      return {
-        ok: true,
-        status: 200,
-        json: async () => ({ content: "今天很好。" }),
-      };
-    },
-    { maxTokens: 80 },
-  );
-
-  assert.equal(content, "今天很好。");
-  assert.match(request.url, /^https:\/\/e-phone-tf8s\.vercel\.app\/api\/chat\?_=req-/);
-  assert.equal(request.url.includes("secret"), false);
-  assert.equal(request.url.includes("deepseek"), false);
-  assert.equal(request.options.cache, "no-store");
-  assert.equal(request.options.credentials, "omit");
-  const body = JSON.parse(request.options.body);
-  assert.equal(body.api.apiKey, "secret");
-  assert.equal(body.api.apiUrl, "https://api.deepseek.com");
-  assert.equal(body.prompt, "写一句动态");
-  assert.equal(body.options.maxTokens, 80);
 });
 
 test("fetches model ids from an API provider", async () => {

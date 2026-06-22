@@ -3155,11 +3155,21 @@ button {
 }
 
 .red-packet-card {
-  grid-template-columns: 38px minmax(0, 1fr);
-  gap: 10px;
-  padding: 11px;
+  display: block;
+  width: min(250px, 76vw);
+  padding: 0;
   color: #fffaf6;
-  background: #e8a24c;
+  background: #e59b3e;
+  border-radius: 8px;
+}
+
+.red-packet-main {
+  display: grid;
+  grid-template-columns: 48px minmax(0, 1fr);
+  gap: 12px;
+  align-items: center;
+  min-height: 82px;
+  padding: 14px 14px 13px;
 }
 
 .red-packet-actions {
@@ -3169,9 +3179,9 @@ button {
 }
 
 .red-packet-actions button {
-  min-height: 24px;
-  border-radius: 999px;
-  padding: 0 10px;
+  min-height: 25px;
+  border-radius: 5px;
+  padding: 0 12px;
   color: #b96e28;
   background: rgba(255, 250, 246, 0.92);
   font-size: 11px;
@@ -3180,13 +3190,26 @@ button {
 .red-packet-icon {
   display: grid;
   place-items: center;
-  width: 34px;
-  height: 34px;
-  border-radius: 8px;
+  width: 44px;
+  height: 44px;
+  border-radius: 999px;
   color: #d98a36;
-  background: #fff0d7;
-  font-size: 20px;
+  background: #fff1d6;
+  font-size: 22px;
   font-weight: 700;
+}
+
+.red-packet-footer {
+  display: block;
+  padding: 7px 14px;
+  color: rgba(125, 91, 65, 0.66);
+  background: #fff8ee;
+  font-size: 10px;
+}
+
+.message-system-chip.red-packet-result {
+  color: #a27b54;
+  background: rgba(255, 244, 225, 0.82);
 }
 
 .location-card {
@@ -3270,6 +3293,44 @@ button {
   font-size: 11px;
 }
 
+.chat-more-panel {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  padding: 12px 4px 2px;
+}
+
+.chat-more-item {
+  display: grid;
+  gap: 6px;
+  justify-items: center;
+  color: #8d7b83;
+  font-size: 11px;
+}
+
+.chat-more-icon {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  color: #9d7e8a;
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 8px 18px rgba(125, 102, 112, 0.08);
+  font-size: 17px;
+}
+
+.chat-more-icon.red {
+  color: #d58b38;
+  background: #fff3e5;
+  font-weight: 600;
+}
+
+.chat-more-icon .message-location-icon {
+  width: 28px;
+  height: 28px;
+}
+
 .chat-composer input {
   width: 100%;
   height: 38px;
@@ -3294,6 +3355,12 @@ button {
 .chat-composer .chat-send {
   color: #8f5268;
   background: rgba(255, 223, 232, 0.86);
+}
+
+.chat-composer .chat-more-toggle {
+  font-size: 22px;
+  line-height: 1;
+  font-weight: 400;
 }
 
 .chat-composer .chat-send:disabled {

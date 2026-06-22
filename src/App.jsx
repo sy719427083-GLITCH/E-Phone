@@ -1200,26 +1200,35 @@ function MessageBubble({ message, onAcceptRedPacket, onReturnRedPacket }) {
     const amount = Number(message.meta?.amount || 0);
     const packetStatus = message.meta?.status || (message.role === "user" ? "sent" : "pending");
     const canHandle = message.role !== "user" && packetStatus === "pending";
+    const statusText = {
+      received: `已领取 ¥${amount.toFixed(2)}`,
+      returned: "已退回",
+      sent: `等待领取 ¥${amount.toFixed(2)}`,
+      accepted_by_role: `对方已领取 ¥${amount.toFixed(2)}`,
+      returned_by_role: `对方已退回 ¥${amount.toFixed(2)}`,
+      pending: message.meta?.subtitle || "微信红包",
+    }[packetStatus] || message.meta?.subtitle || "微信红包";
     return (
       <span className="message-card red-packet-card">
-        <span className="red-packet-icon">¥</span>
-        <span>
-          <b>{message.meta?.title || "恭喜发财，大吉大利"}</b>
-          <small>
-            {packetStatus === "received" ? `已领取 ¥${amount.toFixed(2)}` : null}
-            {packetStatus === "returned" ? "已退回" : null}
-            {packetStatus === "sent" ? `已发送 ¥${amount.toFixed(2)}` : null}
-            {packetStatus === "pending" ? message.meta?.subtitle || "微信红包" : null}
-          </small>
-          {canHandle ? (
-            <span className="red-packet-actions">
-              <button type="button" onClick={() => onAcceptRedPacket?.(message)}>领取</button>
-              <button type="button" onClick={() => onReturnRedPacket?.(message)}>退回</button>
-            </span>
-          ) : null}
+        <span className="red-packet-main">
+          <span className="red-packet-icon">¥</span>
+          <span>
+            <b>{message.meta?.title || "恭喜发财，大吉大利"}</b>
+            <small>{statusText}</small>
+            {canHandle ? (
+              <span className="red-packet-actions">
+                <button type="button" onClick={() => onAcceptRedPacket?.(message)}>领取</button>
+                <button type="button" onClick={() => onReturnRedPacket?.(message)}>退回</button>
+              </span>
+            ) : null}
+          </span>
         </span>
+        <span className="red-packet-footer">微信红包</span>
       </span>
     );
+  }
+  if (message.type === "red_packet_result") {
+    return <span className="message-system-chip red-packet-result">{message.content}</span>;
   }
   if (message.type === "location") {
     return (
@@ -1241,6 +1250,7 @@ function MessageBubble({ message, onAcceptRedPacket, onReturnRedPacket }) {
 
 function ChatThread({ conversation, onBack, onSend, onSendRedPacket, onAcceptRedPacket, onReturnRedPacket, sending }) {
   const [text, setText] = useState("");
+  const [moreOpen, setMoreOpen] = useState(false);
   const [redPacketOpen, setRedPacketOpen] = useState(false);
   const [redPacketAmount, setRedPacketAmount] = useState("");
   const [redPacketMessage, setRedPacketMessage] = useState("");
@@ -1280,7 +1290,7 @@ function ChatThread({ conversation, onBack, onSend, onSendRedPacket, onAcceptRed
         ) : (
           visibleMessages.map((message) => (
             <div className={`message-row ${message.role === "user" ? "from-user" : "from-role"} message-type-${message.type || "text"}`} key={message.id}>
-              {message.role !== "user" && !["recall", "pat"].includes(message.type) ? <ChatAvatar conversation={conversation} /> : null}
+              {message.role !== "user" && !["recall", "pat", "red_packet_result"].includes(message.type) ? <ChatAvatar conversation={conversation} /> : null}
               <div className="message-stack">
                 <MessageBubble
                   message={message}
@@ -1313,8 +1323,39 @@ function ChatThread({ conversation, onBack, onSend, onSendRedPacket, onAcceptRed
           {redPacketMessage ? <small>{redPacketMessage}</small> : null}
         </div>
       ) : null}
+      {moreOpen ? (
+        <div className="chat-more-panel">
+          <button
+            type="button"
+            className="chat-more-item"
+            onClick={() => {
+              setRedPacketOpen((value) => !value);
+              setRedPacketMessage("");
+            }}
+          >
+            <span className="chat-more-icon red">¥</span>
+            <small>发红包</small>
+          </button>
+          <button type="button" className="chat-more-item" onClick={() => setRedPacketMessage("位置功能稍后开放。")}>
+            <span className="chat-more-icon">
+              <LocationIcon />
+            </span>
+            <small>位置</small>
+          </button>
+          <button type="button" className="chat-more-item" onClick={() => setRedPacketMessage("拍一拍功能稍后开放。")}>
+            <span className="chat-more-icon">拍</span>
+            <small>拍一拍</small>
+          </button>
+        </div>
+      ) : null}
       <div className="chat-composer">
-        <button aria-label="红包" onClick={() => setRedPacketOpen((value) => !value)}>¥</button>
+        <button
+          aria-label="更多"
+          className="chat-more-toggle"
+          onClick={() => setMoreOpen((value) => !value)}
+        >
+          +
+        </button>
         <input
           value={text}
           placeholder="发消息"
@@ -2280,6 +2321,34 @@ export function App() {
             walletStore.sendRedPacket({ to: conversation.title, amount: value, messageId: message.id });
             setWallet(walletStore.snapshot());
             setConversations(chatStore.list());
+            window.setTimeout(() => {
+              const latestConversation = chatStore.get(conversationId);
+              const latestMessage = latestConversation?.messages.find((item) => item.id === message.id);
+              if (!latestMessage || latestMessage.meta?.status !== "sent") return;
+              const accepted = Math.random() > 0.28;
+              if (accepted) {
+                chatStore.updateMessageMeta(conversationId, message.id, { status: "accepted_by_role" });
+                chatStore.addMessage(conversationId, createChatMessage({
+                  role: "assistant",
+                  type: "red_packet_result",
+                  content: `${conversation.title}领取了你的红包`,
+                }));
+              } else {
+                walletStore.refundSentRedPacket({
+                  from: conversation.title,
+                  amount: value,
+                  messageId: message.id,
+                });
+                chatStore.updateMessageMeta(conversationId, message.id, { status: "returned_by_role" });
+                chatStore.addMessage(conversationId, createChatMessage({
+                  role: "assistant",
+                  type: "red_packet_result",
+                  content: `${conversation.title}退回了你的红包`,
+                }));
+                setWallet(walletStore.snapshot());
+              }
+              setConversations(chatStore.list());
+            }, 2600 + Math.floor(Math.random() * 2400));
             return message;
           }}
           onAcceptRedPacket={(conversationId, message) => {

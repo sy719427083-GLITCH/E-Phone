@@ -33,3 +33,17 @@ test("does not add money when a red packet is returned", () => {
   assert.equal(store.snapshot().balance, 2000);
   assert.deepEqual(store.snapshot().bills, []);
 });
+
+test("refunds my sent red packet when the role returns it", () => {
+  const store = new WalletStore(createMemoryStorage());
+
+  store.sendRedPacket({ to: "陆清晏", amount: 30, messageId: "msg-out" });
+  assert.equal(store.snapshot().balance, 1970);
+
+  store.refundSentRedPacket({ from: "陆清晏", amount: 30, messageId: "msg-out" });
+  const snapshot = store.snapshot();
+
+  assert.equal(snapshot.balance, 2000);
+  assert.equal(snapshot.bills[0].title, "红包退回");
+  assert.equal(snapshot.bills[0].amount, 30);
+});

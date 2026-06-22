@@ -101,6 +101,22 @@ export class WalletStore {
     return this.snapshot();
   }
 
+  refundSentRedPacket({ from = "对方", amount = 0, messageId = "" } = {}) {
+    const value = Number(amount);
+    const refundMessageId = messageId ? `refund-${messageId}` : "";
+    if (!Number.isFinite(value) || value <= 0) throw new Error("红包金额无效。");
+    if (this.hasBill(refundMessageId)) return this.snapshot();
+    this.wallet.balance = Number((this.wallet.balance + value).toFixed(2));
+    this.addBill({
+      title: "红包退回",
+      note: from,
+      amount: value,
+      messageId: refundMessageId,
+    });
+    this.persist();
+    return this.snapshot();
+  }
+
   sendRedPacket({ to = "对方", amount = 0, messageId = "" } = {}) {
     const value = Number(amount);
     if (!Number.isFinite(value) || value <= 0) throw new Error("红包金额无效。");

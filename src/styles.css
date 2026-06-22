@@ -2930,7 +2930,8 @@ button {
 }
 
 .message-bubble {
-  max-width: min(72%, 260px);
+  width: fit-content;
+  max-width: min(72vw, 300px);
   border-radius: 12px;
   padding: 9px 11px;
   color: #4a4046;
@@ -2946,7 +2947,7 @@ button {
   display: grid;
   gap: 3px;
   justify-items: start;
-  max-width: min(76%, 280px);
+  max-width: min(78vw, 320px);
 }
 
 .from-user .message-stack {

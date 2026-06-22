@@ -112,9 +112,6 @@ test("parses assistant replies into realistic chat bubbles", () => {
     "刚看到。",
     "今天可能会晚一点。",
     "你先别等我。",
-    "晚上说。",
-    "第五条",
-    "第六条",
   ]);
 });
 

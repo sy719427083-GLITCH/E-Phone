@@ -70,7 +70,7 @@ Current prototype direction:
 - The Moments top-right action area can include a trash icon beside the plus icon for one-tap clearing of all Moment posts.
 - Moments clearing must ask for confirmation before deleting generated posts.
 - Moments top-right action buttons should keep the same compact round size; if the trash icon needs emphasis, widen only the drawn bin inside the SVG, not the button itself.
-- Micro Chat role replies should behave like real phone chat bubbles: one user message may receive 1-6 short assistant bubbles, with no stage directions, gestures, poses, parenthetical action, or narration.
+- Micro Chat role replies should behave like real phone chat bubbles: one user message may receive 1-3 short assistant bubbles, with no stage directions, gestures, poses, parenthetical action, or narration. Short complete sentences should not be visually squeezed into unnecessary line breaks.
 - Micro Chat must never show model prompts, JSON wrappers, Markdown, rewrite notes, analysis, or formatting instructions as chat bubbles; parser and display should filter those leaks, including older stored messages.
 - Micro Chat messages should show a time below each bubble. Roles may proactively send normal messages and WeChat-like special events: recalled message, red packet, pat, and shared location rendered with CSS/SVG instead of external images.
 - In the new friends page, rejection should appear before acceptance when both actions are shown.

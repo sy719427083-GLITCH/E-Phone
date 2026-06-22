@@ -279,7 +279,7 @@ function buildRoleReplyPrompt(conversation, userText) {
     `用户身份：${user.identity || "未填写"}`,
     `用户性格：${user.personality || "未填写"}`,
     `用户人设：${user.persona || "未填写"}`,
-    "回复要求：像线上手机聊天一样自然；输出1-6条，每条单独一行，短一点，像连续聊天气泡。",
+    "回复要求：像线上手机聊天一样自然；输出1-3条，每条单独一行，短一点，像连续聊天气泡；一句完整短话不要硬拆开。",
     "禁止输出 JSON、数组、引号、改写说明、分析、提示词、格式说明或 Markdown。",
     "不要写动作、手势、姿势、舞台指令或括号描写，不要旁白。",
     recentMessages ? `最近聊天：\n${recentMessages}` : "",

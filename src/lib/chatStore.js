@@ -104,7 +104,7 @@ function parseReplyItemsFromJson(text) {
   return null;
 }
 
-export function parseAssistantReplies(raw, limit = 6) {
+export function parseAssistantReplies(raw, limit = 3) {
   const text = String(raw || "").trim();
   if (!text) return [];
   const jsonText = text.match(/```json\s*([\s\S]*?)```/)?.[1] || text.match(/```\s*([\s\S]*?)```/)?.[1] || text;
@@ -118,7 +118,7 @@ export function parseAssistantReplies(raw, limit = 6) {
       ? quotedItems
     : text.split(/\n+/).map((line) => line.replace(/^[-*\d.、\s]+/, ""));
   const cleaned = source.map(cleanAssistantReply).filter((reply) => reply && !isPromptLeakReply(reply));
-  return cleaned.slice(0, Math.max(1, Math.min(6, Number(limit) || 6)));
+  return cleaned.slice(0, Math.max(1, Math.min(3, Number(limit) || 3)));
 }
 
 function createProfileSnapshot(profile = {}) {

@@ -9,7 +9,7 @@ import {
   requestChatCompletion,
   resolveApiSelection,
 } from "./lib/apiStore.js";
-import { ChatStore, createChatMessage } from "./lib/chatStore.js";
+import { ChatStore, createChatMessage, parseAssistantReplies } from "./lib/chatStore.js";
 import { createIdentityDraft, IdentityStore } from "./lib/identityStore.js";
 import {
   buildMomentContext,
@@ -251,7 +251,8 @@ function buildRoleReplyPrompt(conversation, userText) {
     `用户身份：${user.identity || "未填写"}`,
     `用户性格：${user.personality || "未填写"}`,
     `用户人设：${user.persona || "未填写"}`,
-    "回复要求：像微信聊天一样自然，1-3 句为主；可以有情绪和动作暗示，但不要太长。",
+    "回复要求：像真实手机聊天一样自然；只返回 JSON 字符串数组，数组长度1-6；每条像一个聊天气泡，短一点。",
+    "不要写动作、手势、姿势、舞台指令或括号描写，不要旁白，不要 Markdown。",
     recentMessages ? `最近聊天：\n${recentMessages}` : "",
     `用户新消息：${userText}`,
   ].filter(Boolean).join("\n");
@@ -613,8 +614,8 @@ function MicroChatContacts({
                 </span>
                 {request.status === "pending" ? (
                   <>
-                    <button onClick={acceptIncoming} disabled={incomingBusy}>通过</button>
                     <button onClick={rejectIncoming} disabled={incomingBusy}>拒绝</button>
+                    <button onClick={acceptIncoming} disabled={incomingBusy}>通过</button>
                   </>
                 ) : (
                   <em>{request.status === "accepted" ? "已添加" : "已拒绝"}</em>
@@ -750,7 +751,6 @@ function MicroChatMoments({
           setCommentDrafts({});
         }}
         aria-label="清空朋友圈"
-        disabled={posts.length === 0}
       >
         <svg viewBox="0 0 24 24" aria-hidden="true">
           <path d="M8 8.5v9M12 8.5v9M16 8.5v9M5.5 6.2h13M9 6.2l.8-2h4.4l.8 2M7.1 6.2l.8 14.3h8.2l.8-14.3" />
@@ -1971,7 +1971,10 @@ export function App() {
               const reply = await callWithRetryAndFallback(config, ({ api }) =>
                 requestChatCompletion(api, prompt, fetch, { maxTokens: 900 }),
               );
-              chatStore.addMessage(conversationId, createChatMessage({ role: "assistant", content: reply }));
+              const replies = parseAssistantReplies(reply);
+              replies.forEach((content) => {
+                chatStore.addMessage(conversationId, createChatMessage({ role: "assistant", content }));
+              });
             } catch (error) {
               chatStore.addMessage(
                 conversationId,

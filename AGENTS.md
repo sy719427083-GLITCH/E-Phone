@@ -65,3 +65,5 @@ Current prototype direction:
 - Moment post timestamps should display from each post's real `createdAt` time instead of a fixed "刚刚" label.
 - User comments on a role's Moment should queue a role reply every time, but replies must feel delayed rather than instant.
 - The Moments top-right action area can include a trash icon beside the plus icon for one-tap clearing of all Moment posts.
+- Micro Chat role replies should behave like real phone chat bubbles: one user message may receive 1-6 short assistant bubbles, with no stage directions, gestures, poses, parenthetical action, or narration.
+- In the new friends page, rejection should appear before acceptance when both actions are shown.

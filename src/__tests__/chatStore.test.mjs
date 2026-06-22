@@ -5,6 +5,7 @@ import {
   ChatStore,
   createChatMessage,
   createConversationDraft,
+  parseAssistantReplies,
 } from "../lib/chatStore.js";
 
 const role = {
@@ -77,6 +78,31 @@ test("starts one conversation per role and persists messages", () => {
   assert.equal(restored.list().length, 1);
   assert.equal(restoredConversation.messages.length, 2);
   assert.equal(restoredConversation.messages[1].content, "晚上好。");
+});
+
+test("parses assistant replies into realistic chat bubbles", () => {
+  const replies = parseAssistantReplies(`[
+    "刚看到。",
+    "今天可能会晚一点。",
+    "（低头整理袖口）你先别等我。",
+    "把手机放回口袋，晚上说。",
+    "第五条",
+    "第六条",
+    "第七条"
+  ]`);
+
+  assert.deepEqual(replies, [
+    "刚看到。",
+    "今天可能会晚一点。",
+    "你先别等我。",
+    "晚上说。",
+    "第五条",
+    "第六条",
+  ]);
+});
+
+test("parses plain line replies when the model does not return json", () => {
+  assert.deepEqual(parseAssistantReplies("到了。\n你在哪？"), ["到了。", "你在哪？"]);
 });
 
 test("removes a conversation and its messages from storage", () => {

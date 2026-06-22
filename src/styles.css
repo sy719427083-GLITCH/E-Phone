@@ -2346,7 +2346,7 @@ button {
   z-index: 5;
   display: grid;
   place-items: center;
-  width: 34px;
+  width: 40px;
   height: 34px;
   border-radius: 50%;
   color: #8f6172;
@@ -2361,11 +2361,7 @@ button {
 }
 
 .moments-clear {
-  right: 58px;
-}
-
-.moments-clear:disabled {
-  opacity: 0.42;
+  right: 62px;
 }
 
 .moments-action svg,

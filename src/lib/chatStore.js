@@ -10,6 +10,34 @@ export function createChatMessage({ role = "user", content = "", status = "sent"
   };
 }
 
+function cleanAssistantReply(content = "") {
+  return String(content || "")
+    .replace(/[（(][^）)]*[）)]/g, "")
+    .replace(/(?:将|把|伸手|抬手|低头|转身|握住|收起|收入|举起|放下|靠在|站在|坐在|走到|拿起|抬眼|垂眸)[^，。！？；、,.!?;\n]*/g, "")
+    .replace(/\s+/g, " ")
+    .replace(/\s*([，。！？；、,.!?;])\s*/g, "$1")
+    .replace(/^[，。！？；、,.!?;]+/, "")
+    .trim();
+}
+
+export function parseAssistantReplies(raw, limit = 6) {
+  const text = String(raw || "").trim();
+  if (!text) return [];
+  const jsonText = text.match(/```json\s*([\s\S]*?)```/)?.[1] || text.match(/```\s*([\s\S]*?)```/)?.[1] || text;
+  let items = null;
+  try {
+    const parsed = JSON.parse(jsonText);
+    items = Array.isArray(parsed) ? parsed : parsed?.messages || parsed?.replies || null;
+  } catch {
+    items = null;
+  }
+  const source = Array.isArray(items)
+    ? items.map((item) => (typeof item === "string" ? item : item?.content || item?.text || ""))
+    : text.split(/\n+/).map((line) => line.replace(/^[-*\d.、\s]+/, ""));
+  const cleaned = source.map(cleanAssistantReply).filter(Boolean);
+  return cleaned.slice(0, Math.max(1, Math.min(6, Number(limit) || 6)));
+}
+
 function createProfileSnapshot(profile = {}) {
   return {
     name: profile?.name || "",

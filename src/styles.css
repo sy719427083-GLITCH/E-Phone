@@ -2401,6 +2401,55 @@ button {
   font-weight: 500;
 }
 
+.moments-confirm {
+  position: absolute;
+  top: max(70px, calc(var(--safe-top) + 56px));
+  right: 16px;
+  z-index: 7;
+  width: min(224px, calc(100% - 32px));
+  border-radius: 12px;
+  padding: 12px;
+  color: #6f5963;
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 16px 32px rgba(111, 82, 94, 0.14);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+}
+
+.moments-confirm b {
+  display: block;
+  margin-bottom: 5px;
+  color: #765c68;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.moments-confirm p {
+  margin: 0 0 10px;
+  color: #a08a94;
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.moments-confirm div {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.moments-confirm button {
+  min-height: 30px;
+  border-radius: 8px;
+  color: #8b6f79;
+  background: rgba(247, 241, 244, 0.9);
+  font-size: 12px;
+}
+
+.moments-confirm button:last-child {
+  color: #9e6075;
+  background: rgba(255, 231, 239, 0.92);
+}
+
 .moments-menu label {
   display: grid;
   grid-template-columns: 42px minmax(0, 1fr);
@@ -2678,9 +2727,16 @@ button {
 }
 
 .moment-reply {
+  display: block;
+  width: 100%;
   margin-top: 4px;
+  border-radius: 4px;
   padding-left: 0;
   color: #6f6268;
+  background: transparent;
+  font-size: 12px;
+  line-height: 1.55;
+  text-align: left;
 }
 
 .moment-reply span {

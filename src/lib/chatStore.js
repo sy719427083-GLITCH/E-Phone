@@ -203,6 +203,7 @@ function mergeMomentReply(reply = {}) {
   return {
     id: reply.id || makeChatId("reply"),
     authorName: reply.authorName || "角色",
+    replyToName: reply.replyToName || "",
     content: String(reply.content || ""),
     createdAt: Number(reply.createdAt) || Date.now(),
   };

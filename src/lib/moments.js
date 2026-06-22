@@ -29,7 +29,11 @@ export function getMomentReplyDelayMs(random = Math.random) {
 }
 
 export function formatMomentReplyText(authorName = "角色", content = "") {
-  return `${authorName || "角色"}回复了我${String(content || "").trim()}`;
+  return `${authorName || "角色"}回复了我：${String(content || "").trim()}`;
+}
+
+export function formatMyMomentReplyText(replyToName = "角色", content = "") {
+  return `我回复了${replyToName || "角色"}：${String(content || "").trim()}`;
 }
 
 export function shouldKeepPartialMomentResults(error, generatedCount = 0) {

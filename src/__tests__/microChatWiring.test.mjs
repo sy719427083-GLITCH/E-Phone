@@ -17,3 +17,8 @@ test("wires the moments clear callback through the micro chat shell", () => {
   assert.ok(appRender, "MicroChatApp render should be discoverable");
   assert.match(appRender[0], /onClearMoments=\{/);
 });
+
+test("asks for confirmation before clearing moments", () => {
+  assert.match(appSource, /确认清空朋友圈/);
+  assert.match(appSource, /setClearConfirmOpen\(true\)/);
+});

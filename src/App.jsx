@@ -16,6 +16,7 @@ import {
   buildMomentsPrompt,
   buildTinyMomentPrompt,
   cleanMomentContent,
+  formatMyMomentReplyText,
   formatMomentReplyText,
   formatMomentTime,
   getDefaultMomentCount,
@@ -63,12 +64,30 @@ function withApiDiagnostics(error, config, requestLabel = "朋友圈") {
   return `${message}${apiInfo}${requestInfo}${runtimeInfo}`;
 }
 
-function MomentReplyText({ authorName, content }) {
-  return [
-    <span key="author">{authorName || "角色"}</span>,
+function MomentReplyText({ authorName, replyToName, content, myName = "我" }) {
+  const isMine = (authorName || "我") === myName || (authorName || "") === "我";
+  const text = isMine
+    ? formatMyMomentReplyText(replyToName || "角色", content)
+    : formatMomentReplyText(authorName || "角色", content);
+  const colonIndex = text.indexOf("：");
+  const beforeColon = colonIndex >= 0 ? text.slice(0, colonIndex) : text;
+  const afterColon = colonIndex >= 0 ? text.slice(colonIndex + 1) : "";
+  const nameMatch = isMine
+    ? beforeColon.match(/^我回复了(.+)$/)
+    : beforeColon.match(/^(.+)回复了我$/);
+
+  if (!nameMatch) return text;
+
+  return isMine ? [
+    <span key="me">我</span>,
+    "回复了",
+    <span key="target">{nameMatch[1]}</span>,
+    `：${afterColon}`,
+  ] : [
+    <span key="author">{nameMatch[1]}</span>,
     "回复了",
     <span key="me">我</span>,
-    String(content || "").trim(),
+    `：${afterColon}`,
   ];
 }
 
@@ -260,11 +279,11 @@ function buildRoleReplyPrompt(conversation, userText) {
 
 function buildMomentReplyPrompt(post, commentText) {
   return [
-    "你正在中文朋友圈里回复用户评论。只输出角色回复内容，不要解释，不要 Markdown。",
+    "你正在中文朋友圈评论区回复用户。只输出角色回复内容，不要解释，不要 Markdown。",
     `发朋友圈的人：${post.authorName || "角色"}`,
     `朋友圈内容：${post.content || ""}`,
     `用户评论：${commentText}`,
-    "要求：像真实朋友圈评论区回复，1-40字，自然、有角色感。",
+    "要求：像真实朋友圈评论区回复，1-40字，自然、有角色感；不要像私聊对话，不要问候式聊天，不要动作、手势、姿势或括号描写。",
   ].join("\n");
 }
 
@@ -721,7 +740,9 @@ function MicroChatMoments({
   const [selectedRoleId, setSelectedRoleId] = useState("");
   const [message, setMessage] = useState("");
   const [commentDrafts, setCommentDrafts] = useState({});
+  const [commentTargets, setCommentTargets] = useState({});
   const [replyingPostId, setReplyingPostId] = useState("");
+  const [clearConfirmOpen, setClearConfirmOpen] = useState(false);
 
   const generate = async () => {
     setMessage("正在生成动态...");
@@ -750,10 +771,8 @@ function MicroChatMoments({
         onClick={(event) => {
           event.preventDefault();
           event.stopPropagation();
-          onClearMoments();
-          setMessage("朋友圈已清空。");
+          setClearConfirmOpen(true);
           setMenuOpen(false);
-          setCommentDrafts({});
         }}
         aria-label="清空朋友圈"
       >
@@ -761,6 +780,28 @@ function MicroChatMoments({
           <path d="M6.8 8.5v9M12 8.5v9M17.2 8.5v9M3.8 6.2h16.4M8.2 6.2l1-2h5.6l1 2M5.6 6.2l.8 14.3h11.2l.8-14.3" />
         </svg>
       </button>
+      {clearConfirmOpen ? (
+        <div className="moments-confirm" role="dialog" aria-label="确认清空朋友圈">
+          <b>确认清空朋友圈？</b>
+          <p>生成的朋友圈内容会被全部删除。</p>
+          <div>
+            <button type="button" onClick={() => setClearConfirmOpen(false)}>取消</button>
+            <button
+              type="button"
+              onClick={() => {
+                onClearMoments();
+                setMessage("朋友圈已清空。");
+                setMenuOpen(false);
+                setClearConfirmOpen(false);
+                setCommentDrafts({});
+                setCommentTargets({});
+              }}
+            >
+              确认清空
+            </button>
+          </div>
+        </div>
+      ) : null}
       {menuOpen ? (
         <div className="moments-menu">
           <b>生成动态</b>
@@ -842,10 +883,17 @@ function MicroChatMoments({
                 </button>
                 <button
                   type="button"
-                  onClick={() => setCommentDrafts((current) => ({
-                    ...current,
-                    [post.id]: current[post.id] || "",
-                  }))}
+                  onClick={() => {
+                    setCommentDrafts((current) => ({
+                      ...current,
+                      [post.id]: current[post.id] || "",
+                    }));
+                    setCommentTargets((current) => {
+                      const next = { ...current };
+                      delete next[post.id];
+                      return next;
+                    });
+                  }}
                   aria-label="评论"
                 >
                   <svg className="moment-comment-icon" viewBox="0 0 24 24" aria-hidden="true">
@@ -864,9 +912,29 @@ function MicroChatMoments({
                     <div className="moment-comment" key={comment.id}>
                       <span>{comment.authorName}：</span>{comment.content}
                       {comment.replies?.map((reply) => (
-                        <div className="moment-reply" key={reply.id}>
-                          <MomentReplyText authorName={reply.authorName} content={reply.content} />
-                        </div>
+                        <button
+                          className="moment-reply"
+                          key={reply.id}
+                          type="button"
+                          onClick={() => {
+                            const targetName = reply.authorName || post.authorName || "角色";
+                            setCommentDrafts((current) => ({ ...current, [post.id]: "" }));
+                            setCommentTargets((current) => ({
+                              ...current,
+                              [post.id]: {
+                                commentId: comment.id,
+                                replyToName: targetName,
+                              },
+                            }));
+                          }}
+                        >
+                          <MomentReplyText
+                            authorName={reply.authorName}
+                            replyToName={reply.replyToName}
+                            content={reply.content}
+                            myName={myProfile?.name || "我"}
+                          />
+                        </button>
                       ))}
                     </div>
                   ))}
@@ -878,11 +946,17 @@ function MicroChatMoments({
                   onSubmit={async (event) => {
                     event.preventDefault();
                     const text = String(commentDrafts[post.id] || "").trim();
+                    const target = commentTargets[post.id] || null;
                     if (!text || replyingPostId) return;
                     setReplyingPostId(post.id);
                     try {
-                      await onAddComment(post, text);
+                      await onAddComment(post, text, target);
                       setCommentDrafts((current) => {
+                        const next = { ...current };
+                        delete next[post.id];
+                        return next;
+                      });
+                      setCommentTargets((current) => {
                         const next = { ...current };
                         delete next[post.id];
                         return next;
@@ -896,7 +970,7 @@ function MicroChatMoments({
                 >
                   <input
                     value={commentDrafts[post.id] || ""}
-                    placeholder="评论"
+                    placeholder={commentTargets[post.id]?.replyToName ? `回复${commentTargets[post.id].replyToName}` : "评论"}
                     onChange={(event) => setCommentDrafts((current) => ({
                       ...current,
                       [post.id]: event.target.value,
@@ -2093,11 +2167,18 @@ export function App() {
             });
             setMomentPosts(chatStore.listMomentPosts());
           }}
-          onAddMomentComment={async (post, text) => {
-            const comment = chatStore.addMomentComment(post.id, {
-              authorName: identities[0]?.name || "我",
-              content: text,
-            });
+          onAddMomentComment={async (post, text, target = null) => {
+            const myName = identities[0]?.name || "我";
+            const comment = target?.commentId
+              ? chatStore.addMomentReply(post.id, target.commentId, {
+                authorName: myName,
+                replyToName: target.replyToName || post.authorName,
+                content: text,
+              })
+              : chatStore.addMomentComment(post.id, {
+                authorName: myName,
+                content: text,
+              });
             setMomentPosts(chatStore.listMomentPosts());
             if (!comment) return comment;
 
@@ -2109,9 +2190,10 @@ export function App() {
                   const reply = await callWithRetryAndFallback(config, ({ api }) =>
                     requestChatCompletion(api, prompt, fetch, { maxTokens: 80 }),
                   );
-                  chatStore.addMomentReply(post.id, comment.id, {
+                  chatStore.addMomentReply(post.id, target?.commentId || comment.id, {
                     authorName: post.authorName,
-                    content: reply.slice(0, 80),
+                    replyToName: myName,
+                    content: cleanMomentContent(reply).slice(0, 80),
                   });
                   setMomentPosts(chatStore.listMomentPosts());
                 } catch {

@@ -199,10 +199,13 @@ test("stores moment likes, comments, and role replies", () => {
 
   const reply = store.addMomentReply(post.id, comment.id, { authorName: "陆斯年", content: "只是实话。" });
   assert.equal(reply.content, "只是实话。");
+  const myReply = store.addMomentReply(post.id, comment.id, { authorName: "我", replyToName: "陆斯年", content: "我知道了。" });
+  assert.equal(myReply.replyToName, "陆斯年");
 
   const restoredPost = new ChatStore(storage).listMomentPosts()[0];
   assert.equal(restoredPost.comments.length, 1);
   assert.equal(restoredPost.comments[0].replies[0].authorName, "陆斯年");
+  assert.equal(restoredPost.comments[0].replies[1].replyToName, "陆斯年");
 });
 
 test("clears all moment posts", () => {

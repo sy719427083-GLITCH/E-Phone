@@ -287,6 +287,7 @@ function MicroChatApp({
   onGenerateMoments,
   onToggleMomentLike,
   onAddMomentComment,
+  onClearMoments,
   sendingChatId,
   generatingMoments,
 }) {
@@ -396,6 +397,7 @@ function MicroChatApp({
             onGenerate={onGenerateMoments}
             onToggleLike={onToggleMomentLike}
             onAddComment={onAddMomentComment}
+            onClearMoments={onClearMoments}
             generating={generatingMoments}
           />
         ) : null}
@@ -756,7 +758,7 @@ function MicroChatMoments({
         aria-label="清空朋友圈"
       >
         <svg viewBox="0 0 24 24" aria-hidden="true">
-          <path d="M7.4 8.5v9M12 8.5v9M16.6 8.5v9M4.8 6.2h14.4M8.6 6.2l.9-2h5l.9 2M6.5 6.2l.8 14.3h9.4l.8-14.3" />
+          <path d="M6.8 8.5v9M12 8.5v9M17.2 8.5v9M3.8 6.2h16.4M8.2 6.2l1-2h5.6l1 2M5.6 6.2l.8 14.3h11.2l.8-14.3" />
         </svg>
       </button>
       {menuOpen ? (

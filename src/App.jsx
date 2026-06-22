@@ -39,6 +39,7 @@ import {
 import { parseGeneratedRole } from "./lib/roleGenerator.js";
 import { createRoleDraft, RoleStore } from "./lib/roleStore.js";
 import { APP_VERSION } from "./lib/appVersion.js";
+import { WalletStore } from "./lib/walletStore.js";
 
 const assetPath = (path) => `${import.meta.env.BASE_URL}${path.replace(/^\/+/, "")}`;
 
@@ -122,17 +123,6 @@ const settingsItems = [
   ["data", "数据管理", "导入、备份、清理", assetPath("assets/settings-icons/data.png")],
   ["system", "系统设置", "PWA与缓存", assetPath("assets/settings-icons/system.png")],
 ];
-
-const walletData = {
-  balance: 128.66,
-  bills: [
-    { id: "bill-redpacket", title: "微聊红包", note: "陆清晏", amount: 18.88, type: "income", time: "今天 15:06" },
-    { id: "bill-food", title: "外卖订单", note: "甜品与热饮", amount: -26.5, type: "expense", time: "今天 12:18" },
-    { id: "bill-topup", title: "余额充值", note: "银行卡", amount: 100, type: "income", time: "昨天 21:40" },
-    { id: "bill-ride", title: "出行支付", note: "市内车费", amount: -13.8, type: "expense", time: "昨天 18:22" },
-    { id: "bill-gift", title: "角色礼物", note: "剧情互动", amount: -9.9, type: "expense", time: "6月20日 20:05" },
-  ],
-};
 
 const tabItems = [
   { key: "home", label: "主页", icon: "home" },
@@ -265,11 +255,13 @@ function formatMoney(amount) {
   return `${amount < 0 ? "-" : "+"}¥${value.toFixed(2)}`;
 }
 
-function WalletApp() {
-  const income = walletData.bills
+function WalletApp({ wallet }) {
+  const bills = wallet?.bills || [];
+  const balance = Number(wallet?.balance ?? 2000);
+  const income = bills
     .filter((bill) => bill.amount > 0)
     .reduce((total, bill) => total + bill.amount, 0);
-  const expense = walletData.bills
+  const expense = bills
     .filter((bill) => bill.amount < 0)
     .reduce((total, bill) => total + Math.abs(bill.amount), 0);
 
@@ -278,7 +270,7 @@ function WalletApp() {
       <Header title="钱包" />
       <div className="wallet-balance-card">
         <span>我的余额</span>
-        <strong>¥{walletData.balance.toFixed(2)}</strong>
+        <strong>¥{balance.toFixed(2)}</strong>
         <div>
           <small>本月收入 ¥{income.toFixed(2)}</small>
           <small>本月支出 ¥{expense.toFixed(2)}</small>
@@ -287,10 +279,13 @@ function WalletApp() {
       <section className="wallet-bills">
         <div className="wallet-section-title">
           <b>我的账单</b>
-          <span>{walletData.bills.length} 笔</span>
+          <span>{bills.length} 笔</span>
         </div>
-        <div className="wallet-bill-list">
-          {walletData.bills.map((bill) => (
+        {bills.length === 0 ? (
+          <div className="wallet-empty-bills">还没有账单</div>
+        ) : (
+          <div className="wallet-bill-list">
+            {bills.map((bill) => (
             <article className="wallet-bill-row" key={bill.id}>
               <span className={`wallet-bill-icon ${bill.type}`}>
                 {bill.amount > 0 ? "入" : "支"}
@@ -303,8 +298,9 @@ function WalletApp() {
                 {formatMoney(bill.amount)}
               </strong>
             </article>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </section>
     </section>
   );
@@ -374,6 +370,9 @@ function MicroChatApp({
   onDeleteChat,
   onCloseChat,
   onSendMessage,
+  onSendRedPacket,
+  onAcceptRedPacket,
+  onReturnRedPacket,
   onGenerateMoments,
   onToggleMomentLike,
   onAddMomentComment,
@@ -463,6 +462,9 @@ function MicroChatApp({
         conversation={selectedConversation}
         onBack={onCloseChat}
         onSend={(text) => onSendMessage(selectedConversation.id, text)}
+        onSendRedPacket={(amount) => onSendRedPacket(selectedConversation.id, amount)}
+        onAcceptRedPacket={(message) => onAcceptRedPacket(selectedConversation.id, message)}
+        onReturnRedPacket={(message) => onReturnRedPacket(selectedConversation.id, message)}
         sending={sendingChatId === selectedConversation.id}
       />
     );
@@ -1190,17 +1192,31 @@ function LocationIcon() {
   );
 }
 
-function MessageBubble({ message }) {
+function MessageBubble({ message, onAcceptRedPacket, onReturnRedPacket }) {
   if (message.type === "recall" || message.type === "pat") {
     return <span className={`message-system-chip ${message.type}`}>{message.content}</span>;
   }
   if (message.type === "red_packet") {
+    const amount = Number(message.meta?.amount || 0);
+    const packetStatus = message.meta?.status || (message.role === "user" ? "sent" : "pending");
+    const canHandle = message.role !== "user" && packetStatus === "pending";
     return (
       <span className="message-card red-packet-card">
         <span className="red-packet-icon">¥</span>
         <span>
           <b>{message.meta?.title || "恭喜发财，大吉大利"}</b>
-          <small>{message.meta?.subtitle || "微信红包"}</small>
+          <small>
+            {packetStatus === "received" ? `已领取 ¥${amount.toFixed(2)}` : null}
+            {packetStatus === "returned" ? "已退回" : null}
+            {packetStatus === "sent" ? `已发送 ¥${amount.toFixed(2)}` : null}
+            {packetStatus === "pending" ? message.meta?.subtitle || "微信红包" : null}
+          </small>
+          {canHandle ? (
+            <span className="red-packet-actions">
+              <button type="button" onClick={() => onAcceptRedPacket?.(message)}>领取</button>
+              <button type="button" onClick={() => onReturnRedPacket?.(message)}>退回</button>
+            </span>
+          ) : null}
         </span>
       </span>
     );
@@ -1223,8 +1239,11 @@ function MessageBubble({ message }) {
   );
 }
 
-function ChatThread({ conversation, onBack, onSend, sending }) {
+function ChatThread({ conversation, onBack, onSend, onSendRedPacket, onAcceptRedPacket, onReturnRedPacket, sending }) {
   const [text, setText] = useState("");
+  const [redPacketOpen, setRedPacketOpen] = useState(false);
+  const [redPacketAmount, setRedPacketAmount] = useState("");
+  const [redPacketMessage, setRedPacketMessage] = useState("");
   const visibleMessages = conversation.messages.filter((message) => (
     message.role === "user" || !isPromptLeakReply(message.content)
   ));
@@ -1234,6 +1253,22 @@ function ChatThread({ conversation, onBack, onSend, sending }) {
     if (!value || sending) return;
     setText("");
     onSend(value);
+  };
+
+  const sendRedPacket = () => {
+    const amount = Number(redPacketAmount);
+    if (!Number.isFinite(amount) || amount <= 0) {
+      setRedPacketMessage("请输入红包金额。");
+      return;
+    }
+    try {
+      onSendRedPacket(amount);
+      setRedPacketAmount("");
+      setRedPacketMessage("");
+      setRedPacketOpen(false);
+    } catch (error) {
+      setRedPacketMessage(error.message || "红包发送失败。");
+    }
   };
 
   return (
@@ -1247,7 +1282,11 @@ function ChatThread({ conversation, onBack, onSend, sending }) {
             <div className={`message-row ${message.role === "user" ? "from-user" : "from-role"} message-type-${message.type || "text"}`} key={message.id}>
               {message.role !== "user" && !["recall", "pat"].includes(message.type) ? <ChatAvatar conversation={conversation} /> : null}
               <div className="message-stack">
-                <MessageBubble message={message} />
+                <MessageBubble
+                  message={message}
+                  onAcceptRedPacket={(item) => onAcceptRedPacket(item)}
+                  onReturnRedPacket={(item) => onReturnRedPacket(item)}
+                />
                 <small className="message-time">{formatChatTime(message.createdAt)}</small>
               </div>
             </div>
@@ -1260,8 +1299,22 @@ function ChatThread({ conversation, onBack, onSend, sending }) {
           </div>
         ) : null}
       </div>
+      {redPacketOpen ? (
+        <div className="chat-red-packet-panel">
+          <input
+            type="number"
+            min="0"
+            step="0.01"
+            value={redPacketAmount}
+            placeholder="红包金额"
+            onChange={(event) => setRedPacketAmount(event.target.value)}
+          />
+          <button type="button" onClick={sendRedPacket}>发红包</button>
+          {redPacketMessage ? <small>{redPacketMessage}</small> : null}
+        </div>
+      ) : null}
       <div className="chat-composer">
-        <button aria-label="语音">⌕</button>
+        <button aria-label="红包" onClick={() => setRedPacketOpen((value) => !value)}>¥</button>
         <input
           value={text}
           placeholder="发消息"
@@ -2058,9 +2111,11 @@ export function App() {
   const [roleStore] = useState(() => new RoleStore());
   const [identityStore] = useState(() => new IdentityStore());
   const [chatStore] = useState(() => new ChatStore());
+  const [walletStore] = useState(() => new WalletStore());
   const [roles, setRoles] = useState(() => roleStore.list());
   const [identities, setIdentities] = useState(() => identityStore.list());
   const [conversations, setConversations] = useState(() => chatStore.list());
+  const [wallet, setWallet] = useState(() => walletStore.snapshot());
   const [contacts, setContacts] = useState(() => chatStore.listContacts());
   const [contactRequests, setContactRequests] = useState(() => chatStore.listContactRequests());
   const [momentPosts, setMomentPosts] = useState(() => chatStore.listMomentPosts());
@@ -2204,6 +2259,53 @@ export function App() {
               setSendingChatId(null);
               setConversations(chatStore.list());
             }
+          }}
+          onSendRedPacket={(conversationId, amount) => {
+            const conversation = chatStore.get(conversationId);
+            if (!conversation) throw new Error("会话不存在。");
+            const value = Number(amount);
+            if (!Number.isFinite(value) || value <= 0) throw new Error("红包金额无效。");
+            if (value > walletStore.snapshot().balance) throw new Error("余额不足。");
+            const message = chatStore.addMessage(conversationId, createChatMessage({
+              role: "user",
+              type: "red_packet",
+              content: "红包",
+              meta: {
+                title: "恭喜发财，大吉大利",
+                subtitle: `${identities[0]?.name || "我"}发出的红包`,
+                amount: value,
+                status: "sent",
+              },
+            }));
+            walletStore.sendRedPacket({ to: conversation.title, amount: value, messageId: message.id });
+            setWallet(walletStore.snapshot());
+            setConversations(chatStore.list());
+            return message;
+          }}
+          onAcceptRedPacket={(conversationId, message) => {
+            const conversation = chatStore.get(conversationId);
+            if (!conversation || message?.meta?.status !== "pending") return null;
+            walletStore.receiveRedPacket({
+              from: conversation.title,
+              amount: Number(message.meta?.amount || 0),
+              messageId: message.id,
+            });
+            chatStore.updateMessageMeta(conversationId, message.id, { status: "received" });
+            setWallet(walletStore.snapshot());
+            setConversations(chatStore.list());
+            return message;
+          }}
+          onReturnRedPacket={(conversationId, message) => {
+            if (message?.meta?.status !== "pending") return null;
+            walletStore.returnRedPacket({
+              from: chatStore.get(conversationId)?.title,
+              amount: Number(message.meta?.amount || 0),
+              messageId: message.id,
+            });
+            chatStore.updateMessageMeta(conversationId, message.id, { status: "returned" });
+            setWallet(walletStore.snapshot());
+            setConversations(chatStore.list());
+            return message;
           }}
           onProactiveChatEvent={(conversationId, random = Math.random) => {
             const conversation = chatStore.get(conversationId);
@@ -2356,7 +2458,7 @@ export function App() {
         />
       );
     }
-    if (appPage?.key === "wallet") return <WalletApp />;
+    if (appPage?.key === "wallet") return <WalletApp wallet={wallet} />;
     if (appPage) return <SimplePane title={appPage.label} />;
     if (settingPage) return <SettingDetail page={settingPage} onBack={() => setSettingPage(null)} />;
     if (rolePage === "create") {
@@ -2480,6 +2582,8 @@ export function App() {
     sendingChatId,
     settingPage,
     tab,
+    wallet,
+    walletStore,
   ]);
 
   if (locked) {

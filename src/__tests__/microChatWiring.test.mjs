@@ -24,9 +24,14 @@ test("asks for confirmation before clearing moments", () => {
 });
 
 test("renders a real wallet app instead of the placeholder pane", () => {
-  assert.match(appSource, /function WalletApp\(\)/);
+  assert.match(appSource, /function WalletApp\(/);
   assert.match(appSource, /我的余额/);
   assert.match(appSource, /我的账单/);
   assert.match(appSource, /appPage\?\.key === "wallet"/);
-  assert.match(appSource, /<WalletApp \/>/);
+  assert.match(appSource, /<WalletApp wallet=\{wallet\} \/>/);
+  assert.match(appSource, /还没有账单/);
+  assert.match(appSource, /walletStore\.receiveRedPacket/);
+  assert.match(appSource, /walletStore\.sendRedPacket/);
+  assert.match(appSource, /onAcceptRedPacket/);
+  assert.match(appSource, /onReturnRedPacket/);
 });

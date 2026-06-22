@@ -10,7 +10,7 @@ Current prototype direction:
 - Use the pink visual direction: white, warm white, milk pink, blush, rose-gray, and tiny mist-blue shadows.
 - Do not use green accents, green switches, mint, sage, grass, leaves, or teal-green.
 - Desktop app icons should not have colored square backgrounds, tiles, badges, or button plates; they should look integrated into the cat wallpaper.
-- The Wallet app should be a real in-app page, not a placeholder, and show "我的余额" plus "我的账单" with soft pink wallet styling.
+- The Wallet app should be a real in-app page, not a placeholder, and show "我的余额" plus "我的账单" with soft pink Alipay-inspired wallet styling. Wallet state starts with a real ¥2000 balance and no fake bills; only in-app red packet events create bills. Role red packets require explicit receive/return actions, receiving increases balance, returning does not, and user-sent red packets deduct from wallet balance.
 - The phone UI is the whole viewport: no external phone frame, no black border, no dynamic island, and no outside background.
 - iPhone/Safari layouts should not feel pushed downward; prefer dynamic viewport units and light safe-area compensation so the UI sits higher and fills the visible screen.
 - Do not render a custom top system time or battery indicator; let the phone/browser own that area while the app background fills behind it.

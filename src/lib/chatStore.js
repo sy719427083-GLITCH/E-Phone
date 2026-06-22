@@ -38,6 +38,8 @@ export function createProactiveChatMessage(conversation = {}, random = Math.rand
       meta: {
         title: "恭喜发财，大吉大利",
         subtitle: `${title}发来的红包`,
+        amount: 18.88,
+        status: "pending",
       },
     });
   }
@@ -378,6 +380,20 @@ export class ChatStore {
     conversation.updatedAt = nextMessage.createdAt;
     this.persist();
     return nextMessage;
+  }
+
+  updateMessageMeta(conversationId, messageId, meta = {}) {
+    const conversation = this.get(conversationId);
+    if (!conversation) return null;
+    const message = conversation.messages.find((item) => item.id === messageId);
+    if (!message) return null;
+    message.meta = {
+      ...(message.meta || {}),
+      ...meta,
+    };
+    conversation.updatedAt = Date.now();
+    this.persist();
+    return message;
   }
 
   markRead(conversationId) {

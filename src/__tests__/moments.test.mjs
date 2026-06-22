@@ -59,7 +59,8 @@ test("builds a compact moments prompt from added contacts", () => {
     nowText: "6月21日 17:30",
   });
 
-  assert.match(prompt, /只回一句朋友圈正文/);
+  assert.match(prompt, /只回一句角色动态正文/);
+  assert.doesNotMatch(prompt, /朋友圈/);
   assert.doesNotMatch(prompt, /JSON/);
   assert.match(prompt, /纯文字/);
   assert.match(prompt, /陆斯年/);
@@ -88,6 +89,7 @@ test("builds a multi-post text prompt for compatible batch callers", () => {
   assert.match(prompt, /陆斯年/);
   assert.match(prompt, /沈棠/);
   assert.match(prompt, /可以像角色自发发布/);
+  assert.doesNotMatch(prompt, /朋友圈/);
 });
 
 test("builds an ultra tiny fallback prompt for text moments", () => {
@@ -99,6 +101,7 @@ test("builds an ultra tiny fallback prompt for text moments", () => {
 
   assert.match(prompt, /1-100字/);
   assert.match(prompt, /陆斯年/);
+  assert.doesNotMatch(prompt, /朋友圈/);
   assert.ok(prompt.length < 120);
 });
 

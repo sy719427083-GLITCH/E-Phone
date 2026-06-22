@@ -130,17 +130,17 @@ export function buildMomentsPrompt({
     const contact = author || roster[0] || {};
     if (limit > 1) {
       return [
-        "为中文角色朋友圈生成动态。只返回 JSON 数组，不要 Markdown。",
+        "为中文角色生成日常动态短句。只返回 JSON 数组，不要 Markdown。",
         `条数:${limit};模式:${mode === "specified" ? "指定" : "随机"};类型:纯文字`,
-        '格式:[{"authorName":"角色名","content":"朋友圈正文"}]',
-        "每条1-100字，像真实朋友圈，可以像角色自发发布，内容可结合聊天、当天行程、所见所得或此刻心情。",
+        '格式:[{"authorName":"角色名","content":"动态正文"}]',
+        "每条1-100字，生活化，可以像角色自发发布，内容可结合聊天、当天行程、所见所得或此刻心情。",
         `现在:${nowText || "当前时间"}`,
         context ? `聊天内容:${context}` : "",
         `角色:${roleLines || `${contact.name || "角色"}:${contact.identity || "身份未填"};${contact.personality || "性格未填"}`}`,
       ].filter(Boolean).join("\n");
     }
     return [
-      "只回一句朋友圈正文，不要解释。",
+      "只回一句角色动态正文，不要解释。",
       "类型:纯文字",
       `角色:${contact.name || "角色"};${contact.identity || "身份未填"};${contact.personality || "性格未填"}`,
       `要求:1-100字。参考:可结合聊天内容、今天行程、所见所得或现在心情。${nowText ? `现在:${nowText}` : ""}`,
@@ -149,9 +149,9 @@ export function buildMomentsPrompt({
   }
 
   return [
-    "为中文角色朋友圈生成动态。只返回 JSON 数组，不要 Markdown。",
+    "为中文角色生成日常动态短句。只返回 JSON 数组，不要 Markdown。",
     `条数:${limit};模式:${mode === "specified" ? "指定" : "随机"};类型:${normalizedPostType === "image_text" ? "图文" : "纯文字"}`,
-    '格式:[{"authorName":"角色名","content":"朋友圈正文"}]',
+    '格式:[{"authorName":"角色名","content":"动态正文"}]',
     "正文每条1-100字，生活化，有角色感。",
     `角色:${roleLines || "暂无"}`,
   ].join("\n");
@@ -160,7 +160,7 @@ export function buildMomentsPrompt({
 export function buildTinyMomentPrompt({ author = null, context = "", nowText = "" } = {}) {
   const role = author || {};
   return [
-    "只回一句朋友圈，正文1-100字，像角色自发发布。",
+    "只回一句角色日常动态，正文1-100字，像角色自发发布。",
     `角色:${role.name || "角色"};${role.identity || ""};${role.personality || ""}`,
     context ? `参考:${context.slice(0, 36)}` : "",
     nowText ? `现在:${nowText}` : "",

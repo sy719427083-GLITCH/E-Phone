@@ -70,4 +70,5 @@ Current prototype direction:
 - Moments clearing must ask for confirmation before deleting generated posts.
 - Moments top-right action buttons should keep the same compact round size; if the trash icon needs emphasis, widen only the drawn bin inside the SVG, not the button itself.
 - Micro Chat role replies should behave like real phone chat bubbles: one user message may receive 1-6 short assistant bubbles, with no stage directions, gestures, poses, parenthetical action, or narration.
+- Micro Chat must never show model prompts, JSON wrappers, Markdown, rewrite notes, analysis, or formatting instructions as chat bubbles; parser and display should filter those leaks, including older stored messages.
 - In the new friends page, rejection should appear before acceptance when both actions are shown.

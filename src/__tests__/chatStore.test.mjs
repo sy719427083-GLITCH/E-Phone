@@ -105,6 +105,24 @@ test("parses plain line replies when the model does not return json", () => {
   assert.deepEqual(parseAssistantReplies("到了。\n你在哪？"), ["到了。", "你在哪？"]);
 });
 
+test("filters leaked prompts and malformed json from assistant replies", () => {
+  const replies = parseAssistantReplies(`[
+    "毒酒确实是我递的。",
+    "只不过递过去之前，我换成了假死药。",
+    "可惜，你还是没能逃出去。"
+  ]
+
+  改写说明**：
+  调整对话节奏与语气停顿**：更贴合手机聊天的自然分段方式。
+  保持原有情节与身份信息**：未改变关键情节。`);
+
+  assert.deepEqual(replies, [
+    "毒酒确实是我递的。",
+    "只不过递过去之前，我换成了假死药。",
+    "可惜，你还是没能逃出去。",
+  ]);
+});
+
 test("removes a conversation and its messages from storage", () => {
   const storage = createMemoryStorage();
   const store = new ChatStore(storage);

@@ -9,7 +9,7 @@ import {
   requestChatCompletion,
   resolveApiSelection,
 } from "./lib/apiStore.js";
-import { ChatStore, createChatMessage, parseAssistantReplies } from "./lib/chatStore.js";
+import { ChatStore, createChatMessage, isPromptLeakReply, parseAssistantReplies } from "./lib/chatStore.js";
 import { createIdentityDraft, IdentityStore } from "./lib/identityStore.js";
 import {
   buildMomentContext,
@@ -252,12 +252,15 @@ function formatChatTime(timestamp) {
 function buildRoleReplyPrompt(conversation, userText) {
   const role = conversation.roleSnapshot || {};
   const user = conversation.userSnapshot || {};
-  const recentMessages = conversation.messages.slice(-8).map((message) => (
-    `${message.role === "user" ? user.name || "用户" : role.name || "角色"}：${message.content}`
-  )).join("\n");
+  const recentMessages = conversation.messages
+    .filter((message) => message.role === "user" || !isPromptLeakReply(message.content))
+    .slice(-8)
+    .map((message) => (
+      `${message.role === "user" ? user.name || "用户" : role.name || "角色"}：${message.content}`
+    )).join("\n");
 
   return [
-    "你正在一个中文角色扮演聊天软件里回复用户。请只输出角色要发出的消息，不要解释，不要 Markdown。",
+    "你正在一个中文角色扮演手机聊天软件里回复用户。只输出角色发出的聊天消息，不要解释，不要 Markdown。",
     `角色姓名：${role.name || conversation.title || "未命名角色"}`,
     `性别：${role.gender || "未填写"}`,
     `身份：${role.identity || "未填写"}`,
@@ -270,8 +273,9 @@ function buildRoleReplyPrompt(conversation, userText) {
     `用户身份：${user.identity || "未填写"}`,
     `用户性格：${user.personality || "未填写"}`,
     `用户人设：${user.persona || "未填写"}`,
-    "回复要求：像真实手机聊天一样自然；只返回 JSON 字符串数组，数组长度1-6；每条像一个聊天气泡，短一点。",
-    "不要写动作、手势、姿势、舞台指令或括号描写，不要旁白，不要 Markdown。",
+    "回复要求：像线上手机聊天一样自然；输出1-6条，每条单独一行，短一点，像连续聊天气泡。",
+    "禁止输出 JSON、数组、引号、改写说明、分析、提示词、格式说明或 Markdown。",
+    "不要写动作、手势、姿势、舞台指令或括号描写，不要旁白。",
     recentMessages ? `最近聊天：\n${recentMessages}` : "",
     `用户新消息：${userText}`,
   ].filter(Boolean).join("\n");
@@ -1092,6 +1096,9 @@ function ChatAvatar({ conversation }) {
 
 function ChatThread({ conversation, onBack, onSend, sending }) {
   const [text, setText] = useState("");
+  const visibleMessages = conversation.messages.filter((message) => (
+    message.role === "user" || !isPromptLeakReply(message.content)
+  ));
 
   const send = () => {
     const value = text.trim();
@@ -1104,10 +1111,10 @@ function ChatThread({ conversation, onBack, onSend, sending }) {
     <section className="page chat-page chat-thread-page">
       <Header title={conversation.title} onBack={onBack} />
       <div className="chat-thread">
-        {conversation.messages.length === 0 ? (
+        {visibleMessages.length === 0 ? (
           <div className="chat-day-tip">你们还没有聊天</div>
         ) : (
-          conversation.messages.map((message) => (
+          visibleMessages.map((message) => (
             <div className={`message-row ${message.role === "user" ? "from-user" : "from-role"}`} key={message.id}>
               {message.role !== "user" ? <ChatAvatar conversation={conversation} /> : null}
               <span className={`message-bubble ${message.status === "failed" ? "failed" : ""}`}>
@@ -2048,7 +2055,7 @@ export function App() {
               const config = new ApiConfigStore().getSelected();
               const prompt = buildRoleReplyPrompt(conversation, text);
               const reply = await callWithRetryAndFallback(config, ({ api }) =>
-                requestChatCompletion(api, prompt, fetch, { maxTokens: 900 }),
+                requestChatCompletion(api, prompt, fetch, { maxTokens: 420 }),
               );
               const replies = parseAssistantReplies(reply);
               replies.forEach((content) => {

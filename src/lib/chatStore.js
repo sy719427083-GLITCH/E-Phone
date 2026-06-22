@@ -12,6 +12,7 @@ export function createChatMessage({ role = "user", content = "", status = "sent"
 
 function cleanAssistantReply(content = "") {
   return String(content || "")
+    .replace(/^["'“”‘’\[\],\s]+|["'“”‘’\[\],\s]+$/g, "")
     .replace(/[（(][^）)]*[）)]/g, "")
     .replace(/(?:将|把|伸手|抬手|低头|转身|握住|收起|收入|举起|放下|靠在|站在|坐在|走到|拿起|抬眼|垂眸)[^，。！？；、,.!?;\n]*/g, "")
     .replace(/\s+/g, " ")
@@ -20,21 +21,45 @@ function cleanAssistantReply(content = "") {
     .trim();
 }
 
+export function isPromptLeakReply(content = "") {
+  const text = String(content || "").trim();
+  if (!text) return true;
+  return /改写说明|调整对话|保持原有|提示词|回复要求|输出要求|格式说明|JSON|Markdown|字符串数组|数组长度|不要解释|不要旁白|\*\*/i.test(text)
+    || /^[\[\]{}]+$/.test(text);
+}
+
+function parseReplyItemsFromJson(text) {
+  const candidates = [text];
+  const bracketed = text.match(/\[[\s\S]*?\]/)?.[0];
+  if (bracketed && bracketed !== text) candidates.push(bracketed);
+
+  for (const candidate of candidates) {
+    try {
+      const parsed = JSON.parse(candidate);
+      const items = Array.isArray(parsed) ? parsed : parsed?.messages || parsed?.replies || null;
+      if (Array.isArray(items)) return items;
+    } catch {
+      // Try the next shape.
+    }
+  }
+
+  return null;
+}
+
 export function parseAssistantReplies(raw, limit = 6) {
   const text = String(raw || "").trim();
   if (!text) return [];
   const jsonText = text.match(/```json\s*([\s\S]*?)```/)?.[1] || text.match(/```\s*([\s\S]*?)```/)?.[1] || text;
-  let items = null;
-  try {
-    const parsed = JSON.parse(jsonText);
-    items = Array.isArray(parsed) ? parsed : parsed?.messages || parsed?.replies || null;
-  } catch {
-    items = null;
-  }
+  const items = parseReplyItemsFromJson(jsonText);
+  const quotedItems = !Array.isArray(items) && jsonText.includes("[")
+    ? Array.from(jsonText.matchAll(/"([^"\n]{1,160})"/g)).map((match) => match[1])
+    : null;
   const source = Array.isArray(items)
     ? items.map((item) => (typeof item === "string" ? item : item?.content || item?.text || ""))
+    : quotedItems?.length
+      ? quotedItems
     : text.split(/\n+/).map((line) => line.replace(/^[-*\d.、\s]+/, ""));
-  const cleaned = source.map(cleanAssistantReply).filter(Boolean);
+  const cleaned = source.map(cleanAssistantReply).filter((reply) => reply && !isPromptLeakReply(reply));
   return cleaned.slice(0, Math.max(1, Math.min(6, Number(limit) || 6)));
 }
 

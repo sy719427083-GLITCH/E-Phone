@@ -123,6 +123,17 @@ const settingsItems = [
   ["system", "系统设置", "PWA与缓存", assetPath("assets/settings-icons/system.png")],
 ];
 
+const walletData = {
+  balance: 128.66,
+  bills: [
+    { id: "bill-redpacket", title: "微聊红包", note: "陆清晏", amount: 18.88, type: "income", time: "今天 15:06" },
+    { id: "bill-food", title: "外卖订单", note: "甜品与热饮", amount: -26.5, type: "expense", time: "今天 12:18" },
+    { id: "bill-topup", title: "余额充值", note: "银行卡", amount: 100, type: "income", time: "昨天 21:40" },
+    { id: "bill-ride", title: "出行支付", note: "市内车费", amount: -13.8, type: "expense", time: "昨天 18:22" },
+    { id: "bill-gift", title: "角色礼物", note: "剧情互动", amount: -9.9, type: "expense", time: "6月20日 20:05" },
+  ],
+};
+
 const tabItems = [
   { key: "home", label: "主页", icon: "home" },
   { key: "roles", label: "角色档案", icon: "roles" },
@@ -245,6 +256,56 @@ function SimplePane({ title }) {
         <h2>{title}</h2>
         <p>这里会承载对应的 AI 聊天扮演功能页面。</p>
       </div>
+    </section>
+  );
+}
+
+function formatMoney(amount) {
+  const value = Math.abs(Number(amount) || 0);
+  return `${amount < 0 ? "-" : "+"}¥${value.toFixed(2)}`;
+}
+
+function WalletApp() {
+  const income = walletData.bills
+    .filter((bill) => bill.amount > 0)
+    .reduce((total, bill) => total + bill.amount, 0);
+  const expense = walletData.bills
+    .filter((bill) => bill.amount < 0)
+    .reduce((total, bill) => total + Math.abs(bill.amount), 0);
+
+  return (
+    <section className="page soft-page wallet-page">
+      <Header title="钱包" />
+      <div className="wallet-balance-card">
+        <span>我的余额</span>
+        <strong>¥{walletData.balance.toFixed(2)}</strong>
+        <div>
+          <small>本月收入 ¥{income.toFixed(2)}</small>
+          <small>本月支出 ¥{expense.toFixed(2)}</small>
+        </div>
+      </div>
+      <section className="wallet-bills">
+        <div className="wallet-section-title">
+          <b>我的账单</b>
+          <span>{walletData.bills.length} 笔</span>
+        </div>
+        <div className="wallet-bill-list">
+          {walletData.bills.map((bill) => (
+            <article className="wallet-bill-row" key={bill.id}>
+              <span className={`wallet-bill-icon ${bill.type}`}>
+                {bill.amount > 0 ? "入" : "支"}
+              </span>
+              <div>
+                <b>{bill.title}</b>
+                <small>{bill.note} · {bill.time}</small>
+              </div>
+              <strong className={bill.amount > 0 ? "income" : "expense"}>
+                {formatMoney(bill.amount)}
+              </strong>
+            </article>
+          ))}
+        </div>
+      </section>
     </section>
   );
 }
@@ -2295,6 +2356,7 @@ export function App() {
         />
       );
     }
+    if (appPage?.key === "wallet") return <WalletApp />;
     if (appPage) return <SimplePane title={appPage.label} />;
     if (settingPage) return <SettingDetail page={settingPage} onBack={() => setSettingPage(null)} />;
     if (rolePage === "create") {

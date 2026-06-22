@@ -22,3 +22,11 @@ test("asks for confirmation before clearing moments", () => {
   assert.match(appSource, /确认清空朋友圈/);
   assert.match(appSource, /setClearConfirmOpen\(true\)/);
 });
+
+test("renders a real wallet app instead of the placeholder pane", () => {
+  assert.match(appSource, /function WalletApp\(\)/);
+  assert.match(appSource, /我的余额/);
+  assert.match(appSource, /我的账单/);
+  assert.match(appSource, /appPage\?\.key === "wallet"/);
+  assert.match(appSource, /<WalletApp \/>/);
+});

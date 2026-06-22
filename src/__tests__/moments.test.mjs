@@ -70,6 +70,8 @@ test("builds a compact moments prompt from added contacts", () => {
   assert.match(prompt, /陆斯年/);
   assert.match(prompt, /聊天内容|今天|现在/);
   assert.match(prompt, /昨天聊到天台和钢琴/);
+  assert.match(prompt, /公开动态|不是聊天/);
+  assert.match(prompt, /不要直接称呼/);
   assert.doesNotMatch(prompt, /沈棠/);
   assert.ok(prompt.length < 360);
 });
@@ -93,6 +95,8 @@ test("builds a multi-post text prompt for compatible batch callers", () => {
   assert.match(prompt, /陆斯年/);
   assert.match(prompt, /沈棠/);
   assert.match(prompt, /可以像角色自发发布/);
+  assert.match(prompt, /公开动态|不是聊天/);
+  assert.match(prompt, /不要直接称呼/);
   assert.doesNotMatch(prompt, /朋友圈/);
 });
 
@@ -104,6 +108,8 @@ test("builds an ultra tiny fallback prompt for text moments", () => {
   });
 
   assert.match(prompt, /1-100字/);
+  assert.match(prompt, /公开动态|不是聊天/);
+  assert.match(prompt, /不要直接称呼/);
   assert.match(prompt, /陆斯年/);
   assert.doesNotMatch(prompt, /朋友圈/);
   assert.ok(prompt.length < 120);

@@ -5,6 +5,7 @@ import {
   ChatStore,
   createChatMessage,
   createConversationDraft,
+  createProactiveChatMessage,
   parseAssistantReplies,
 } from "../lib/chatStore.js";
 
@@ -78,6 +79,22 @@ test("starts one conversation per role and persists messages", () => {
   assert.equal(restored.list().length, 1);
   assert.equal(restoredConversation.messages.length, 2);
   assert.equal(restoredConversation.messages[1].content, "晚上好。");
+});
+
+test("stores wechat-style message types for proactive role events", () => {
+  const storage = createMemoryStorage();
+  const store = new ChatStore(storage);
+  const conversation = store.startConversation(role);
+
+  store.addMessage(conversation.id, createProactiveChatMessage(conversation, () => 0.2));
+  store.addMessage(conversation.id, createProactiveChatMessage(conversation, () => 0.4));
+  store.addMessage(conversation.id, createProactiveChatMessage(conversation, () => 0.6));
+
+  const restored = new ChatStore(storage).get(conversation.id);
+  assert.deepEqual(restored.messages.map((message) => message.type), ["red_packet", "pat", "location"]);
+  assert.equal(restored.messages[0].meta.title, "恭喜发财，大吉大利");
+  assert.equal(restored.messages[1].content, "陆斯年拍了拍我");
+  assert.equal(restored.messages[2].meta.title, "位置");
 });
 
 test("parses assistant replies into realistic chat bubbles", () => {

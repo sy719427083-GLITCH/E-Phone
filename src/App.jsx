@@ -9,7 +9,13 @@ import {
   requestChatCompletion,
   resolveApiSelection,
 } from "./lib/apiStore.js";
-import { ChatStore, createChatMessage, isPromptLeakReply, parseAssistantReplies } from "./lib/chatStore.js";
+import {
+  ChatStore,
+  createChatMessage,
+  createProactiveChatMessage,
+  isPromptLeakReply,
+  parseAssistantReplies,
+} from "./lib/chatStore.js";
 import { createIdentityDraft, IdentityStore } from "./lib/identityStore.js";
 import {
   buildMomentContext,
@@ -311,6 +317,7 @@ function MicroChatApp({
   onToggleMomentLike,
   onAddMomentComment,
   onClearMoments,
+  onProactiveChatEvent,
   sendingChatId,
   generatingMoments,
 }) {
@@ -334,6 +341,25 @@ function MicroChatApp({
   useEffect(() => {
     momentPostsRef.current = momentPosts;
   }, [momentPosts]);
+
+  useEffect(() => {
+    if (conversations.length === 0) return undefined;
+    let cancelled = false;
+    const sendProactive = () => {
+      if (cancelled || conversations.length === 0) return;
+      if (Math.random() > 0.42) return;
+      const index = Math.min(conversations.length - 1, Math.floor(Math.random() * conversations.length));
+      const conversation = conversations[index];
+      if (conversation?.id) onProactiveChatEvent(conversation.id, Math.random);
+    };
+    const firstTimer = window.setTimeout(sendProactive, 38_000);
+    const interval = window.setInterval(sendProactive, 4 * 60_000);
+    return () => {
+      cancelled = true;
+      window.clearTimeout(firstTimer);
+      window.clearInterval(interval);
+    };
+  }, [conversations, onProactiveChatEvent]);
 
   useEffect(() => {
     if (contacts.length === 0) return undefined;
@@ -1094,6 +1120,48 @@ function ChatAvatar({ conversation }) {
   );
 }
 
+function LocationIcon() {
+  return (
+    <svg className="message-location-icon" viewBox="0 0 48 48" aria-hidden="true">
+      <path d="M24 5.5c-8 0-14.5 6.4-14.5 14.2 0 10.4 14.5 22.8 14.5 22.8S38.5 30.1 38.5 19.7C38.5 11.9 32 5.5 24 5.5Z" />
+      <circle cx="24" cy="19.8" r="5.1" />
+    </svg>
+  );
+}
+
+function MessageBubble({ message }) {
+  if (message.type === "recall" || message.type === "pat") {
+    return <span className={`message-system-chip ${message.type}`}>{message.content}</span>;
+  }
+  if (message.type === "red_packet") {
+    return (
+      <span className="message-card red-packet-card">
+        <span className="red-packet-icon">¥</span>
+        <span>
+          <b>{message.meta?.title || "恭喜发财，大吉大利"}</b>
+          <small>{message.meta?.subtitle || "微信红包"}</small>
+        </span>
+      </span>
+    );
+  }
+  if (message.type === "location") {
+    return (
+      <span className="message-card location-card">
+        <span>
+          <b>{message.meta?.title || "位置"}</b>
+          <small>{message.meta?.subtitle || "对方分享了一个坐标"}</small>
+        </span>
+        <LocationIcon />
+      </span>
+    );
+  }
+  return (
+    <span className={`message-bubble ${message.status === "failed" ? "failed" : ""}`}>
+      {message.content}
+    </span>
+  );
+}
+
 function ChatThread({ conversation, onBack, onSend, sending }) {
   const [text, setText] = useState("");
   const visibleMessages = conversation.messages.filter((message) => (
@@ -1115,11 +1183,12 @@ function ChatThread({ conversation, onBack, onSend, sending }) {
           <div className="chat-day-tip">你们还没有聊天</div>
         ) : (
           visibleMessages.map((message) => (
-            <div className={`message-row ${message.role === "user" ? "from-user" : "from-role"}`} key={message.id}>
-              {message.role !== "user" ? <ChatAvatar conversation={conversation} /> : null}
-              <span className={`message-bubble ${message.status === "failed" ? "failed" : ""}`}>
-                {message.content}
-              </span>
+            <div className={`message-row ${message.role === "user" ? "from-user" : "from-role"} message-type-${message.type || "text"}`} key={message.id}>
+              {message.role !== "user" && !["recall", "pat"].includes(message.type) ? <ChatAvatar conversation={conversation} /> : null}
+              <div className="message-stack">
+                <MessageBubble message={message} />
+                <small className="message-time">{formatChatTime(message.createdAt)}</small>
+              </div>
             </div>
           ))
         )}
@@ -2074,6 +2143,14 @@ export function App() {
               setSendingChatId(null);
               setConversations(chatStore.list());
             }
+          }}
+          onProactiveChatEvent={(conversationId, random = Math.random) => {
+            const conversation = chatStore.get(conversationId);
+            if (!conversation) return null;
+            const message = createProactiveChatMessage(conversation, random);
+            chatStore.addMessage(conversationId, message);
+            setConversations(chatStore.list());
+            return message;
           }}
           onGenerateMoments={async ({ mode, postType, selectedRoleId, count, spontaneous = false }) => {
             if (momentGenerationBusyRef.current) {

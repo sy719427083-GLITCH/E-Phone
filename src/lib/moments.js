@@ -141,7 +141,8 @@ export function buildMomentsPrompt({
         "为中文角色生成日常动态短句。只返回 JSON 数组，不要 Markdown。",
         `条数:${limit};模式:${mode === "specified" ? "指定" : "随机"};类型:纯文字`,
         '格式:[{"authorName":"角色名","content":"动态正文"}]',
-        "每条1-100字，像真实社交平台短动态，可以像角色自发发布，内容可结合聊天、当天行程、所见所得或此刻心情。",
+        "每条1-100字，像真实社交平台公开动态，不是聊天回复；可以像角色自发发布，内容可结合当天行程、所见所得、环境、心情或少量聊天余韵。",
+        "不要直接称呼用户，不要写“你/客官/宝/主人”等对话称呼，不要提问式私聊，不要解释给某个人听。",
         "不要写动作、手势、姿势、舞台指令或括号描写，例如不要写“将三枚铜钱收入袖中”。",
         `现在:${nowText || "当前时间"}`,
         context ? `聊天内容:${context}` : "",
@@ -152,7 +153,7 @@ export function buildMomentsPrompt({
       "只回一句角色动态正文，不要解释。",
       "类型:纯文字",
       `角色:${contact.name || "角色"};${contact.identity || "身份未填"};${contact.personality || "性格未填"}`,
-      `要求:1-100字，像真实社交平台短动态；不要写动作、手势、姿势、舞台指令或括号描写。参考:可结合聊天内容、今天行程、所见所得或现在心情。${nowText ? `现在:${nowText}` : ""}`,
+      `要求:1-100字，像真实社交平台公开动态，不是聊天回复；不要直接称呼用户，不要写“你/客官/宝/主人”等对话称呼；不要写动作、手势、姿势、舞台指令或括号描写。参考:可结合今天行程、所见所得、环境、心情或少量聊天余韵。${nowText ? `现在:${nowText}` : ""}`,
       context ? `聊天内容:${context}` : "",
     ].join("\n");
   }
@@ -161,7 +162,7 @@ export function buildMomentsPrompt({
     "为中文角色生成日常动态短句。只返回 JSON 数组，不要 Markdown。",
     `条数:${limit};模式:${mode === "specified" ? "指定" : "随机"};类型:${normalizedPostType === "image_text" ? "图文" : "纯文字"}`,
     '格式:[{"authorName":"角色名","content":"动态正文"}]',
-    "正文每条1-100字，像真实社交平台短动态，有角色感。不要写动作、手势、姿势、舞台指令或括号描写。",
+    "正文每条1-100字，像真实社交平台公开动态，不是聊天回复，有角色感。不要直接称呼用户，不要写“你/客官/宝/主人”等对话称呼。不要写动作、手势、姿势、舞台指令或括号描写。",
     `角色:${roleLines || "暂无"}`,
   ].join("\n");
 }
@@ -169,8 +170,7 @@ export function buildMomentsPrompt({
 export function buildTinyMomentPrompt({ author = null, context = "", nowText = "" } = {}) {
   const role = author || {};
   return [
-    "只回一句角色日常动态，正文1-100字，像真实社交平台短动态。",
-    "不要写动作、手势、姿势、舞台指令或括号描写。",
+    "一句公开动态，不是聊天；1-100字；不要直接称呼用户或写动作。",
     `角色:${role.name || "角色"};${role.identity || ""};${role.personality || ""}`,
     context ? `参考:${context.slice(0, 36)}` : "",
     nowText ? `现在:${nowText}` : "",

@@ -1,13 +1,71 @@
 export const CHAT_STORAGE_KEY = "ephone.microchat";
 
-export function createChatMessage({ role = "user", content = "", status = "sent" } = {}) {
+export function createChatMessage({ role = "user", content = "", status = "sent", type = "text", meta = {} } = {}) {
   return {
     id: makeChatId("msg"),
     role,
+    type,
     content: String(content || ""),
+    meta: meta && typeof meta === "object" ? { ...meta } : {},
     status,
     createdAt: Date.now(),
   };
+}
+
+const proactiveTexts = [
+  "刚看到一件事，想起你了。",
+  "现在方便说话吗？",
+  "路过你之前提过的地方。",
+  "今天有点安静。",
+  "突然想问问你在不在。",
+];
+
+export function createProactiveChatMessage(conversation = {}, random = Math.random) {
+  const title = conversation.title || conversation.roleSnapshot?.name || "对方";
+  const roll = Math.max(0, Math.min(0.999, Number(random()) || 0));
+  if (roll < 0.2) {
+    return createChatMessage({
+      role: "assistant",
+      type: "recall",
+      content: `${title}撤回了一条消息`,
+    });
+  }
+  if (roll < 0.4) {
+    return createChatMessage({
+      role: "assistant",
+      type: "red_packet",
+      content: "红包",
+      meta: {
+        title: "恭喜发财，大吉大利",
+        subtitle: `${title}发来的红包`,
+      },
+    });
+  }
+  if (roll < 0.6) {
+    return createChatMessage({
+      role: "assistant",
+      type: "pat",
+      content: `${title}拍了拍我`,
+    });
+  }
+  if (roll < 0.8) {
+    return createChatMessage({
+      role: "assistant",
+      type: "location",
+      content: "分享位置",
+      meta: {
+        title: "位置",
+        subtitle: "对方分享了一个坐标",
+      },
+    });
+  }
+
+  const index = Math.min(proactiveTexts.length - 1, Math.floor((roll - 0.8) / 0.2 * proactiveTexts.length));
+  return createChatMessage({
+    role: "assistant",
+    type: "text",
+    content: proactiveTexts[index] || proactiveTexts[0],
+  });
 }
 
 function cleanAssistantReply(content = "") {
@@ -165,7 +223,9 @@ function mergeMessage(message = {}) {
   return {
     id: message.id || makeChatId("msg"),
     role: message.role || "user",
+    type: message.type || "text",
     content: String(message.content || ""),
+    meta: message.meta && typeof message.meta === "object" ? { ...message.meta } : {},
     status: message.status || "sent",
     createdAt: Number(message.createdAt) || Date.now(),
   };

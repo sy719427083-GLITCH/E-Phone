@@ -66,9 +66,11 @@ Current prototype direction:
 - User comments on a role's Moment should queue a role reply every time, but replies must feel delayed rather than instant.
 - Moment replies should display Chinese colons, for example "角色名回复了我：内容" and "我回复了角色名：内容"; tapping a role reply should let the user continue replying in the same comment thread.
 - Moment role replies should sound like public social-feed comments rather than private chat messages.
+- Moment generated post copy should read like a public social feed post, not private chat: avoid direct address such as "你", "客官", "宝", or "主人", and avoid question-style replies to the user.
 - The Moments top-right action area can include a trash icon beside the plus icon for one-tap clearing of all Moment posts.
 - Moments clearing must ask for confirmation before deleting generated posts.
 - Moments top-right action buttons should keep the same compact round size; if the trash icon needs emphasis, widen only the drawn bin inside the SVG, not the button itself.
 - Micro Chat role replies should behave like real phone chat bubbles: one user message may receive 1-6 short assistant bubbles, with no stage directions, gestures, poses, parenthetical action, or narration.
 - Micro Chat must never show model prompts, JSON wrappers, Markdown, rewrite notes, analysis, or formatting instructions as chat bubbles; parser and display should filter those leaks, including older stored messages.
+- Micro Chat messages should show a time below each bubble. Roles may proactively send normal messages and WeChat-like special events: recalled message, red packet, pat, and shared location rendered with CSS/SVG instead of external images.
 - In the new friends page, rejection should appear before acceptance when both actions are shown.

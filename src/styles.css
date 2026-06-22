@@ -2916,6 +2916,11 @@ button {
   justify-content: flex-end;
 }
 
+.message-row.message-type-recall,
+.message-row.message-type-pat {
+  justify-content: center;
+}
+
 .message-row .chat-avatar {
   flex: 0 0 auto;
   width: 34px;
@@ -2935,6 +2940,110 @@ button {
   line-height: 1.45;
   white-space: pre-wrap;
   word-break: break-word;
+}
+
+.message-stack {
+  display: grid;
+  gap: 3px;
+  justify-items: start;
+  max-width: min(76%, 280px);
+}
+
+.from-user .message-stack {
+  justify-items: end;
+}
+
+.message-type-recall .message-stack,
+.message-type-pat .message-stack {
+  justify-items: center;
+  max-width: 100%;
+}
+
+.message-time {
+  color: #b1a5ab;
+  font-size: 9px;
+  line-height: 1.2;
+}
+
+.message-system-chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 22px;
+  border-radius: 999px;
+  padding: 0 9px;
+  color: #9b8d94;
+  background: rgba(255, 255, 255, 0.58);
+  font-size: 11px;
+}
+
+.message-card {
+  display: grid;
+  align-items: center;
+  width: min(210px, 70vw);
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 8px 14px rgba(54, 45, 50, 0.055);
+}
+
+.message-card b,
+.message-card small {
+  display: block;
+}
+
+.message-card b {
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.message-card small {
+  margin-top: 4px;
+  font-size: 10px;
+  opacity: 0.72;
+}
+
+.red-packet-card {
+  grid-template-columns: 38px minmax(0, 1fr);
+  gap: 10px;
+  padding: 11px;
+  color: #fffaf6;
+  background: #e8a24c;
+}
+
+.red-packet-icon {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  color: #d98a36;
+  background: #fff0d7;
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.location-card {
+  grid-template-columns: minmax(0, 1fr) 46px;
+  gap: 10px;
+  padding: 11px;
+  color: #5e5157;
+  background: rgba(255, 255, 255, 0.95);
+}
+
+.message-location-icon {
+  width: 42px;
+  height: 42px;
+}
+
+.message-location-icon path {
+  fill: #f3d5df;
+  stroke: #b88295;
+  stroke-width: 2;
+}
+
+.message-location-icon circle {
+  fill: #fff;
+  stroke: #b88295;
+  stroke-width: 2;
 }
 
 .from-user .message-bubble {

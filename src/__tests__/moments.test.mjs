@@ -43,8 +43,8 @@ test("formats role replies to my moment comments", () => {
 });
 
 test("delays role replies to comments so they do not feel instant", () => {
-  assert.equal(getMomentReplyDelayMs(() => 0), 1800);
-  assert.equal(getMomentReplyDelayMs(() => 1), 3600);
+  assert.equal(getMomentReplyDelayMs(() => 0), 8000);
+  assert.equal(getMomentReplyDelayMs(() => 1), 18000);
 });
 
 test("builds a compact moments prompt from added contacts", () => {

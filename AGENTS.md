@@ -63,3 +63,5 @@ Current prototype direction:
 - Roles may spontaneously post Moments using the same direct API path, but automatic posts must respect real-world time spacing and recent manual posts so they do not feel frequent or spammy.
 - Moment copy should read like real social feed text and must avoid stage directions, gestures, poses, or parenthetical action descriptions such as "将三枚铜钱收入袖中"; clean generated content before saving if needed.
 - Moment post timestamps should display from each post's real `createdAt` time instead of a fixed "刚刚" label.
+- User comments on a role's Moment should queue a role reply every time, but replies must feel delayed rather than instant.
+- The Moments top-right action area can include a trash icon beside the plus icon for one-tap clearing of all Moment posts.

@@ -333,6 +333,11 @@ export class ChatStore {
     return next;
   }
 
+  clearMomentPosts() {
+    this.momentPosts = [];
+    this.persist();
+  }
+
   getMomentPost(postId) {
     return this.momentPosts.find((post) => post.id === postId) || null;
   }

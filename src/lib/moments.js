@@ -25,7 +25,7 @@ export function getMomentRequestDelayMs(index, postType = "text") {
 }
 
 export function getMomentReplyDelayMs(random = Math.random) {
-  return 1800 + Math.round(Math.max(0, Math.min(1, random())) * 1800);
+  return 8000 + Math.round(Math.max(0, Math.min(1, random())) * 10000);
 }
 
 export function formatMomentReplyText(authorName = "角色", content = "") {

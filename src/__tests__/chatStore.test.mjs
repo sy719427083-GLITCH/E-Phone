@@ -178,3 +178,16 @@ test("stores moment likes, comments, and role replies", () => {
   assert.equal(restoredPost.comments.length, 1);
   assert.equal(restoredPost.comments[0].replies[0].authorName, "陆斯年");
 });
+
+test("clears all moment posts", () => {
+  const storage = createMemoryStorage();
+  const store = new ChatStore(storage);
+  store.addMomentPost({ authorName: "陆斯年", content: "今天的风很轻。" });
+  store.addMomentPost({ authorName: "沈棠", content: "路过旧书店。" });
+
+  assert.equal(store.listMomentPosts().length, 2);
+  store.clearMomentPosts();
+
+  assert.equal(store.listMomentPosts().length, 0);
+  assert.equal(new ChatStore(storage).listMomentPosts().length, 0);
+});

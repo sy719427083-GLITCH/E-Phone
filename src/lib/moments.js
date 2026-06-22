@@ -14,7 +14,7 @@ export function getMomentMaxTokens(count, postType = "text") {
   const limit = normalizeMomentCount(count);
   return normalizeMomentPostType(postType) === "image_text"
     ? Math.min(420, 120 + limit * 40)
-    : Math.min(260, 60 + (limit - 1) * 40);
+    : 700;
 }
 
 export function getMomentRequestDelayMs(index, postType = "text") {

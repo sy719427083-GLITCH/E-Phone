@@ -18,8 +18,8 @@ import {
 
 test("uses a compact token budget for moments generation", () => {
   assert.equal(getDefaultMomentCount(), 1);
-  assert.equal(getMomentMaxTokens(1, "text"), 60);
-  assert.equal(getMomentMaxTokens(3, "text"), 140);
+  assert.equal(getMomentMaxTokens(1, "text"), 700);
+  assert.equal(getMomentMaxTokens(3, "text"), 700);
   assert.equal(getMomentMaxTokens(3, "image_text"), 240);
   assert.equal(getMomentMaxTokens(9, "image_text"), 320);
 });

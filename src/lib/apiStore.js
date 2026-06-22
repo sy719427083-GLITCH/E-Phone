@@ -70,12 +70,24 @@ function apiHost(apiUrl = "") {
   }
 }
 
+function apiKeyFingerprint(apiKey = "") {
+  const key = String(apiKey || "").trim();
+  if (!key) return "未填";
+  let hash = 2166136261;
+  for (const char of key) {
+    hash ^= char.charCodeAt(0);
+    hash = Math.imul(hash, 16777619);
+  }
+  return (hash >>> 0).toString(36).slice(0, 6).padStart(6, "0");
+}
+
 export function describeApiUsage(config = {}) {
   const normalized = mergeConfig(config);
   return [
     `配置:${normalized.name || "未命名"}`,
     `模型:${normalized.primary.model || "未填"}`,
     `地址:${apiHost(normalized.primary.apiUrl)}`,
+    `Key:${apiKeyFingerprint(normalized.primary.apiKey)}`,
   ].join("，");
 }
 
@@ -320,6 +332,7 @@ function withRequestNonce(url, requestId) {
 export async function requestChatCompletion(api, prompt, fetcher = fetch, options = {}) {
   validateApi(api);
   const requestId = makeRequestId();
+  const body = buildChatCompletionBody(api, prompt, options);
   const response = await fetcher(withRequestNonce(buildApiUrl(api, "chat/completions"), requestId), {
     method: "POST",
     cache: "no-store",
@@ -329,7 +342,7 @@ export async function requestChatCompletion(api, prompt, fetcher = fetch, option
       Authorization: `Bearer ${api.apiKey.trim()}`,
       "X-EPhone-Request-Id": requestId,
     },
-    body: JSON.stringify(buildChatCompletionBody(api, prompt, options)),
+    body: JSON.stringify(body),
   });
 
   const payload = await response.json().catch(() => ({}));
@@ -337,7 +350,7 @@ export async function requestChatCompletion(api, prompt, fetcher = fetch, option
     const detail = payload?.error?.message || payload?.message || `HTTP ${response.status}`;
     const status = response.status ? `HTTP ${response.status}` : "HTTP error";
     const model = api.model?.trim() ? `模型：${api.model.trim()}` : "模型未知";
-    throw new Error(`API返回：${detail}（${model}，${status}）`);
+    throw new Error(`API返回：${detail}（${model}，${status}，max:${body.max_tokens}，字数:${String(prompt || "").length}，Key:${apiKeyFingerprint(api.apiKey)}）`);
   }
 
   const content = extractCompletionText(payload).trim();

@@ -59,6 +59,7 @@ test("describes selected API without leaking the key", () => {
   assert.match(description, /主线/);
   assert.match(description, /gpt-main/);
   assert.match(description, /api.example.com/);
+  assert.match(description, /Key:/);
   assert.doesNotMatch(description, /secret-key/);
 });
 
@@ -417,7 +418,7 @@ test("includes model and status in API error messages", async () => {
         json: async () => ({ error: { message: "The quota has been exceeded." } }),
       }),
     ),
-    /gpt-real.*HTTP 429/,
+    /gpt-real.*HTTP 429.*max:24.*字数:4.*Key:/,
   );
 });
 

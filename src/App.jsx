@@ -1998,7 +1998,7 @@ export function App() {
                   let reply = "";
                   try {
                     reply = await callWithRetryAndFallback(config, ({ api }) =>
-                      requestChatCompletion(api, prompt, fetch, { maxTokens: 60 }),
+                      requestChatCompletion(api, prompt, fetch, { maxTokens: getMomentMaxTokens(1, normalizedPostType) }),
                     );
                   } catch (error) {
                     if (shouldKeepPartialMomentResults(error, generated.length)) {

@@ -3163,6 +3163,25 @@ button {
   border-radius: 8px;
 }
 
+.transfer-card {
+  display: block;
+  width: min(250px, 76vw);
+  padding: 0;
+  color: #fffaf6;
+  background: #dda04d;
+  border-radius: 8px;
+}
+
+.transfer-card .red-packet-icon {
+  color: #c98430;
+  background: #fff4df;
+}
+
+.transfer-card .red-packet-footer {
+  color: rgba(126, 92, 55, 0.66);
+  background: #fffaf1;
+}
+
 .red-packet-main {
   display: grid;
   grid-template-columns: 48px minmax(0, 1fr);
@@ -3256,8 +3275,17 @@ button {
   grid-template-columns: 34px minmax(0, 1fr) 50px;
   gap: 8px;
   align-items: center;
-  padding: 8px 2px 0;
-  background: linear-gradient(180deg, rgba(242, 239, 241, 0), rgba(242, 239, 241, 0.96) 28%);
+  padding: 8px 6px 0;
+}
+
+.chat-input-area {
+  margin: 0 -6px -2px;
+  padding: 2px 6px 8px;
+  background: linear-gradient(180deg, rgba(246, 242, 244, 0), rgba(246, 242, 244, 0.98) 22%);
+}
+
+.chat-input-area.open {
+  background: rgba(246, 242, 244, 0.98);
 }
 
 .chat-red-packet-panel {
@@ -3297,7 +3325,10 @@ button {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 12px;
-  padding: 12px 4px 2px;
+  margin-top: 10px;
+  padding: 14px 8px 10px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.52);
 }
 
 .chat-more-item {
@@ -3315,8 +3346,8 @@ button {
   height: 44px;
   border-radius: 12px;
   color: #9d7e8a;
-  background: rgba(255, 255, 255, 0.9);
-  box-shadow: 0 8px 18px rgba(125, 102, 112, 0.08);
+  background: rgba(255, 255, 255, 0.88);
+  box-shadow: 0 7px 16px rgba(125, 102, 112, 0.055);
   font-size: 17px;
 }
 
@@ -3329,6 +3360,86 @@ button {
 .chat-more-icon .message-location-icon {
   width: 28px;
   height: 28px;
+}
+
+.chat-more-hint {
+  grid-column: 1 / -1;
+  color: #ad8794;
+  font-size: 11px;
+  text-align: center;
+}
+
+.chat-red-packet-modal {
+  position: absolute;
+  inset: 0;
+  z-index: 12;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(73, 58, 65, 0.18);
+  backdrop-filter: blur(4px);
+}
+
+.chat-red-packet-dialog {
+  position: relative;
+  display: grid;
+  gap: 12px;
+  width: min(280px, 82vw);
+  border-radius: 14px;
+  padding: 22px 18px 18px;
+  color: #5c4650;
+  background: #fff8f2;
+  box-shadow: 0 22px 42px rgba(116, 86, 70, 0.2);
+}
+
+.chat-red-packet-dialog b {
+  font-size: 18px;
+  font-weight: 500;
+  text-align: center;
+}
+
+.chat-red-packet-dialog span {
+  color: #a3848f;
+  font-size: 12px;
+  text-align: center;
+}
+
+.chat-red-packet-dialog input {
+  height: 46px;
+  border: 0;
+  border-radius: 10px;
+  outline: none;
+  padding: 0 14px;
+  color: #4f3d45;
+  background: rgba(255, 255, 255, 0.94);
+  font-size: 20px;
+  text-align: center;
+}
+
+.chat-red-packet-dialog > button:not(.chat-red-packet-close) {
+  min-height: 42px;
+  border-radius: 9px;
+  color: #fff9f2;
+  background: #e39b43;
+  font-size: 13px;
+}
+
+.chat-red-packet-dialog small {
+  color: #b07f91;
+  font-size: 11px;
+  text-align: center;
+}
+
+.chat-red-packet-close {
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  color: #a9848f;
+  background: transparent;
+  font-size: 20px;
 }
 
 .chat-composer input {

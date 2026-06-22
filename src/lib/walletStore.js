@@ -97,6 +97,21 @@ export class WalletStore {
     return this.snapshot();
   }
 
+  receiveTransfer({ from = "对方", amount = 0, messageId = "" } = {}) {
+    const value = Number(amount);
+    if (!Number.isFinite(value) || value <= 0) throw new Error("转账金额无效。");
+    if (this.hasBill(messageId)) return this.snapshot();
+    this.wallet.balance = Number((this.wallet.balance + value).toFixed(2));
+    this.addBill({
+      title: "收到转账",
+      note: from,
+      amount: value,
+      messageId,
+    });
+    this.persist();
+    return this.snapshot();
+  }
+
   returnRedPacket() {
     return this.snapshot();
   }

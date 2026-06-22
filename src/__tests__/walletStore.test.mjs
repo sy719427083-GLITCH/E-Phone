@@ -25,6 +25,16 @@ test("receives and sends red packets through wallet bills", () => {
   assert.equal(store.snapshot().bills[0].amount, -20);
 });
 
+test("receives role transfers through wallet bills", () => {
+  const store = new WalletStore(createMemoryStorage());
+
+  store.receiveTransfer({ from: "陆清晏", amount: 52, messageId: "msg-transfer" });
+
+  assert.equal(store.snapshot().balance, 2052);
+  assert.equal(store.snapshot().bills[0].title, "收到转账");
+  assert.equal(store.snapshot().bills[0].amount, 52);
+});
+
 test("does not add money when a red packet is returned", () => {
   const store = new WalletStore(createMemoryStorage());
 

@@ -336,9 +336,10 @@ function buildRoleReplyPrompt(conversation, userText) {
     `用户身份：${user.identity || "未填写"}`,
     `用户性格：${user.personality || "未填写"}`,
     `用户人设：${user.persona || "未填写"}`,
-    "回复要求：像线上手机聊天一样自然；输出1-3条，每条单独一行，短一点，像连续聊天气泡；一句完整短话不要硬拆开。",
+    "回复要求：像线上手机聊天一样自然；你和用户不在同一个现实空间，只通过手机屏幕聊天；输出1-3条，每条单独一行，短一点，像连续聊天气泡；一句完整短话不要硬拆开。",
     "禁止输出 JSON、数组、引号、改写说明、分析、提示词、格式说明或 Markdown。",
-    "不要写动作、手势、姿势、舞台指令或括号描写，不要旁白。",
+    "不要写动作、手势、姿势、舞台指令或括号描写，不要旁白；不要写见面、靠近、抬手、递给、看着、低头、拿出、放到你手里等线下场景。",
+    "如果角色想给钱，不要用文字说给了多少钱，应该由系统发送转账或红包卡片；普通回复里不要描述转账已经发生。",
     recentMessages ? `最近聊天：\n${recentMessages}` : "",
     `用户新消息：${userText}`,
   ].filter(Boolean).join("\n");
@@ -1196,34 +1197,35 @@ function MessageBubble({ message, onAcceptRedPacket, onReturnRedPacket }) {
   if (message.type === "recall" || message.type === "pat") {
     return <span className={`message-system-chip ${message.type}`}>{message.content}</span>;
   }
-  if (message.type === "red_packet") {
+  if (message.type === "red_packet" || message.type === "transfer") {
+    const isTransfer = message.type === "transfer";
     const amount = Number(message.meta?.amount || 0);
     const packetStatus = message.meta?.status || (message.role === "user" ? "sent" : "pending");
     const canHandle = message.role !== "user" && packetStatus === "pending";
     const statusText = {
-      received: `已领取 ¥${amount.toFixed(2)}`,
-      returned: "已退回",
+      received: isTransfer ? `已收款 ¥${amount.toFixed(2)}` : `已领取 ¥${amount.toFixed(2)}`,
+      returned: isTransfer ? "已退还" : "已退回",
       sent: `等待领取 ¥${amount.toFixed(2)}`,
       accepted_by_role: `对方已领取 ¥${amount.toFixed(2)}`,
       returned_by_role: `对方已退回 ¥${amount.toFixed(2)}`,
-      pending: message.meta?.subtitle || "微信红包",
-    }[packetStatus] || message.meta?.subtitle || "微信红包";
+      pending: message.meta?.subtitle || (isTransfer ? "微信转账" : "微信红包"),
+    }[packetStatus] || message.meta?.subtitle || (isTransfer ? "微信转账" : "微信红包");
     return (
-      <span className="message-card red-packet-card">
+      <span className={`message-card ${isTransfer ? "transfer-card" : "red-packet-card"}`}>
         <span className="red-packet-main">
-          <span className="red-packet-icon">¥</span>
+          <span className="red-packet-icon">{isTransfer ? "¥" : "¥"}</span>
           <span>
-            <b>{message.meta?.title || "恭喜发财，大吉大利"}</b>
+            <b>{message.meta?.title || (isTransfer ? "转账给你" : "恭喜发财，大吉大利")}</b>
             <small>{statusText}</small>
             {canHandle ? (
               <span className="red-packet-actions">
-                <button type="button" onClick={() => onAcceptRedPacket?.(message)}>领取</button>
-                <button type="button" onClick={() => onReturnRedPacket?.(message)}>退回</button>
+                <button type="button" onClick={() => onAcceptRedPacket?.(message)}>{isTransfer ? "收款" : "领取"}</button>
+                <button type="button" onClick={() => onReturnRedPacket?.(message)}>{isTransfer ? "退还" : "退回"}</button>
               </span>
             ) : null}
           </span>
         </span>
-        <span className="red-packet-footer">微信红包</span>
+        <span className="red-packet-footer">{isTransfer ? "微信转账" : "微信红包"}</span>
       </span>
     );
   }
@@ -1309,65 +1311,91 @@ function ChatThread({ conversation, onBack, onSend, onSendRedPacket, onAcceptRed
           </div>
         ) : null}
       </div>
-      {redPacketOpen ? (
-        <div className="chat-red-packet-panel">
-          <input
-            type="number"
-            min="0"
-            step="0.01"
-            value={redPacketAmount}
-            placeholder="红包金额"
-            onChange={(event) => setRedPacketAmount(event.target.value)}
-          />
-          <button type="button" onClick={sendRedPacket}>发红包</button>
-          {redPacketMessage ? <small>{redPacketMessage}</small> : null}
-        </div>
-      ) : null}
-      {moreOpen ? (
-        <div className="chat-more-panel">
+      <div className={`chat-input-area ${moreOpen ? "open" : ""}`}>
+        <div className="chat-composer">
           <button
-            type="button"
-            className="chat-more-item"
+            aria-label="更多"
+            className="chat-more-toggle"
             onClick={() => {
-              setRedPacketOpen((value) => !value);
+              setMoreOpen((value) => !value);
               setRedPacketMessage("");
             }}
           >
-            <span className="chat-more-icon red">¥</span>
-            <small>发红包</small>
+            +
           </button>
-          <button type="button" className="chat-more-item" onClick={() => setRedPacketMessage("位置功能稍后开放。")}>
-            <span className="chat-more-icon">
-              <LocationIcon />
-            </span>
-            <small>位置</small>
-          </button>
-          <button type="button" className="chat-more-item" onClick={() => setRedPacketMessage("拍一拍功能稍后开放。")}>
-            <span className="chat-more-icon">拍</span>
-            <small>拍一拍</small>
+          <input
+            value={text}
+            placeholder="发消息"
+            onChange={(event) => setText(event.target.value)}
+            onKeyDown={(event) => {
+              if (event.key === "Enter") send();
+            }}
+          />
+          <button className="chat-send" onClick={send} disabled={!text.trim() || sending}>
+            发送
           </button>
         </div>
-      ) : null}
-      <div className="chat-composer">
-        <button
-          aria-label="更多"
-          className="chat-more-toggle"
-          onClick={() => setMoreOpen((value) => !value)}
-        >
-          +
-        </button>
-        <input
-          value={text}
-          placeholder="发消息"
-          onChange={(event) => setText(event.target.value)}
-          onKeyDown={(event) => {
-            if (event.key === "Enter") send();
-          }}
-        />
-        <button className="chat-send" onClick={send} disabled={!text.trim() || sending}>
-          发送
-        </button>
+        {moreOpen ? (
+          <div className="chat-more-panel">
+            <button
+              type="button"
+              className="chat-more-item"
+              onClick={() => {
+                setRedPacketOpen(true);
+                setMoreOpen(false);
+                setRedPacketMessage("");
+              }}
+            >
+              <span className="chat-more-icon red">¥</span>
+              <small>发红包</small>
+            </button>
+            <button type="button" className="chat-more-item" onClick={() => setRedPacketMessage("位置功能稍后开放。")}>
+              <span className="chat-more-icon">
+                <LocationIcon />
+              </span>
+              <small>位置</small>
+            </button>
+            <button type="button" className="chat-more-item" onClick={() => setRedPacketMessage("拍一拍功能稍后开放。")}>
+              <span className="chat-more-icon">拍</span>
+              <small>拍一拍</small>
+            </button>
+            <button type="button" className="chat-more-item" onClick={() => setRedPacketMessage("图片功能稍后开放。")}>
+              <span className="chat-more-icon">图</span>
+              <small>图片</small>
+            </button>
+            {redPacketMessage ? <small className="chat-more-hint">{redPacketMessage}</small> : null}
+          </div>
+        ) : null}
       </div>
+      {redPacketOpen ? (
+        <div className="chat-red-packet-modal" role="dialog" aria-modal="true">
+          <div className="chat-red-packet-dialog">
+            <button
+              type="button"
+              className="chat-red-packet-close"
+              aria-label="关闭红包弹窗"
+              onClick={() => {
+                setRedPacketOpen(false);
+                setRedPacketMessage("");
+              }}
+            >
+              ×
+            </button>
+            <b>发红包</b>
+            <span>输入金额后发送给 {conversation.title}</span>
+            <input
+              type="number"
+              min="0"
+              step="0.01"
+              value={redPacketAmount}
+              placeholder="¥ 0.00"
+              onChange={(event) => setRedPacketAmount(event.target.value)}
+            />
+            <button type="button" onClick={sendRedPacket}>塞钱进红包</button>
+            {redPacketMessage ? <small>{redPacketMessage}</small> : null}
+          </div>
+        </div>
+      ) : null}
     </section>
   );
 }
@@ -2354,7 +2382,10 @@ export function App() {
           onAcceptRedPacket={(conversationId, message) => {
             const conversation = chatStore.get(conversationId);
             if (!conversation || message?.meta?.status !== "pending") return null;
-            walletStore.receiveRedPacket({
+            const receive = message.type === "transfer"
+              ? walletStore.receiveTransfer.bind(walletStore)
+              : walletStore.receiveRedPacket.bind(walletStore);
+            receive({
               from: conversation.title,
               amount: Number(message.meta?.amount || 0),
               messageId: message.id,

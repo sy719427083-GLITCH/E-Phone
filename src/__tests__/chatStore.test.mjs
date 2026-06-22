@@ -91,8 +91,8 @@ test("stores wechat-style message types for proactive role events", () => {
   store.addMessage(conversation.id, createProactiveChatMessage(conversation, () => 0.6));
 
   const restored = new ChatStore(storage).get(conversation.id);
-  assert.deepEqual(restored.messages.map((message) => message.type), ["red_packet", "pat", "location"]);
-  assert.equal(restored.messages[0].meta.title, "恭喜发财，大吉大利");
+  assert.deepEqual(restored.messages.map((message) => message.type), ["transfer", "pat", "location"]);
+  assert.equal(restored.messages[0].meta.title, "转账给你");
   assert.equal(restored.messages[1].content, "陆斯年拍了拍我");
   assert.equal(restored.messages[2].meta.title, "位置");
 });
@@ -115,6 +115,12 @@ test("parses assistant replies into realistic chat bubbles", () => {
   ]);
 });
 
+test("cleans offline face-to-face wording from assistant replies", () => {
+  assert.deepEqual(parseAssistantReplies("我给你转了52块。\n（低头看着你）把钱递给你。"), [
+    "我发了，点收款。",
+  ]);
+});
+
 test("parses plain line replies when the model does not return json", () => {
   assert.deepEqual(parseAssistantReplies("到了。\n你在哪？"), ["到了。", "你在哪？"]);
 });
@@ -132,7 +138,7 @@ test("filters leaked prompts and malformed json from assistant replies", () => {
 
   assert.deepEqual(replies, [
     "毒酒确实是我递的。",
-    "只不过递过去之前，我换成了假死药。",
+    "只不过，我换成了假死药。",
     "可惜，你还是没能逃出去。",
   ]);
 });

@@ -33,12 +33,12 @@ export function createProactiveChatMessage(conversation = {}, random = Math.rand
   if (roll < 0.4) {
     return createChatMessage({
       role: "assistant",
-      type: "red_packet",
-      content: "红包",
+      type: "transfer",
+      content: "转账",
       meta: {
-        title: "恭喜发财，大吉大利",
-        subtitle: `${title}发来的红包`,
-        amount: 18.88,
+        title: "转账给你",
+        subtitle: `${title}发起的转账`,
+        amount: 52,
         status: "pending",
       },
     });
@@ -74,9 +74,11 @@ function cleanAssistantReply(content = "") {
   return String(content || "")
     .replace(/^["'“”‘’\[\],\s]+|["'“”‘’\[\],\s]+$/g, "")
     .replace(/[（(][^）)]*[）)]/g, "")
-    .replace(/(?:将|把|伸手|抬手|低头|转身|握住|收起|收入|举起|放下|靠在|站在|坐在|走到|拿起|抬眼|垂眸)[^，。！？；、,.!?;\n]*/g, "")
+    .replace(/(?:将|把|伸手|抬手|低头|转身|握住|收起|收入|举起|放下|靠在|站在|坐在|走到|走近|靠近|拿起|拿出|递给|递过|塞给|交到|放进|看着|抬眼|垂眸)[^，。！？；、,.!?;\n]*/g, "")
+    .replace(/(?:我)?(?:给你转|转给你|给你发|发给你)[^，。！？；、,.!?;\n]*\d+(?:\.\d+)?[^，。！？；、,.!?;\n]*/g, "我发了，点收款。")
     .replace(/\s+/g, " ")
     .replace(/\s*([，。！？；、,.!?;])\s*/g, "$1")
+    .replace(/([。！？；,.!?]){2,}/g, "$1")
     .replace(/^[，。！？；、,.!?;]+/, "")
     .trim();
 }

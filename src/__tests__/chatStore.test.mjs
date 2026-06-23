@@ -127,6 +127,19 @@ test("parses plain line replies when the model does not return json", () => {
   assert.deepEqual(parseAssistantReplies("到了。\n你在哪？"), ["到了。", "你在哪？"]);
 });
 
+test("removes role-name prefixes from assistant bubbles", () => {
+  assert.deepEqual(parseAssistantReplies("陆清晏：缺银子了？\n陆清晏: 要不要先替你算一卦？"), [
+    "缺银子了？",
+    "要不要先替你算一卦？",
+  ]);
+});
+
+test("drops offline or meeting-like chat fragments", () => {
+  const replies = parseAssistantReplies("阁下这声不用倒是干脆，坐下喝杯茶吧。\n这会儿只能隔着屏幕说。");
+
+  assert.deepEqual(replies, ["这会儿只能隔着屏幕说。"]);
+});
+
 test("filters leaked prompts and malformed json from assistant replies", () => {
   const replies = parseAssistantReplies(`[
     "毒酒确实是我递的。",

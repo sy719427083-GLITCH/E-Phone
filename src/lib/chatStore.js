@@ -71,16 +71,26 @@ export function createProactiveChatMessage(conversation = {}, random = Math.rand
 }
 
 function cleanAssistantReply(content = "") {
-  return String(content || "")
+  const withoutWrapper = String(content || "")
     .replace(/^["'“”‘’\[\],\s]+|["'“”‘’\[\],\s]+$/g, "")
+    .replace(/^[\u4e00-\u9fa5A-Za-z0-9_·]{1,12}\s*[：:]\s*/, "");
+  if (/(见面|线下|当面|碰面|约个地方|约出来|来找我|我去找你|你来我这|到我这|到你那|去你那|来我这里|过去找你|过来找我|坐下|坐一会|一起喝|一起吃|陪我去|陪你去|在你身边|放到你手里|递到你手里)/.test(withoutWrapper)) {
+    return "";
+  }
+  const cleaned = withoutWrapper
     .replace(/[（(][^）)]*[）)]/g, "")
     .replace(/(?:将|把|伸手|抬手|低头|转身|握住|收起|收入|举起|放下|靠在|站在|坐在|走到|走近|靠近|拿起|拿出|递给|递过|塞给|交到|放进|看着|抬眼|垂眸)[^，。！？；、,.!?;\n]*/g, "")
+    .replace(/(?:见面|线下|当面|碰面|约个地方|约出来|来找我|我去找你|你来我这|到我这|到你那|去你那|来我这里|过去找你|过来找我|坐下|坐一会|一起喝|一起吃|陪我去|陪你去|在你身边|放到你手里|递到你手里)[^，。！？；、,.!?;\n]*/g, "")
     .replace(/(?:我)?(?:给你转|转给你|给你发|发给你)[^，。！？；、,.!?;\n]*\d+(?:\.\d+)?[^，。！？；、,.!?;\n]*/g, "")
     .replace(/\s+/g, " ")
     .replace(/\s*([，。！？；、,.!?;])\s*/g, "$1")
     .replace(/([。！？；,.!?]){2,}/g, "$1")
     .replace(/^[，。！？；、,.!?;]+/, "")
     .trim();
+  if (/(见面|线下|当面|碰面|来找我|我去找你|你来我这|到我这|到你那|去你那|来我这里|过去找你|过来找我|坐下|一起喝|一起吃|陪我去|陪你去|在你身边|放到你手里|递到你手里)/.test(cleaned)) {
+    return "";
+  }
+  return cleaned;
 }
 
 function extractTransferEvent(content = "") {

@@ -41,6 +41,7 @@ import { parseGeneratedRole } from "./lib/roleGenerator.js";
 import { createRoleDraft, RoleStore } from "./lib/roleStore.js";
 import { APP_VERSION } from "./lib/appVersion.js";
 import { WalletStore } from "./lib/walletStore.js";
+import { getJobRemainingMs, WorkStore } from "./lib/workStore.js";
 
 const assetPath = (path) => `${import.meta.env.BASE_URL}${path.replace(/^\/+/, "")}`;
 
@@ -112,6 +113,7 @@ const appItems = [
   { key: "outing", label: "外出", icon: assetPath("assets/app-icons/outing.png") },
   { key: "diary", label: "日记", icon: assetPath("assets/app-icons/diary.png") },
   { key: "couple", label: "情侣空间", icon: assetPath("assets/app-icons/couple.png") },
+  { key: "work", label: "工作", icon: assetPath("assets/app-icons/work.png") },
 ];
 
 const settingsItems = [
@@ -303,6 +305,77 @@ function WalletApp({ wallet }) {
           </div>
         )}
       </section>
+    </section>
+  );
+}
+
+function formatWorkDuration(minutes) {
+  const value = Math.max(1, Number(minutes) || 1);
+  return value >= 60 ? `${Math.floor(value / 60)}小时${value % 60 ? `${value % 60}分钟` : ""}` : `${value}分钟`;
+}
+
+function formatRemaining(ms) {
+  const totalSeconds = Math.ceil(Math.max(0, Number(ms) || 0) / 1000);
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+}
+
+function WorkApp({ workDay, onRefreshJobs, onStartJob, onClaimJob, message }) {
+  const [now, setNow] = useState(Date.now());
+
+  useEffect(() => {
+    const timer = window.setInterval(() => setNow(Date.now()), 1000);
+    return () => window.clearInterval(timer);
+  }, []);
+
+  const runningJob = workDay.jobs.find((job) => job.status === "running") || null;
+
+  return (
+    <section className="page soft-page work-page">
+      <Header title="工作" />
+      <section className="work-summary">
+        <span>今日工作</span>
+        <strong>3 个任务</strong>
+        <small>刷新机会 {workDay.refreshesLeft}/3</small>
+      </section>
+      <div className="work-actions">
+        <button
+          type="button"
+          onClick={onRefreshJobs}
+          disabled={workDay.refreshesLeft <= 0 || workDay.jobs.some((job) => job.status !== "idle")}
+        >
+          刷新工作
+        </button>
+        <span>{runningJob ? `进行中：${runningJob.title}` : "按现实时间完成后领取工资"}</span>
+      </div>
+      {message ? <p className="work-message">{message}</p> : null}
+      <div className="work-list">
+        {workDay.jobs.map((job) => {
+          const remaining = getJobRemainingMs(job, now);
+          const canClaim = job.status === "running" && remaining <= 0;
+          return (
+            <article className={`work-card ${job.status}`} key={job.id}>
+              <div>
+                <span>{job.place}</span>
+                <b>{job.title}</b>
+                <small>{formatWorkDuration(job.durationMinutes)} · ¥{job.pay.toFixed(2)}</small>
+              </div>
+              {job.status === "idle" ? (
+                <button type="button" onClick={() => onStartJob(job.id)}>
+                  开始打工
+                </button>
+              ) : null}
+              {job.status === "running" ? (
+                <button type="button" onClick={() => onClaimJob(job.id)} disabled={!canClaim}>
+                  {canClaim ? "领取工资" : formatRemaining(remaining)}
+                </button>
+              ) : null}
+              {job.status === "claimed" ? <em>已入账</em> : null}
+            </article>
+          );
+        })}
+      </div>
     </section>
   );
 }
@@ -2269,10 +2342,13 @@ export function App() {
   const [identityStore] = useState(() => new IdentityStore());
   const [chatStore] = useState(() => new ChatStore());
   const [walletStore] = useState(() => new WalletStore());
+  const [workStore] = useState(() => new WorkStore());
   const [roles, setRoles] = useState(() => roleStore.list());
   const [identities, setIdentities] = useState(() => identityStore.list());
   const [conversations, setConversations] = useState(() => chatStore.list());
   const [wallet, setWallet] = useState(() => walletStore.snapshot());
+  const [workDay, setWorkDay] = useState(() => workStore.snapshot());
+  const [workMessage, setWorkMessage] = useState("");
   const [contacts, setContacts] = useState(() => chatStore.listContacts());
   const [contactRequests, setContactRequests] = useState(() => chatStore.listContactRequests());
   const [momentPosts, setMomentPosts] = useState(() => chatStore.listMomentPosts());
@@ -2663,6 +2739,46 @@ export function App() {
       );
     }
     if (appPage?.key === "wallet") return <WalletApp wallet={wallet} />;
+    if (appPage?.key === "work") {
+      return (
+        <WorkApp
+          workDay={workDay}
+          message={workMessage}
+          onRefreshJobs={() => {
+            try {
+              setWorkDay(workStore.refreshJobs());
+              setWorkMessage("今日工作已刷新。");
+            } catch (error) {
+              setWorkMessage(error.message || "刷新失败。");
+            }
+          }}
+          onStartJob={(jobId) => {
+            try {
+              const job = workStore.startJob(jobId);
+              setWorkDay(workStore.snapshot());
+              setWorkMessage(`${job.title} 已开始。`);
+            } catch (error) {
+              setWorkMessage(error.message || "开始失败。");
+            }
+          }}
+          onClaimJob={(jobId) => {
+            try {
+              const job = workStore.claimJob(jobId);
+              walletStore.receiveWorkPay({
+                job: job.title,
+                amount: job.pay,
+                messageId: `work-${workDay.dateKey}-${job.id}`,
+              });
+              setWallet(walletStore.snapshot());
+              setWorkDay(workStore.snapshot());
+              setWorkMessage(`工资 ¥${job.pay.toFixed(2)} 已存入钱包。`);
+            } catch (error) {
+              setWorkMessage(error.message || "领取失败。");
+            }
+          }}
+        />
+      );
+    }
     if (appPage) return <SimplePane title={appPage.label} />;
     if (settingPage) return <SettingDetail page={settingPage} onBack={() => setSettingPage(null)} />;
     if (rolePage === "create") {
@@ -2788,6 +2904,9 @@ export function App() {
     tab,
     wallet,
     walletStore,
+    workDay,
+    workMessage,
+    workStore,
   ]);
 
   if (locked) {

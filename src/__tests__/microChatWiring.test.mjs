@@ -52,3 +52,14 @@ test("renders a real wallet app instead of the placeholder pane", () => {
   assert.doesNotMatch(appSource, /拍一拍功能稍后开放/);
   assert.doesNotMatch(appSource, /领取了你的红包/);
 });
+
+test("wires a real work app to the home screen and wallet", () => {
+  assert.match(appSource, /key: "work", label: "工作"/);
+  assert.match(appSource, /assets\/app-icons\/work\.png/);
+  assert.match(appSource, /function WorkApp\(/);
+  assert.match(appSource, /appPage\?\.key === "work"/);
+  assert.match(appSource, /workStore\.refreshJobs/);
+  assert.match(appSource, /workStore\.startJob/);
+  assert.match(appSource, /workStore\.claimJob/);
+  assert.match(appSource, /walletStore\.receiveWorkPay/);
+});

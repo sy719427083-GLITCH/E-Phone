@@ -112,6 +112,21 @@ export class WalletStore {
     return this.snapshot();
   }
 
+  receiveWorkPay({ job = "打工", amount = 0, messageId = "" } = {}) {
+    const value = Number(amount);
+    if (!Number.isFinite(value) || value <= 0) throw new Error("工资金额无效。");
+    if (this.hasBill(messageId)) return this.snapshot();
+    this.wallet.balance = Number((this.wallet.balance + value).toFixed(2));
+    this.addBill({
+      title: "打工收入",
+      note: job,
+      amount: value,
+      messageId,
+    });
+    this.persist();
+    return this.snapshot();
+  }
+
   returnRedPacket() {
     return this.snapshot();
   }

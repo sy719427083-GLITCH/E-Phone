@@ -35,6 +35,16 @@ test("receives role transfers through wallet bills", () => {
   assert.equal(store.snapshot().bills[0].amount, 52);
 });
 
+test("receives work pay through wallet bills", () => {
+  const store = new WalletStore(createMemoryStorage());
+
+  store.receiveWorkPay({ job: "整理虚拟档案", amount: 36, messageId: "work-1" });
+
+  assert.equal(store.snapshot().balance, 2036);
+  assert.equal(store.snapshot().bills[0].title, "打工收入");
+  assert.equal(store.snapshot().bills[0].note, "整理虚拟档案");
+});
+
 test("does not add money when a red packet is returned", () => {
   const store = new WalletStore(createMemoryStorage());
 

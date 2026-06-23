@@ -124,11 +124,18 @@ button {
   left: 18px;
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  grid-template-rows: repeat(3, clamp(82px, 10.7dvh, 100px));
+  grid-auto-rows: clamp(82px, 10.7dvh, 100px);
   column-gap: 4px;
   row-gap: clamp(24px, 4dvh, 40px);
   align-content: start;
   align-items: start;
+  overflow-y: auto;
+  padding-bottom: 10px;
+  scrollbar-width: none;
+}
+
+.home-grid::-webkit-scrollbar {
+  display: none;
 }
 
 .app-hit {
@@ -519,6 +526,111 @@ button {
 
 .wallet-bill-row > strong.expense {
   color: #6f6268;
+}
+
+.work-page {
+  display: grid;
+  align-content: start;
+  gap: 12px;
+  background:
+    radial-gradient(circle at 18% 12%, rgba(255, 225, 235, 0.86), transparent 34%),
+    linear-gradient(180deg, #fffafb, #fff 46%);
+}
+
+.work-summary {
+  display: grid;
+  gap: 6px;
+  border-radius: 18px;
+  padding: 18px;
+  color: #705260;
+  background: linear-gradient(135deg, rgba(255, 238, 245, 0.94), rgba(255, 255, 255, 0.9));
+  box-shadow: 0 18px 34px rgba(205, 151, 170, 0.16);
+}
+
+.work-summary span,
+.work-summary small,
+.work-actions span {
+  color: #a48691;
+  font-size: 11px;
+}
+
+.work-summary strong {
+  color: #58434b;
+  font-size: 28px;
+  font-weight: 650;
+}
+
+.work-actions {
+  display: grid;
+  grid-template-columns: 108px minmax(0, 1fr);
+  gap: 10px;
+  align-items: center;
+}
+
+.work-actions button,
+.work-card button {
+  min-height: 34px;
+  border-radius: 10px;
+  color: #7c5967;
+  background: rgba(255, 226, 235, 0.78);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.work-actions button:disabled,
+.work-card button:disabled {
+  color: rgba(128, 102, 115, 0.46);
+  background: rgba(255, 255, 255, 0.66);
+}
+
+.work-message {
+  margin: 0;
+  color: #a87385;
+  font-size: 12px;
+}
+
+.work-list {
+  display: grid;
+  gap: 10px;
+}
+
+.work-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 86px;
+  gap: 12px;
+  align-items: center;
+  min-height: 82px;
+  border-radius: 14px;
+  padding: 13px;
+  color: #51444b;
+  background: rgba(255, 255, 255, 0.76);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.72),
+    0 12px 26px rgba(190, 156, 170, 0.1);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+}
+
+.work-card span,
+.work-card small {
+  display: block;
+  color: #aa98a0;
+  font-size: 11px;
+}
+
+.work-card b {
+  display: block;
+  margin: 4px 0;
+  color: #59454e;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.work-card em {
+  justify-self: end;
+  color: #c27790;
+  font-size: 12px;
+  font-style: normal;
 }
 
 .settings-page {
@@ -3674,7 +3786,7 @@ button {
 
   .home-grid {
     bottom: 124px;
-    grid-template-rows: repeat(3, 82px);
+    grid-auto-rows: 82px;
     row-gap: 24px;
   }
 

@@ -353,25 +353,49 @@ function WorkApp({ workDay, onRefreshJobs, onStartJob, onClaimJob, message }) {
       <div className="work-list">
         {workDay.jobs.map((job) => {
           const remaining = getJobRemainingMs(job, now);
+          const durationMs = Math.max(1, Number(job.durationMinutes) || 1) * 60_000;
+          const elapsedMs = job.status === "running" ? durationMs - remaining : job.status === "claimed" ? durationMs : 0;
+          const progress = Math.max(0, Math.min(1, elapsedMs / durationMs));
+          const catY = 15 - Math.sin(progress * Math.PI) * 14;
+          const progressPercent = `${progress * 100}%`;
           const canClaim = job.status === "running" && remaining <= 0;
           return (
-            <article className={`work-card ${job.status}`} key={job.id}>
-              <div>
-                <span>{job.place}</span>
-                <b>{job.title}</b>
-                <small>{formatWorkDuration(job.durationMinutes)} · ¥{job.pay.toFixed(2)}</small>
+            <article
+              className={`work-card ${job.status}`}
+              key={job.id}
+              style={{ "--work-progress-percent": progressPercent, "--work-cat-y": `${catY}px` }}
+            >
+              <div className="work-card-head">
+                <div>
+                  <span>{job.place}</span>
+                  <b>{job.title}</b>
+                  <small>{formatWorkDuration(job.durationMinutes)} · ¥{job.pay.toFixed(2)}</small>
+                </div>
+                {job.status === "idle" ? (
+                  <button type="button" onClick={() => onStartJob(job.id)}>
+                    开始打工
+                  </button>
+                ) : null}
+                {job.status === "running" ? (
+                  <button type="button" onClick={() => onClaimJob(job.id)} disabled={!canClaim}>
+                    {canClaim ? "领取工资" : formatRemaining(remaining)}
+                  </button>
+                ) : null}
+                {job.status === "claimed" ? <em>已入账</em> : null}
               </div>
-              {job.status === "idle" ? (
-                <button type="button" onClick={() => onStartJob(job.id)}>
-                  开始打工
-                </button>
-              ) : null}
-              {job.status === "running" ? (
-                <button type="button" onClick={() => onClaimJob(job.id)} disabled={!canClaim}>
-                  {canClaim ? "领取工资" : formatRemaining(remaining)}
-                </button>
-              ) : null}
-              {job.status === "claimed" ? <em>已入账</em> : null}
+              <p>{job.description}</p>
+              <div className="work-progress" aria-label={`工作进度 ${Math.round(progress * 100)}%`}>
+                <svg viewBox="0 0 240 42" aria-hidden="true">
+                  <path className="work-progress-track" d="M8 28 C54 2 92 42 132 21 S198 11 232 25" pathLength="100" />
+                  <path
+                    className="work-progress-fill"
+                    d="M8 28 C54 2 92 42 132 21 S198 11 232 25"
+                    pathLength="100"
+                    style={{ strokeDasharray: `${progress * 100} 100` }}
+                  />
+                </svg>
+                <img src={assetPath("assets/work-progress-cat.png")} alt="" draggable="false" />
+              </div>
             </article>
           );
         })}

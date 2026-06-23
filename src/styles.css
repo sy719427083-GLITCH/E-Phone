@@ -595,11 +595,10 @@ button {
 }
 
 .work-card {
+  --work-progress-percent: 0%;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 86px;
-  gap: 12px;
-  align-items: center;
-  min-height: 82px;
+  gap: 10px;
+  min-height: 132px;
   border-radius: 14px;
   padding: 13px;
   color: #51444b;
@@ -609,6 +608,13 @@ button {
     0 12px 26px rgba(190, 156, 170, 0.1);
   backdrop-filter: blur(18px);
   -webkit-backdrop-filter: blur(18px);
+}
+
+.work-card-head {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 86px;
+  gap: 12px;
+  align-items: center;
 }
 
 .work-card span,
@@ -626,11 +632,63 @@ button {
   font-weight: 600;
 }
 
+.work-card p {
+  margin: 0;
+  color: #7e6f76;
+  font-size: 11.5px;
+  line-height: 1.55;
+}
+
 .work-card em {
   justify-self: end;
   color: #c27790;
   font-size: 12px;
   font-style: normal;
+}
+
+.work-progress {
+  position: relative;
+  height: 46px;
+  margin-top: 2px;
+}
+
+.work-progress svg {
+  position: absolute;
+  inset: 2px 0 0;
+  width: 100%;
+  height: 42px;
+  overflow: visible;
+}
+
+.work-progress-track,
+.work-progress-fill {
+  fill: none;
+  stroke-linecap: round;
+  stroke-width: 7;
+}
+
+.work-progress-track {
+  stroke: rgba(234, 202, 213, 0.44);
+}
+
+.work-progress-fill {
+  stroke: rgba(210, 126, 154, 0.54);
+  transition: stroke-dasharray 0.35s ease;
+}
+
+.work-progress img {
+  position: absolute;
+  left: clamp(19px, var(--work-progress-percent), calc(100% - 19px));
+  top: var(--work-cat-y);
+  width: 38px;
+  height: 38px;
+  object-fit: contain;
+  transform: translate(-50%, -8px);
+  filter: drop-shadow(0 7px 9px rgba(184, 128, 147, 0.18));
+  transition: left 0.35s ease;
+  pointer-events: none;
+  -webkit-user-select: none;
+  user-select: none;
 }
 
 .settings-page {

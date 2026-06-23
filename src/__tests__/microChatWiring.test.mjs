@@ -62,4 +62,6 @@ test("wires a real work app to the home screen and wallet", () => {
   assert.match(appSource, /workStore\.startJob/);
   assert.match(appSource, /workStore\.claimJob/);
   assert.match(appSource, /walletStore\.receiveWorkPay/);
+  assert.match(appSource, /work-progress-cat\.png/);
+  assert.match(appSource, /job.description/);
 });

@@ -13,6 +13,7 @@ test("creates three daily jobs with three refresh chances", () => {
   assert.equal(day.jobs.length, 3);
   assert.equal(day.refreshesLeft, 3);
   assert.ok(day.jobs.every((job) => job.status === "idle"));
+  assert.ok(day.jobs.every((job) => job.description.length > 10));
 });
 
 test("refreshes jobs up to three times before any job starts", () => {

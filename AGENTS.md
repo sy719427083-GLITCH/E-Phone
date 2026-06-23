@@ -86,3 +86,4 @@ Current prototype direction:
 - Micro Chat messages should show a time below each bubble. Roles may proactively send normal messages and WeChat-like special events: recalled message, red packet, pat, and shared location rendered with CSS/SVG instead of external images.
 - In the new friends page, rejection should appear before acceptance when both actions are shown.
 - The Work app icon should be a generated transparent-background PNG matching the existing soft 3D app icon family, placed as the 13th home icon on the row below 情侣空间. The Work app should offer 3 daily jobs, 3 daily refreshes, real-time task timers, and earned pay must be deposited into Wallet bills.
+- Work app task cards should include concrete job descriptions and show countdown progress as a curved line with a generated transparent PNG kitten moving along the curve.

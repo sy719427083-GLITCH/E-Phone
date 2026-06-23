@@ -312,6 +312,28 @@ function formatChatTime(timestamp) {
   return date.toLocaleTimeString("zh-CN", { hour: "2-digit", minute: "2-digit", hour12: false });
 }
 
+function getChatReplyDelayMs(index) {
+  return 850 + Math.min(1100, index * 260) + Math.floor(Math.random() * 520);
+}
+
+const redPacketAcceptedReplies = [
+  "收到了。",
+  "谢谢。",
+  "我先收下。",
+  "看到了，已收。",
+];
+
+const redPacketReturnedReplies = [
+  "不用了，你留着。",
+  "这次先不收。",
+  "心意到了。",
+  "先退给你。",
+];
+
+function pickShortReply(items) {
+  return items[Math.floor(Math.random() * items.length)] || items[0] || "嗯。";
+}
+
 function buildRoleReplyPrompt(conversation, userText) {
   const role = conversation.roleSnapshot || {};
   const user = conversation.userSnapshot || {};
@@ -1202,16 +1224,17 @@ function MessageBubble({ message, onAcceptRedPacket, onReturnRedPacket }) {
     const amount = Number(message.meta?.amount || 0);
     const packetStatus = message.meta?.status || (message.role === "user" ? "sent" : "pending");
     const canHandle = message.role !== "user" && packetStatus === "pending";
+    const isHandled = ["received", "returned", "accepted_by_role", "returned_by_role"].includes(packetStatus);
     const statusText = {
       received: isTransfer ? `已收款 ¥${amount.toFixed(2)}` : `已领取 ¥${amount.toFixed(2)}`,
       returned: isTransfer ? "已退还" : "已退回",
       sent: `等待领取 ¥${amount.toFixed(2)}`,
-      accepted_by_role: `对方已领取 ¥${amount.toFixed(2)}`,
-      returned_by_role: `对方已退回 ¥${amount.toFixed(2)}`,
+      accepted_by_role: `已领取 ¥${amount.toFixed(2)}`,
+      returned_by_role: `已退回 ¥${amount.toFixed(2)}`,
       pending: message.meta?.subtitle || (isTransfer ? "微信转账" : "微信红包"),
     }[packetStatus] || message.meta?.subtitle || (isTransfer ? "微信转账" : "微信红包");
     return (
-      <span className={`message-card ${isTransfer ? "transfer-card" : "red-packet-card"}`}>
+      <span className={`message-card ${isTransfer ? "transfer-card" : "red-packet-card"} ${isHandled ? "is-handled" : ""}`}>
         <span className="red-packet-main">
           <span className="red-packet-icon">{isTransfer ? "¥" : "¥"}</span>
           <span>
@@ -1313,16 +1336,6 @@ function ChatThread({ conversation, onBack, onSend, onSendRedPacket, onAcceptRed
       </div>
       <div className={`chat-input-area ${moreOpen ? "open" : ""}`}>
         <div className="chat-composer">
-          <button
-            aria-label="更多"
-            className="chat-more-toggle"
-            onClick={() => {
-              setMoreOpen((value) => !value);
-              setRedPacketMessage("");
-            }}
-          >
-            +
-          </button>
           <input
             value={text}
             placeholder="发消息"
@@ -1333,6 +1346,16 @@ function ChatThread({ conversation, onBack, onSend, onSendRedPacket, onAcceptRed
           />
           <button className="chat-send" onClick={send} disabled={!text.trim() || sending}>
             发送
+          </button>
+          <button
+            aria-label="更多"
+            className="chat-more-toggle"
+            onClick={() => {
+              setMoreOpen((value) => !value);
+              setRedPacketMessage("");
+            }}
+          >
+            <span aria-hidden="true" />
           </button>
         </div>
         {moreOpen ? (
@@ -2312,9 +2335,11 @@ export function App() {
                 requestChatCompletion(api, prompt, fetch, { maxTokens: 420 }),
               );
               const replies = parseAssistantReplies(reply);
-              replies.forEach((content) => {
+              for (const [index, content] of replies.entries()) {
+                if (index > 0) await wait(getChatReplyDelayMs(index));
                 chatStore.addMessage(conversationId, createChatMessage({ role: "assistant", content }));
-              });
+                setConversations(chatStore.list());
+              }
             } catch (error) {
               chatStore.addMessage(
                 conversationId,
@@ -2349,18 +2374,13 @@ export function App() {
             walletStore.sendRedPacket({ to: conversation.title, amount: value, messageId: message.id });
             setWallet(walletStore.snapshot());
             setConversations(chatStore.list());
-            window.setTimeout(() => {
+            window.setTimeout(async () => {
               const latestConversation = chatStore.get(conversationId);
               const latestMessage = latestConversation?.messages.find((item) => item.id === message.id);
               if (!latestMessage || latestMessage.meta?.status !== "sent") return;
               const accepted = Math.random() > 0.28;
               if (accepted) {
                 chatStore.updateMessageMeta(conversationId, message.id, { status: "accepted_by_role" });
-                chatStore.addMessage(conversationId, createChatMessage({
-                  role: "assistant",
-                  type: "red_packet_result",
-                  content: `${conversation.title}领取了你的红包`,
-                }));
               } else {
                 walletStore.refundSentRedPacket({
                   from: conversation.title,
@@ -2368,13 +2388,18 @@ export function App() {
                   messageId: message.id,
                 });
                 chatStore.updateMessageMeta(conversationId, message.id, { status: "returned_by_role" });
-                chatStore.addMessage(conversationId, createChatMessage({
-                  role: "assistant",
-                  type: "red_packet_result",
-                  content: `${conversation.title}退回了你的红包`,
-                }));
                 setWallet(walletStore.snapshot());
               }
+              setConversations(chatStore.list());
+              setSendingChatId(conversationId);
+              await wait(getChatReplyDelayMs(1));
+              chatStore.addMessage(conversationId, createChatMessage({
+                role: "assistant",
+                content: accepted
+                  ? pickShortReply(redPacketAcceptedReplies)
+                  : pickShortReply(redPacketReturnedReplies),
+              }));
+              setSendingChatId(null);
               setConversations(chatStore.list());
             }, 2600 + Math.floor(Math.random() * 2400));
             return message;

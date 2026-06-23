@@ -36,9 +36,12 @@ test("renders a real wallet app instead of the placeholder pane", () => {
   assert.match(appSource, /walletStore\.refundSentRedPacket/);
   assert.match(appSource, /onAcceptRedPacket/);
   assert.match(appSource, /onReturnRedPacket/);
-  assert.match(appSource, /对方已领取/);
+  assert.match(appSource, /accepted_by_role/);
+  assert.match(appSource, /redPacketAcceptedReplies/);
+  assert.match(appSource, /getChatReplyDelayMs/);
   assert.match(appSource, /微信转账/);
   assert.match(appSource, /chat-input-area/);
   assert.match(appSource, /chat-more-panel/);
   assert.match(appSource, /chat-red-packet-modal/);
+  assert.doesNotMatch(appSource, /领取了你的红包/);
 });

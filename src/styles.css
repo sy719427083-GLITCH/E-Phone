@@ -3163,6 +3163,12 @@ button {
   border-radius: 8px;
 }
 
+.red-packet-card.is-handled,
+.transfer-card.is-handled {
+  filter: grayscale(0.35) saturate(0.62);
+  opacity: 0.72;
+}
+
 .transfer-card {
   display: block;
   width: min(250px, 76vw);
@@ -3272,7 +3278,7 @@ button {
 
 .chat-composer {
   display: grid;
-  grid-template-columns: 34px minmax(0, 1fr) 50px;
+  grid-template-columns: minmax(0, 1fr) 50px 34px;
   gap: 8px;
   align-items: center;
   padding: 8px 6px 0;
@@ -3469,9 +3475,45 @@ button {
 }
 
 .chat-composer .chat-more-toggle {
+  position: relative;
+  display: grid;
+  place-items: center;
   font-size: 22px;
   line-height: 1;
   font-weight: 400;
+  color: #2d292b;
+  background: rgba(255, 255, 255, 0.88);
+}
+
+.chat-composer .chat-more-toggle span,
+.chat-composer .chat-more-toggle span::before,
+.chat-composer .chat-more-toggle span::after {
+  display: block;
+}
+
+.chat-composer .chat-more-toggle span {
+  position: relative;
+  width: 17px;
+  height: 17px;
+  border: 1.8px solid #2f2b2d;
+  border-radius: 999px;
+}
+
+.chat-composer .chat-more-toggle span::before,
+.chat-composer .chat-more-toggle span::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 9px;
+  height: 1.7px;
+  border-radius: 999px;
+  background: #2f2b2d;
+  transform: translate(-50%, -50%);
+}
+
+.chat-composer .chat-more-toggle span::after {
+  transform: translate(-50%, -50%) rotate(90deg);
 }
 
 .chat-composer .chat-send:disabled {

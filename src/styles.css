@@ -3287,11 +3287,11 @@ button {
 .chat-input-area {
   margin: 0 -6px -2px;
   padding: 2px 6px 8px;
-  background: linear-gradient(180deg, rgba(246, 242, 244, 0), rgba(246, 242, 244, 0.98) 22%);
+  background: transparent;
 }
 
 .chat-input-area.open {
-  background: rgba(246, 242, 244, 0.98);
+  background: transparent;
 }
 
 .chat-red-packet-panel {
@@ -3332,8 +3332,7 @@ button {
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 14px;
   margin-top: 10px;
-  padding: 14px 8px 10px;
-  border-radius: 16px;
+  padding: 12px 8px 6px;
 }
 
 .chat-more-item {
@@ -3375,7 +3374,7 @@ button {
   z-index: 12;
   display: grid;
   place-items: center;
-  padding: 24px;
+  padding: 24px 20px;
   background: rgba(73, 58, 65, 0.18);
   backdrop-filter: blur(4px);
 }
@@ -3383,8 +3382,10 @@ button {
 .chat-red-packet-dialog {
   position: relative;
   display: grid;
+  justify-items: stretch;
   gap: 12px;
-  width: min(280px, 82vw);
+  width: min(286px, calc(100vw - 56px));
+  max-width: 100%;
   border-radius: 14px;
   padding: 22px 18px 18px;
   color: #5c4650;
@@ -3405,6 +3406,8 @@ button {
 }
 
 .chat-red-packet-dialog input {
+  width: 100%;
+  box-sizing: border-box;
   height: 46px;
   border: 0;
   border-radius: 10px;
@@ -3476,7 +3479,7 @@ button {
   line-height: 1;
   font-weight: 400;
   color: #2d292b;
-  background: rgba(255, 255, 255, 0.88);
+  background: transparent;
 }
 
 .chat-composer .chat-more-toggle span,

@@ -75,12 +75,25 @@ function cleanAssistantReply(content = "") {
     .replace(/^["'“”‘’\[\],\s]+|["'“”‘’\[\],\s]+$/g, "")
     .replace(/[（(][^）)]*[）)]/g, "")
     .replace(/(?:将|把|伸手|抬手|低头|转身|握住|收起|收入|举起|放下|靠在|站在|坐在|走到|走近|靠近|拿起|拿出|递给|递过|塞给|交到|放进|看着|抬眼|垂眸)[^，。！？；、,.!?;\n]*/g, "")
-    .replace(/(?:我)?(?:给你转|转给你|给你发|发给你)[^，。！？；、,.!?;\n]*\d+(?:\.\d+)?[^，。！？；、,.!?;\n]*/g, "我发了，点收款。")
+    .replace(/(?:我)?(?:给你转|转给你|给你发|发给你)[^，。！？；、,.!?;\n]*\d+(?:\.\d+)?[^，。！？；、,.!?;\n]*/g, "")
     .replace(/\s+/g, " ")
     .replace(/\s*([，。！？；、,.!?;])\s*/g, "$1")
     .replace(/([。！？；,.!?]){2,}/g, "$1")
     .replace(/^[，。！？；、,.!?;]+/, "")
     .trim();
+}
+
+function extractTransferEvent(content = "") {
+  const text = String(content || "");
+  const transferLike = /(给你转|转给你|给你发|发给你|给你打|打给你|转账给你|转了|发了|打钱|转账)/.test(text);
+  if (!transferLike) return null;
+  const amountMatch = text.match(/(?:¥|￥)?\s*(\d+(?:\.\d{1,2})?)\s*(?:元|块|块钱|rmb|RMB)?/);
+  const amount = Number(amountMatch?.[1] || 0);
+  if (!Number.isFinite(amount) || amount <= 0) return null;
+  return {
+    type: "transfer",
+    amount: Number(amount.toFixed(2)),
+  };
 }
 
 export function isPromptLeakReply(content = "") {
@@ -109,6 +122,12 @@ function parseReplyItemsFromJson(text) {
 }
 
 export function parseAssistantReplies(raw, limit = 3) {
+  return parseAssistantReplyEvents(raw, limit)
+    .filter((event) => event.type === "text")
+    .map((event) => event.content);
+}
+
+export function parseAssistantReplyEvents(raw, limit = 3) {
   const text = String(raw || "").trim();
   if (!text) return [];
   const jsonText = text.match(/```json\s*([\s\S]*?)```/)?.[1] || text.match(/```\s*([\s\S]*?)```/)?.[1] || text;
@@ -121,8 +140,17 @@ export function parseAssistantReplies(raw, limit = 3) {
     : quotedItems?.length
       ? quotedItems
     : text.split(/\n+/).map((line) => line.replace(/^[-*\d.、\s]+/, ""));
-  const cleaned = source.map(cleanAssistantReply).filter((reply) => reply && !isPromptLeakReply(reply));
-  return cleaned.slice(0, Math.max(1, Math.min(3, Number(limit) || 3)));
+  const events = [];
+  for (const item of source) {
+    const transfer = extractTransferEvent(item);
+    if (transfer) {
+      events.push(transfer);
+      continue;
+    }
+    const reply = cleanAssistantReply(item);
+    if (reply && !isPromptLeakReply(reply)) events.push({ type: "text", content: reply });
+  }
+  return events.slice(0, Math.max(1, Math.min(3, Number(limit) || 3)));
 }
 
 function createProfileSnapshot(profile = {}) {

@@ -6,6 +6,7 @@ import {
   createChatMessage,
   createConversationDraft,
   createProactiveChatMessage,
+  parseAssistantReplyEvents,
   parseAssistantReplies,
 } from "../lib/chatStore.js";
 
@@ -115,10 +116,11 @@ test("parses assistant replies into realistic chat bubbles", () => {
   ]);
 });
 
-test("cleans offline face-to-face wording from assistant replies", () => {
-  assert.deepEqual(parseAssistantReplies("我给你转了52块。\n（低头看着你）把钱递给你。"), [
-    "我发了，点收款。",
+test("turns transfer wording into a transfer event instead of text", () => {
+  assert.deepEqual(parseAssistantReplyEvents("我给你转了52块。\n（低头看着你）把钱递给你。"), [
+    { type: "transfer", amount: 52 },
   ]);
+  assert.deepEqual(parseAssistantReplies("我给你转了52块。"), []);
 });
 
 test("parses plain line replies when the model does not return json", () => {

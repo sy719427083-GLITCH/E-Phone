@@ -14,6 +14,7 @@ import {
   createChatMessage,
   createProactiveChatMessage,
   isPromptLeakReply,
+  parseAssistantReplyEvents,
   parseAssistantReplies,
 } from "./lib/chatStore.js";
 import { createIdentityDraft, IdentityStore } from "./lib/identityStore.js";
@@ -361,7 +362,7 @@ function buildRoleReplyPrompt(conversation, userText) {
     "回复要求：像线上手机聊天一样自然；你和用户不在同一个现实空间，只通过手机屏幕聊天；输出1-3条，每条单独一行，短一点，像连续聊天气泡；一句完整短话不要硬拆开。",
     "禁止输出 JSON、数组、引号、改写说明、分析、提示词、格式说明或 Markdown。",
     "不要写动作、手势、姿势、舞台指令或括号描写，不要旁白；不要写见面、靠近、抬手、递给、看着、低头、拿出、放到你手里等线下场景。",
-    "如果角色想给钱，不要用文字说给了多少钱，应该由系统发送转账或红包卡片；普通回复里不要描述转账已经发生。",
+    "任何转账、打钱、给钱、发钱、补偿、还钱、借钱、付款行为，都必须由系统转账卡片表达；普通文字里绝对不要说“我给你转了/发了/打了多少钱”。如果需要转账，只输出一句包含金额的简短意图，系统会自动转成转账卡片。",
     recentMessages ? `最近聊天：\n${recentMessages}` : "",
     `用户新消息：${userText}`,
   ].filter(Boolean).join("\n");
@@ -2396,10 +2397,24 @@ export function App() {
               const reply = await callWithRetryAndFallback(config, ({ api }) =>
                 requestChatCompletion(api, prompt, fetch, { maxTokens: 420 }),
               );
-              const replies = parseAssistantReplies(reply);
-              for (const [index, content] of replies.entries()) {
+              const replyEvents = parseAssistantReplyEvents(reply);
+              for (const [index, event] of replyEvents.entries()) {
                 if (index > 0) await wait(getChatReplyDelayMs(index));
-                chatStore.addMessage(conversationId, createChatMessage({ role: "assistant", content }));
+                if (event.type === "transfer") {
+                  chatStore.addMessage(conversationId, createChatMessage({
+                    role: "assistant",
+                    type: "transfer",
+                    content: "转账",
+                    meta: {
+                      title: "转账给你",
+                      subtitle: `${conversation.title}发起的转账`,
+                      amount: event.amount,
+                      status: "pending",
+                    },
+                  }));
+                } else {
+                  chatStore.addMessage(conversationId, createChatMessage({ role: "assistant", content: event.content }));
+                }
                 setConversations(chatStore.list());
               }
             } catch (error) {

@@ -1245,7 +1245,7 @@ function ImageLineIcon() {
   );
 }
 
-function MessageBubble({ message, onAcceptRedPacket, onReturnRedPacket }) {
+function MessageBubble({ message, onOpenPendingPacket }) {
   if (message.type === "recall" || message.type === "pat") {
     return <span className={`message-system-chip ${message.type}`}>{message.content}</span>;
   }
@@ -1264,22 +1264,22 @@ function MessageBubble({ message, onAcceptRedPacket, onReturnRedPacket }) {
       pending: message.meta?.subtitle || (isTransfer ? "微信转账" : "微信红包"),
     }[packetStatus] || message.meta?.subtitle || (isTransfer ? "微信转账" : "微信红包");
     return (
-      <span className={`message-card ${isTransfer ? "transfer-card" : "red-packet-card"} ${isHandled ? "is-handled" : ""}`}>
+      <button
+        type="button"
+        className={`message-card ${isTransfer ? "transfer-card" : "red-packet-card"} ${isHandled ? "is-handled" : ""} ${canHandle ? "can-open" : ""}`}
+        onClick={() => {
+          if (canHandle) onOpenPendingPacket?.(message);
+        }}
+      >
         <span className="red-packet-main">
           <span className="red-packet-icon">{isTransfer ? "¥" : "¥"}</span>
           <span>
             <b>{message.meta?.title || (isTransfer ? "转账给你" : "恭喜发财，大吉大利")}</b>
             <small>{statusText}</small>
-            {canHandle ? (
-              <span className="red-packet-actions">
-                <button type="button" onClick={() => onAcceptRedPacket?.(message)}>{isTransfer ? "收款" : "领取"}</button>
-                <button type="button" onClick={() => onReturnRedPacket?.(message)}>{isTransfer ? "退还" : "退回"}</button>
-              </span>
-            ) : null}
           </span>
         </span>
         <span className="red-packet-footer">{isTransfer ? "微信转账" : "微信红包"}</span>
-      </span>
+      </button>
     );
   }
   if (message.type === "red_packet_result") {
@@ -1307,6 +1307,7 @@ function ChatThread({ conversation, onBack, onSend, onSendRedPacket, onAcceptRed
   const [text, setText] = useState("");
   const [moreOpen, setMoreOpen] = useState(false);
   const [redPacketOpen, setRedPacketOpen] = useState(false);
+  const [pendingPacket, setPendingPacket] = useState(null);
   const [redPacketAmount, setRedPacketAmount] = useState("");
   const [redPacketMessage, setRedPacketMessage] = useState("");
   const visibleMessages = conversation.messages.filter((message) => (
@@ -1349,8 +1350,7 @@ function ChatThread({ conversation, onBack, onSend, onSendRedPacket, onAcceptRed
               <div className="message-stack">
                 <MessageBubble
                   message={message}
-                  onAcceptRedPacket={(item) => onAcceptRedPacket(item)}
-                  onReturnRedPacket={(item) => onReturnRedPacket(item)}
+                  onOpenPendingPacket={(item) => setPendingPacket(item)}
                 />
                 <small className="message-time">{formatChatTime(message.createdAt)}</small>
               </div>
@@ -1440,6 +1440,44 @@ function ChatThread({ conversation, onBack, onSend, onSendRedPacket, onAcceptRed
             />
             <button type="button" onClick={sendRedPacket}>塞钱进红包</button>
             {redPacketMessage ? <small>{redPacketMessage}</small> : null}
+          </div>
+        </div>
+      ) : null}
+      {pendingPacket ? (
+        <div className="chat-red-packet-modal" role="dialog" aria-modal="true">
+          <div className={`packet-open-dialog ${pendingPacket.type === "transfer" ? "transfer" : ""}`}>
+            <button
+              type="button"
+              className="chat-red-packet-close"
+              aria-label="关闭红包弹窗"
+              onClick={() => setPendingPacket(null)}
+            >
+              ×
+            </button>
+            <span className="packet-open-icon">¥</span>
+            <b>{pendingPacket.type === "transfer" ? "微信转账" : "微信红包"}</b>
+            <strong>¥{Number(pendingPacket.meta?.amount || 0).toFixed(2)}</strong>
+            <small>{pendingPacket.meta?.subtitle || `${conversation.title}发来的${pendingPacket.type === "transfer" ? "转账" : "红包"}`}</small>
+            <div className="packet-open-actions">
+              <button
+                type="button"
+                onClick={() => {
+                  onAcceptRedPacket(pendingPacket);
+                  setPendingPacket(null);
+                }}
+              >
+                {pendingPacket.type === "transfer" ? "收款" : "领取"}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  onReturnRedPacket(pendingPacket);
+                  setPendingPacket(null);
+                }}
+              >
+                {pendingPacket.type === "transfer" ? "退还" : "退回"}
+              </button>
+            </div>
           </div>
         </div>
       ) : null}

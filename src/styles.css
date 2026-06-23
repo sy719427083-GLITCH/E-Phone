@@ -3158,6 +3158,7 @@ button {
   display: block;
   width: min(250px, 76vw);
   padding: 0;
+  text-align: left;
   color: #fffaf6;
   background: #e59b3e;
   border-radius: 8px;
@@ -3169,10 +3170,21 @@ button {
   opacity: 0.72;
 }
 
+.red-packet-card.can-open,
+.transfer-card.can-open {
+  cursor: pointer;
+}
+
+.red-packet-card.can-open:active,
+.transfer-card.can-open:active {
+  transform: scale(0.992);
+}
+
 .transfer-card {
   display: block;
   width: min(250px, 76vw);
   padding: 0;
+  text-align: left;
   color: #fffaf6;
   background: #dda04d;
   border-radius: 8px;
@@ -3198,9 +3210,7 @@ button {
 }
 
 .red-packet-actions {
-  display: flex;
-  gap: 6px;
-  margin-top: 8px;
+  display: none;
 }
 
 .red-packet-actions button {
@@ -3339,7 +3349,9 @@ button {
   display: grid;
   gap: 7px;
   justify-items: center;
+  padding: 0;
   color: #272325;
+  background: transparent;
   font-size: 11px;
 }
 
@@ -3349,6 +3361,7 @@ button {
   width: 44px;
   height: 44px;
   color: #272325;
+  background: transparent;
 }
 
 .chat-more-hint {
@@ -3431,6 +3444,102 @@ button {
   color: #b07f91;
   font-size: 11px;
   text-align: center;
+}
+
+.packet-open-dialog {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+  width: min(286px, calc(100vw - 56px));
+  max-width: 100%;
+  border-radius: 16px;
+  padding: 28px 20px 20px;
+  color: #fff8f2;
+  background: #e59b3e;
+  box-shadow: 0 24px 48px rgba(111, 72, 35, 0.24);
+  animation: packet-pop 340ms cubic-bezier(0.18, 0.9, 0.28, 1.18);
+}
+
+.packet-open-dialog.transfer {
+  background: #dda04d;
+}
+
+.packet-open-dialog .chat-red-packet-close {
+  color: rgba(255, 248, 242, 0.86);
+}
+
+.packet-open-icon {
+  display: grid;
+  place-items: center;
+  width: 58px;
+  height: 58px;
+  border-radius: 999px;
+  color: #d78b36;
+  background: #fff1d6;
+  font-size: 28px;
+  font-weight: 700;
+  animation: packet-icon-open 540ms ease-out 80ms both;
+}
+
+.packet-open-dialog b {
+  font-size: 17px;
+  font-weight: 500;
+}
+
+.packet-open-dialog strong {
+  font-size: 26px;
+  font-weight: 520;
+}
+
+.packet-open-dialog small {
+  color: rgba(255, 248, 242, 0.78);
+  font-size: 11px;
+  text-align: center;
+}
+
+.packet-open-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  width: 100%;
+  margin-top: 8px;
+}
+
+.packet-open-actions button {
+  min-height: 38px;
+  border-radius: 9px;
+  color: #b8752f;
+  background: rgba(255, 249, 242, 0.94);
+  font-size: 13px;
+}
+
+.packet-open-actions button + button {
+  color: rgba(255, 249, 242, 0.92);
+  background: rgba(80, 54, 39, 0.22);
+}
+
+@keyframes packet-pop {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.92);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes packet-icon-open {
+  0% {
+    transform: rotateY(78deg) scale(0.88);
+  }
+  58% {
+    transform: rotateY(-8deg) scale(1.04);
+  }
+  100% {
+    transform: rotateY(0) scale(1);
+  }
 }
 
 .chat-red-packet-close {

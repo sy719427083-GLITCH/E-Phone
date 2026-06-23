@@ -43,6 +43,8 @@ test("renders a real wallet app instead of the placeholder pane", () => {
   assert.match(appSource, /chat-input-area/);
   assert.match(appSource, /chat-more-panel/);
   assert.match(appSource, /chat-red-packet-modal/);
+  assert.match(appSource, /pendingPacket/);
+  assert.match(appSource, /packet-open-dialog/);
   assert.match(appSource, /RedPacketLineIcon/);
   assert.match(appSource, /LocationLineIcon/);
   assert.match(appSource, /ImageLineIcon/);

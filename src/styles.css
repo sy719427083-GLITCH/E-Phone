@@ -3329,19 +3329,18 @@ button {
 
 .chat-more-panel {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 12px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
   margin-top: 10px;
   padding: 14px 8px 10px;
   border-radius: 16px;
-  background: rgba(255, 255, 255, 0.52);
 }
 
 .chat-more-item {
   display: grid;
-  gap: 6px;
+  gap: 7px;
   justify-items: center;
-  color: #8d7b83;
+  color: #272325;
   font-size: 11px;
 }
 
@@ -3350,22 +3349,7 @@ button {
   place-items: center;
   width: 44px;
   height: 44px;
-  border-radius: 12px;
-  color: #9d7e8a;
-  background: rgba(255, 255, 255, 0.88);
-  box-shadow: 0 7px 16px rgba(125, 102, 112, 0.055);
-  font-size: 17px;
-}
-
-.chat-more-icon.red {
-  color: #d58b38;
-  background: #fff3e5;
-  font-weight: 600;
-}
-
-.chat-more-icon .message-location-icon {
-  width: 28px;
-  height: 28px;
+  color: #272325;
 }
 
 .chat-more-hint {
@@ -3373,6 +3357,16 @@ button {
   color: #ad8794;
   font-size: 11px;
   text-align: center;
+}
+
+.chat-more-svg {
+  width: 31px;
+  height: 31px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 .chat-red-packet-modal {

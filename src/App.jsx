@@ -1215,6 +1215,36 @@ function LocationIcon() {
   );
 }
 
+function RedPacketLineIcon() {
+  return (
+    <svg className="chat-more-svg" viewBox="0 0 48 48" aria-hidden="true">
+      <rect x="10" y="8" width="28" height="34" rx="4" />
+      <path d="M10 17h28" />
+      <path d="M18 25h12" />
+      <path d="M24 20v15" />
+    </svg>
+  );
+}
+
+function LocationLineIcon() {
+  return (
+    <svg className="chat-more-svg" viewBox="0 0 48 48" aria-hidden="true">
+      <path d="M24 6c-8 0-14 6.1-14 13.7C10 30 24 42 24 42s14-12 14-22.3C38 12.1 32 6 24 6Z" />
+      <circle cx="24" cy="19.8" r="4.5" />
+    </svg>
+  );
+}
+
+function ImageLineIcon() {
+  return (
+    <svg className="chat-more-svg" viewBox="0 0 48 48" aria-hidden="true">
+      <rect x="8" y="11" width="32" height="26" rx="4" />
+      <circle cx="18" cy="20" r="3" />
+      <path d="M12 33l9-8 7 6 4-4 5 6" />
+    </svg>
+  );
+}
+
 function MessageBubble({ message, onAcceptRedPacket, onReturnRedPacket }) {
   if (message.type === "recall" || message.type === "pat") {
     return <span className={`message-system-chip ${message.type}`}>{message.content}</span>;
@@ -1369,21 +1399,15 @@ function ChatThread({ conversation, onBack, onSend, onSendRedPacket, onAcceptRed
                 setRedPacketMessage("");
               }}
             >
-              <span className="chat-more-icon red">¥</span>
+              <span className="chat-more-icon"><RedPacketLineIcon /></span>
               <small>发红包</small>
             </button>
             <button type="button" className="chat-more-item" onClick={() => setRedPacketMessage("位置功能稍后开放。")}>
-              <span className="chat-more-icon">
-                <LocationIcon />
-              </span>
+              <span className="chat-more-icon"><LocationLineIcon /></span>
               <small>位置</small>
             </button>
-            <button type="button" className="chat-more-item" onClick={() => setRedPacketMessage("拍一拍功能稍后开放。")}>
-              <span className="chat-more-icon">拍</span>
-              <small>拍一拍</small>
-            </button>
             <button type="button" className="chat-more-item" onClick={() => setRedPacketMessage("图片功能稍后开放。")}>
-              <span className="chat-more-icon">图</span>
+              <span className="chat-more-icon"><ImageLineIcon /></span>
               <small>图片</small>
             </button>
             {redPacketMessage ? <small className="chat-more-hint">{redPacketMessage}</small> : null}

@@ -330,24 +330,26 @@ function WorkApp({ workDay, onRefreshJobs, onStartJob, onClaimJob, message }) {
   }, []);
 
   const runningJob = workDay.jobs.find((job) => job.status === "running") || null;
+  const eraLabel = workDay.worldEra === "ancient" ? "古代工作池" : "现代工作池";
+  const refreshLabel = workDay.nextRefreshCost > 0 ? `刷新 ¥${workDay.nextRefreshCost.toFixed(2)}` : "免费刷新";
 
   return (
     <section className="page soft-page work-page">
       <Header title="工作" />
       <section className="work-summary">
-        <span>今日工作</span>
-        <strong>3 个任务</strong>
-        <small>刷新机会 {workDay.refreshesLeft}/3</small>
+        <span>当前工作</span>
+        <strong>{runningJob ? "打工中" : "1 个机会"}</strong>
+        <small>{eraLabel} · 免费刷新剩 {workDay.freeRefreshesLeft} 次</small>
       </section>
       <div className="work-actions">
         <button
           type="button"
           onClick={onRefreshJobs}
-          disabled={workDay.refreshesLeft <= 0 || workDay.jobs.some((job) => job.status !== "idle")}
+          disabled={workDay.jobs.some((job) => job.status === "running")}
         >
-          刷新工作
+          {refreshLabel}
         </button>
-        <span>{runningJob ? `进行中：${runningJob.title}` : "按现实时间完成后领取工资"}</span>
+        <span>{runningJob ? `进行中：${runningJob.title}` : "前三次免费，之后从钱包扣费刷新"}</span>
       </div>
       {message ? <p className="work-message">{message}</p> : null}
       <div className="work-list">
@@ -356,7 +358,7 @@ function WorkApp({ workDay, onRefreshJobs, onStartJob, onClaimJob, message }) {
           const durationMs = Math.max(1, Number(job.durationMinutes) || 1) * 60_000;
           const elapsedMs = job.status === "running" ? durationMs - remaining : job.status === "claimed" ? durationMs : 0;
           const progress = Math.max(0, Math.min(1, elapsedMs / durationMs));
-          const catY = 15 - Math.sin(progress * Math.PI) * 14;
+          const catY = 0 - Math.sin(progress * Math.PI) * 4;
           const progressPercent = `${progress * 100}%`;
           const canClaim = job.status === "running" && remaining <= 0;
           return (
@@ -367,7 +369,7 @@ function WorkApp({ workDay, onRefreshJobs, onStartJob, onClaimJob, message }) {
             >
               <div className="work-card-head">
                 <div>
-                  <span>{job.place}</span>
+                  <span>{job.place} · {job.era === "ancient" ? "古代" : "现代"} · 线下</span>
                   <b>{job.title}</b>
                   <small>{formatWorkDuration(job.durationMinutes)} · ¥{job.pay.toFixed(2)}</small>
                 </div>
@@ -386,10 +388,10 @@ function WorkApp({ workDay, onRefreshJobs, onStartJob, onClaimJob, message }) {
               <p>{job.description}</p>
               <div className="work-progress" aria-label={`工作进度 ${Math.round(progress * 100)}%`}>
                 <svg viewBox="0 0 240 42" aria-hidden="true">
-                  <path className="work-progress-track" d="M8 28 C54 2 92 42 132 21 S198 11 232 25" pathLength="100" />
+                  <path className="work-progress-track" d="M8 27 C62 22 110 22 146 25 S203 30 232 24" pathLength="100" />
                   <path
                     className="work-progress-fill"
-                    d="M8 28 C54 2 92 42 132 21 S198 11 232 25"
+                    d="M8 27 C62 22 110 22 146 25 S203 30 232 24"
                     pathLength="100"
                     style={{ strokeDasharray: `${progress * 100} 100` }}
                   />
@@ -2770,8 +2772,16 @@ export function App() {
           message={workMessage}
           onRefreshJobs={() => {
             try {
+              const cost = workDay.nextRefreshCost || 0;
+              if (cost > 0) {
+                walletStore.payWorkRefresh({
+                  amount: cost,
+                  messageId: `work-refresh-${workDay.dateKey}-${workDay.refreshIndex + 1}`,
+                });
+                setWallet(walletStore.snapshot());
+              }
               setWorkDay(workStore.refreshJobs());
-              setWorkMessage("今日工作已刷新。");
+              setWorkMessage(cost > 0 ? `已扣除 ¥${cost.toFixed(2)}，工作已刷新。` : "工作已免费刷新。");
             } catch (error) {
               setWorkMessage(error.message || "刷新失败。");
             }

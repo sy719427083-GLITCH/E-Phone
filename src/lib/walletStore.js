@@ -127,6 +127,22 @@ export class WalletStore {
     return this.snapshot();
   }
 
+  payWorkRefresh({ amount = 0, messageId = "" } = {}) {
+    const value = Number(amount);
+    if (!Number.isFinite(value) || value <= 0) throw new Error("刷新费用无效。");
+    if (value > this.wallet.balance) throw new Error("余额不足。");
+    if (this.hasBill(messageId)) return this.snapshot();
+    this.wallet.balance = Number((this.wallet.balance - value).toFixed(2));
+    this.addBill({
+      title: "工作刷新",
+      note: "刷新打工机会",
+      amount: -value,
+      messageId,
+    });
+    this.persist();
+    return this.snapshot();
+  }
+
   returnRedPacket() {
     return this.snapshot();
   }

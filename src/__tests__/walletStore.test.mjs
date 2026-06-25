@@ -78,3 +78,32 @@ test("refunds my sent red packet when the role returns it", () => {
   assert.equal(snapshot.bills[0].title, "红包退回");
   assert.equal(snapshot.bills[0].amount, 30);
 });
+
+test("clears wallet bills without changing the balance", () => {
+  const store = new WalletStore(createMemoryStorage());
+
+  store.receiveRedPacket({ from: "陆清晏", amount: 18, messageId: "msg-in" });
+  assert.equal(store.snapshot().balance, 2018);
+
+  store.clearBills();
+  const snapshot = store.snapshot();
+
+  assert.equal(snapshot.balance, 2018);
+  assert.deepEqual(snapshot.bills, []);
+});
+
+test("manually adjusts wallet balance and records transparent wallet bills", () => {
+  const store = new WalletStore(createMemoryStorage());
+
+  store.adjustBalance({ amount: 120, note: "手动调整", messageId: "manual-add" });
+  assert.equal(store.snapshot().balance, 2120);
+  assert.equal(store.snapshot().bills[0].title, "手动增加余额");
+  assert.equal(store.snapshot().bills[0].amount, 120);
+
+  store.adjustBalance({ amount: -20, note: "手动调整", messageId: "manual-subtract" });
+  const snapshot = store.snapshot();
+
+  assert.equal(snapshot.balance, 2100);
+  assert.equal(snapshot.bills[0].title, "手动减少余额");
+  assert.equal(snapshot.bills[0].amount, -20);
+});

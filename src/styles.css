@@ -381,21 +381,26 @@ button {
   align-content: start;
   gap: 14px;
   background:
-    radial-gradient(circle at 12% 8%, rgba(255, 222, 232, 0.82), transparent 30%),
-    linear-gradient(180deg, #fff9fb, #ffffff 44%);
+    linear-gradient(180deg, rgba(255, 248, 251, 0.16), rgba(255, 255, 255, 0.16)),
+    url("/assets/wallet-wallpaper-cat-v78.png") center bottom / cover no-repeat;
 }
 
 .wallet-balance-card {
   display: grid;
-  gap: 8px;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: start;
   margin-top: 8px;
-  border-radius: 18px;
-  padding: 18px;
+  border-radius: 0;
+  padding: 18px 8px;
   color: #76515e;
-  background:
-    linear-gradient(135deg, rgba(255, 235, 242, 0.94), rgba(255, 255, 255, 0.9)),
-    #fff;
-  box-shadow: 0 18px 34px rgba(205, 151, 170, 0.16);
+  background: transparent;
+  box-shadow: none;
+  text-shadow: 0 1px 9px rgba(255, 255, 255, 0.82);
+}
+
+.wallet-balance-content {
+  min-width: 0;
 }
 
 .wallet-balance-card span {
@@ -410,7 +415,7 @@ button {
   letter-spacing: 0;
 }
 
-.wallet-balance-card div {
+.wallet-balance-meta {
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
@@ -421,20 +426,40 @@ button {
   border-radius: 999px;
   padding: 5px 9px;
   color: #9a7481;
-  background: rgba(255, 255, 255, 0.68);
+  background: transparent;
   font-size: 11px;
+}
+
+.wallet-balance-actions {
+  display: flex;
+  gap: 8px;
+  padding-top: 2px;
+}
+
+.wallet-balance-actions button {
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  color: #8f6576;
+  background: rgba(255, 255, 255, 0.24);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.44), 0 8px 22px rgba(203, 151, 169, 0.12);
+  font-size: 18px;
+  font-weight: 500;
+  backdrop-filter: blur(10px);
 }
 
 .wallet-bills {
   display: grid;
   gap: 8px;
+  background: transparent;
 }
 
 .wallet-section-title {
   display: flex;
   justify-content: space-between;
   align-items: baseline;
-  padding: 0 2px;
+  padding: 0 8px;
+  text-shadow: 0 1px 9px rgba(255, 255, 255, 0.82);
 }
 
 .wallet-section-title b {
@@ -448,21 +473,43 @@ button {
   font-size: 11px;
 }
 
+.wallet-section-title div {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.wallet-section-title button {
+  min-height: 28px;
+  border-radius: 999px;
+  padding: 0 11px;
+  color: #9b6a7c;
+  background: rgba(255, 255, 255, 0.22);
+  font-size: 12px;
+  backdrop-filter: blur(10px);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.38);
+}
+
+.wallet-section-title button:disabled {
+  color: rgba(154, 116, 129, 0.42);
+}
+
 .wallet-bill-list {
   overflow: hidden;
   border-radius: 14px;
-  background: rgba(255, 255, 255, 0.9);
-  box-shadow: 0 12px 26px rgba(190, 156, 170, 0.08);
+  background: transparent;
+  box-shadow: none;
 }
 
 .wallet-empty-bills {
   display: grid;
   place-items: center;
   min-height: 116px;
-  border-radius: 14px;
+  border-radius: 0;
   color: #b09aa3;
-  background: rgba(255, 255, 255, 0.76);
+  background: transparent;
   font-size: 13px;
+  text-shadow: 0 1px 9px rgba(255, 255, 255, 0.82);
 }
 
 .wallet-bill-row {
@@ -473,10 +520,12 @@ button {
   min-height: 62px;
   padding: 11px 12px;
   color: #51444b;
+  background: transparent;
+  text-shadow: 0 1px 9px rgba(255, 255, 255, 0.78);
 }
 
 .wallet-bill-row + .wallet-bill-row {
-  border-top: 1px solid rgba(236, 222, 227, 0.72);
+  border-top: 1px solid rgba(236, 222, 227, 0.34);
 }
 
 .wallet-bill-icon {
@@ -486,19 +535,20 @@ button {
   height: 34px;
   border-radius: 10px;
   color: #ad7185;
-  background: #fff0f5;
+  background: rgba(255, 255, 255, 0.2);
   font-size: 12px;
   font-weight: 600;
+  backdrop-filter: blur(8px);
 }
 
 .wallet-bill-icon.income {
   color: #9a6c7d;
-  background: #ffe6ef;
+  background: rgba(255, 231, 239, 0.22);
 }
 
 .wallet-bill-icon.expense {
   color: #98848c;
-  background: #f7f1f4;
+  background: rgba(255, 255, 255, 0.18);
 }
 
 .wallet-bill-row b {
@@ -526,6 +576,79 @@ button {
 
 .wallet-bill-row > strong.expense {
   color: #6f6268;
+}
+
+.wallet-adjust-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(88, 65, 75, 0.12);
+  backdrop-filter: blur(7px);
+}
+
+.wallet-adjust-panel {
+  width: min(100%, 286px);
+  display: grid;
+  gap: 12px;
+  border-radius: 18px;
+  padding: 18px;
+  color: #644a55;
+  background: rgba(255, 249, 251, 0.86);
+  box-shadow: 0 22px 50px rgba(168, 113, 132, 0.18);
+}
+
+.wallet-adjust-panel b {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.wallet-adjust-panel input {
+  width: 100%;
+  min-height: 44px;
+  border-radius: 12px;
+  padding: 0 12px;
+  color: #56464d;
+  background: rgba(255, 255, 255, 0.72);
+  font-size: 16px;
+}
+
+.wallet-adjust-panel input::placeholder {
+  color: #b9a7af;
+  font-size: 12px;
+}
+
+.wallet-adjust-panel span {
+  color: #b56d82;
+  font-size: 12px;
+}
+
+.wallet-adjust-panel p {
+  margin: 0;
+  color: #9b8790;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.wallet-adjust-panel div {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.wallet-adjust-panel button {
+  min-height: 38px;
+  border-radius: 999px;
+  color: #8d6474;
+  background: rgba(255, 236, 242, 0.76);
+  font-size: 13px;
+}
+
+.wallet-adjust-panel button:first-child {
+  color: #9b8a91;
+  background: rgba(255, 255, 255, 0.66);
 }
 
 .work-page {
@@ -687,43 +810,6 @@ button {
   font-size: 15px;
   font-weight: 650;
   white-space: nowrap;
-}
-
-.work-tier {
-  display: inline-block;
-  min-width: 0;
-  margin-right: 4px;
-  padding: 0;
-  color: #9f6b7d;
-  background: transparent;
-  font-size: 10px;
-  font-weight: 800;
-  line-height: 1;
-  letter-spacing: 0;
-  vertical-align: 1px;
-  text-shadow: 0 0 10px rgba(255, 255, 255, 0.86);
-}
-
-.work-tier.tier-SSS {
-  color: #c46b91;
-  text-shadow: 0 0 10px rgba(255, 174, 206, 0.92), 0 0 18px rgba(255, 255, 255, 0.86);
-}
-
-.work-tier.tier-S {
-  color: #a86fbd;
-  text-shadow: 0 0 10px rgba(216, 183, 235, 0.72), 0 0 16px rgba(255, 255, 255, 0.82);
-}
-
-.work-tier.tier-A {
-  color: #c17c70;
-}
-
-.work-tier.tier-B {
-  color: #8d86bd;
-}
-
-.work-tier.tier-C {
-  color: #8ba0b4;
 }
 
 .work-card-action {

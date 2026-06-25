@@ -82,6 +82,28 @@ export class WalletStore {
     return bill;
   }
 
+  clearBills() {
+    this.wallet.bills = [];
+    this.persist();
+    return this.snapshot();
+  }
+
+  adjustBalance({ amount = 0, note = "手动调整", messageId = "" } = {}) {
+    const value = Number(amount);
+    if (!Number.isFinite(value) || value === 0) throw new Error("金额无效。");
+    if (value < 0 && Math.abs(value) > this.wallet.balance) throw new Error("余额不足。");
+    if (this.hasBill(messageId)) return this.snapshot();
+    this.wallet.balance = Number((this.wallet.balance + value).toFixed(2));
+    this.addBill({
+      title: value > 0 ? "手动增加余额" : "手动减少余额",
+      note,
+      amount: value,
+      messageId,
+    });
+    this.persist();
+    return this.snapshot();
+  }
+
   receiveRedPacket({ from = "对方", amount = 0, messageId = "" } = {}) {
     const value = Number(amount);
     if (!Number.isFinite(value) || value <= 0) throw new Error("红包金额无效。");

@@ -258,7 +258,11 @@ function formatMoney(amount) {
   return `${amount < 0 ? "-" : "+"}¥${value.toFixed(2)}`;
 }
 
-function WalletApp({ wallet }) {
+function WalletApp({ wallet, onAdjustBalance, onClearBills }) {
+  const [adjustMode, setAdjustMode] = useState(null);
+  const [adjustValue, setAdjustValue] = useState("");
+  const [adjustError, setAdjustError] = useState("");
+  const [clearConfirmOpen, setClearConfirmOpen] = useState(false);
   const bills = wallet?.bills || [];
   const balance = Number(wallet?.balance ?? 2000);
   const income = bills
@@ -268,21 +272,46 @@ function WalletApp({ wallet }) {
     .filter((bill) => bill.amount < 0)
     .reduce((total, bill) => total + Math.abs(bill.amount), 0);
 
+  const adjustLabel = adjustMode === "subtract" ? "减少余额" : "增加余额";
+  const closeAdjust = () => {
+    setAdjustMode(null);
+    setAdjustValue("");
+    setAdjustError("");
+  };
+
+  const submitAdjust = () => {
+    try {
+      onAdjustBalance?.(adjustMode, adjustValue);
+      closeAdjust();
+    } catch (error) {
+      setAdjustError(error.message || "调整失败。");
+    }
+  };
+
   return (
     <section className="page soft-page wallet-page">
       <Header title="钱包" />
       <div className="wallet-balance-card">
-        <span>我的余额</span>
-        <strong>¥{balance.toFixed(2)}</strong>
-        <div>
-          <small>本月收入 ¥{income.toFixed(2)}</small>
-          <small>本月支出 ¥{expense.toFixed(2)}</small>
+        <div className="wallet-balance-content">
+          <span>我的余额</span>
+          <strong>¥{balance.toFixed(2)}</strong>
+          <div className="wallet-balance-meta">
+            <small>本月收入 ¥{income.toFixed(2)}</small>
+            <small>本月支出 ¥{expense.toFixed(2)}</small>
+          </div>
+        </div>
+        <div className="wallet-balance-actions" aria-label="手动调整余额">
+          <button type="button" onClick={() => setAdjustMode("add")} aria-label="增加余额">+</button>
+          <button type="button" onClick={() => setAdjustMode("subtract")} aria-label="减少余额">-</button>
         </div>
       </div>
       <section className="wallet-bills">
         <div className="wallet-section-title">
           <b>我的账单</b>
-          <span>{bills.length} 笔</span>
+          <div>
+            <span>{bills.length} 笔</span>
+            <button type="button" onClick={() => setClearConfirmOpen(true)} disabled={bills.length === 0}>清空</button>
+          </div>
         </div>
         {bills.length === 0 ? (
           <div className="wallet-empty-bills">还没有账单</div>
@@ -305,6 +334,51 @@ function WalletApp({ wallet }) {
           </div>
         )}
       </section>
+      {adjustMode ? (
+        <div className="wallet-adjust-overlay" role="dialog" aria-modal="true" aria-label={adjustLabel}>
+          <div className="wallet-adjust-panel">
+            <b>{adjustLabel}</b>
+            <input
+              type="number"
+              inputMode="decimal"
+              min="0"
+              step="0.01"
+              value={adjustValue}
+              onChange={(event) => {
+                setAdjustValue(event.target.value);
+                setAdjustError("");
+              }}
+              placeholder="输入金额"
+              autoFocus
+            />
+            {adjustError ? <span>{adjustError}</span> : null}
+            <div>
+              <button type="button" onClick={closeAdjust}>取消</button>
+              <button type="button" onClick={submitAdjust}>确认</button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+      {clearConfirmOpen ? (
+        <div className="wallet-adjust-overlay" role="dialog" aria-modal="true" aria-label="确认清空我的账单">
+          <div className="wallet-adjust-panel">
+            <b>清空我的账单？</b>
+            <p>余额不会清除，只删除账单记录。</p>
+            <div>
+              <button type="button" onClick={() => setClearConfirmOpen(false)}>取消</button>
+              <button
+                type="button"
+                onClick={() => {
+                  onClearBills?.();
+                  setClearConfirmOpen(false);
+                }}
+              >
+                清空
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </section>
   );
 }
@@ -387,7 +461,7 @@ function WorkApp({ workDay, onRefreshJobs, onStartJob, onClaimJob, message }) {
                 </div>
                 <div className="work-card-meta">
                   <small>{formatWorkDuration(job.durationMinutes)}</small>
-                  <strong><span className={`work-tier tier-${job.tier}`}>{job.tier}</span> ¥{job.pay.toFixed(2)}</strong>
+                  <strong>¥{job.pay.toFixed(2)}</strong>
                 </div>
                 <div className="work-card-action">
                   {job.status === "idle" ? (
@@ -2782,7 +2856,29 @@ export function App() {
         />
       );
     }
-    if (appPage?.key === "wallet") return <WalletApp wallet={wallet} />;
+    if (appPage?.key === "wallet") {
+      return (
+        <WalletApp
+          wallet={wallet}
+          onAdjustBalance={(mode, input) => {
+            const value = Number(String(input).replace(/[^\d.]/g, ""));
+            if (!Number.isFinite(value) || value <= 0) throw new Error("请输入有效金额。");
+            const signedValue = mode === "subtract" ? -value : value;
+            walletStore.adjustBalance({
+              amount: signedValue,
+              note: "手动调整",
+              messageId: `manual-${mode}-${Date.now()}`,
+            });
+            setWallet(walletStore.snapshot());
+          }}
+          onClearBills={() => {
+            if (wallet.bills.length === 0) return;
+            walletStore.clearBills();
+            setWallet(walletStore.snapshot());
+          }}
+        />
+      );
+    }
     if (appPage?.key === "work") {
       return (
         <WorkApp

@@ -29,7 +29,11 @@ test("renders a real wallet app instead of the placeholder pane", () => {
   assert.match(appSource, /我的余额/);
   assert.match(appSource, /我的账单/);
   assert.match(appSource, /appPage\?\.key === "wallet"/);
-  assert.match(appSource, /<WalletApp wallet=\{wallet\} \/>/);
+  assert.match(appSource, /onAdjustBalance=\{/);
+  assert.match(appSource, /walletStore\.adjustBalance/);
+  assert.match(appSource, /walletStore\.clearBills/);
+  assert.match(appSource, /确认清空我的账单/);
+  assert.match(styleSource, /wallet-wallpaper-cat-v78\.png/);
   assert.match(appSource, /还没有账单/);
   assert.match(appSource, /walletStore\.receiveRedPacket/);
   assert.match(appSource, /walletStore\.receiveTransfer/);
@@ -71,6 +75,7 @@ test("wires a real work app to the home screen and wallet", () => {
   assert.match(appSource, /curvePoint\.x \/ 340/);
   assert.match(appSource, /M4 24 L336 24/);
   assert.match(styleSource, /work-soft-bg-v75\.png/);
+  assert.doesNotMatch(appSource, /work-tier/);
   assert.doesNotMatch(appSource, /5 个备选/);
   assert.doesNotMatch(appSource, /可选线上或线下/);
   assert.doesNotMatch(appSource, /现代工作池/);

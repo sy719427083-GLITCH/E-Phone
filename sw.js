@@ -1,4 +1,4 @@
-const CACHE_NAME = "e-phone-pink-pwa-v70";
+const CACHE_NAME = "e-phone-pink-pwa-v71";
 const ASSETS = [
   "manifest.webmanifest",
   "version.json",

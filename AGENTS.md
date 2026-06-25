@@ -21,6 +21,7 @@ Current prototype direction:
 - Incoming red packets and transfers should not expose receive/return buttons directly on the chat card. Tapping the card should open a WeChat-like animated modal, and only that modal offers receive/return actions.
 - Any Micro Chat transfer/payment/giving-money behavior must appear as a transfer card, never only as plain text. Prompting should forbid textual-only transfer descriptions, and parser logic should convert model transfer wording into a transfer message card.
 - Micro Chat ordinary text bubbles should use a liquid-glass translucent style with blur, soft highlights, and readable text. Do not apply this treatment to red packet or transfer cards.
+- Micro Chat chat thread wallpaper should show behind the whole screen, including the top title/header area. Text chat bubbles should be near-transparent bordered glass with modest corner radius rather than rounded solid pills.
 - The phone UI is the whole viewport: no external phone frame, no black border, no dynamic island, and no outside background.
 - iPhone/Safari layouts should not feel pushed downward; prefer dynamic viewport units and light safe-area compensation so the UI sits higher and fills the visible screen.
 - Do not render a custom top system time or battery indicator; let the phone/browser own that area while the app background fills behind it.

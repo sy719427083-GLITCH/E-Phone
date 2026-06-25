@@ -350,7 +350,7 @@ function WorkApp({ workDay, onRefreshJobs, onStartJob, onClaimJob, message }) {
             <span>当前工作</span>
             <small>{eraLabel} · 免费刷新剩 {workDay.freeRefreshesLeft} 次</small>
           </div>
-          <strong>{runningJob ? "打工中" : "现有工作"}</strong>
+          <strong>{runningJob ? "打工中" : "工作清单"}</strong>
         </section>
         <div className="work-actions">
           <button

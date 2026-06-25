@@ -690,28 +690,40 @@ button {
 }
 
 .work-tier {
-  display: inline-grid;
-  place-items: center;
-  min-width: 26px;
+  display: inline-block;
+  min-width: 0;
   margin-right: 4px;
-  padding: 2px 5px 1px;
-  border-radius: 999px;
-  color: #9a6176;
-  background: rgba(255, 226, 235, 0.64);
-  font-size: 9px;
+  padding: 0;
+  color: #9f6b7d;
+  background: transparent;
+  font-size: 10px;
+  font-weight: 800;
   line-height: 1;
   letter-spacing: 0;
   vertical-align: 1px;
+  text-shadow: 0 0 10px rgba(255, 255, 255, 0.86);
 }
 
 .work-tier.tier-SSS {
-  color: #845265;
-  background: rgba(255, 220, 232, 0.84);
+  color: #c46b91;
+  text-shadow: 0 0 10px rgba(255, 174, 206, 0.92), 0 0 18px rgba(255, 255, 255, 0.86);
 }
 
 .work-tier.tier-S {
-  color: #936077;
-  background: rgba(255, 229, 238, 0.76);
+  color: #a86fbd;
+  text-shadow: 0 0 10px rgba(216, 183, 235, 0.72), 0 0 16px rgba(255, 255, 255, 0.82);
+}
+
+.work-tier.tier-A {
+  color: #c17c70;
+}
+
+.work-tier.tier-B {
+  color: #8d86bd;
+}
+
+.work-tier.tier-C {
+  color: #8ba0b4;
 }
 
 .work-card-action {

@@ -3,6 +3,7 @@ import { readFileSync } from "node:fs";
 import test from "node:test";
 
 const appSource = readFileSync(new URL("../App.jsx", import.meta.url), "utf8");
+const styleSource = readFileSync(new URL("../styles.css", import.meta.url), "utf8");
 
 test("wires the moments clear callback through the micro chat shell", () => {
   const microChatProps = appSource.match(/function MicroChatApp\(\{([\s\S]*?)\}\) \{/);
@@ -64,9 +65,12 @@ test("wires a real work app to the home screen and wallet", () => {
   assert.match(appSource, /walletStore\.receiveWorkPay/);
   assert.match(appSource, /work-progress-cat\.png/);
   assert.match(appSource, /job.description/);
-  assert.match(appSource, /工作目录/);
+  assert.match(appSource, /现有工作/);
+  assert.match(appSource, /function getWorkCurvePoint/);
   assert.match(appSource, /--work-cat-line-y/);
-  assert.match(appSource, /Math\.sin\(progress \* Math\.PI \* 2/);
+  assert.match(appSource, /curvePoint\.x \/ 300/);
+  assert.match(styleSource, /work-page-bg-v73\.png/);
   assert.doesNotMatch(appSource, /5 个备选/);
   assert.doesNotMatch(appSource, /可选线上或线下/);
+  assert.doesNotMatch(appSource, /现代工作池/);
 });

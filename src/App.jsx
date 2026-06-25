@@ -321,6 +321,28 @@ function formatRemaining(ms) {
   return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
 }
 
+function getWorkCurvePoint(progress) {
+  const clamped = Math.max(0, Math.min(1, Number(progress) || 0));
+  const point = (a, b, c, d, t) => {
+    const mt = 1 - t;
+    return (mt ** 3 * a) + (3 * mt ** 2 * t * b) + (3 * mt * t ** 2 * c) + (t ** 3 * d);
+  };
+
+  if (clamped <= 0.5) {
+    const t = clamped * 2;
+    return {
+      x: point(2, 72, 112, 150, t),
+      y: point(38, 18, 55, 36, t),
+    };
+  }
+
+  const t = (clamped - 0.5) * 2;
+  return {
+    x: point(150, 190, 238, 298, t),
+    y: point(36, 18, 18, 39, t),
+  };
+}
+
 function WorkApp({ workDay, onRefreshJobs, onStartJob, onClaimJob, message }) {
   const [now, setNow] = useState(Date.now());
 
@@ -330,7 +352,7 @@ function WorkApp({ workDay, onRefreshJobs, onStartJob, onClaimJob, message }) {
   }, []);
 
   const runningJob = workDay.jobs.find((job) => job.status === "running") || null;
-  const eraLabel = workDay.worldEra === "ancient" ? "古代工作池" : "现代工作池";
+  const eraLabel = workDay.worldEra === "ancient" ? "古代工作池" : "工作池";
   const refreshLabel = workDay.nextRefreshCost > 0 ? `刷新 ¥${workDay.nextRefreshCost.toFixed(2)}` : "免费刷新";
 
   return (
@@ -338,7 +360,7 @@ function WorkApp({ workDay, onRefreshJobs, onStartJob, onClaimJob, message }) {
       <Header title="工作" />
       <section className="work-summary">
         <span>当前工作</span>
-        <strong>{runningJob ? "打工中" : "工作目录"}</strong>
+        <strong>{runningJob ? "打工中" : "现有工作"}</strong>
         <small>{eraLabel} · 免费刷新剩 {workDay.freeRefreshesLeft} 次</small>
       </section>
       <div className="work-actions">
@@ -358,15 +380,15 @@ function WorkApp({ workDay, onRefreshJobs, onStartJob, onClaimJob, message }) {
           const durationMs = Math.max(1, Number(job.durationMinutes) || 1) * 60_000;
           const elapsedMs = job.status === "running" ? durationMs - remaining : job.status === "claimed" ? durationMs : 0;
           const progress = Math.max(0, Math.min(1, elapsedMs / durationMs));
-          const curveY = 31 + Math.sin(progress * Math.PI * 2 - Math.PI / 7) * 7;
-          const progressPercent = `${progress * 100}%`;
+          const curvePoint = getWorkCurvePoint(progress);
+          const progressPercent = `${(curvePoint.x / 300) * 100}%`;
           const canClaim = job.status === "running" && remaining <= 0;
           const isBlockedByOtherJob = Boolean(runningJob && runningJob.id !== job.id);
           return (
             <article
               className={`work-card ${job.status}`}
               key={job.id}
-              style={{ "--work-progress-percent": progressPercent, "--work-cat-line-y": `${curveY}px` }}
+              style={{ "--work-progress-percent": progressPercent, "--work-cat-line-y": `${curvePoint.y}px` }}
             >
               <div className="work-card-head">
                 <div>
@@ -388,11 +410,11 @@ function WorkApp({ workDay, onRefreshJobs, onStartJob, onClaimJob, message }) {
               </div>
               <p>{job.description}</p>
               <div className="work-progress" aria-label={`工作进度 ${Math.round(progress * 100)}%`}>
-                <svg viewBox="0 0 260 56" aria-hidden="true">
-                  <path className="work-progress-track" d="M4 28 C58 12 88 48 130 33 S214 16 256 34" pathLength="100" />
+                <svg viewBox="0 0 300 64" aria-hidden="true">
+                  <path className="work-progress-track" d="M2 38 C72 18 112 55 150 36 S238 18 298 39" pathLength="100" />
                   <path
                     className="work-progress-fill"
-                    d="M4 28 C58 12 88 48 130 33 S214 16 256 34"
+                    d="M2 38 C72 18 112 55 150 36 S238 18 298 39"
                     pathLength="100"
                     style={{ strokeDasharray: `${progress * 100} 100` }}
                   />

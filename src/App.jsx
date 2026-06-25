@@ -338,7 +338,7 @@ function WorkApp({ workDay, onRefreshJobs, onStartJob, onClaimJob, message }) {
       <Header title="工作" />
       <section className="work-summary">
         <span>当前工作</span>
-        <strong>{runningJob ? "打工中" : "1 个机会"}</strong>
+        <strong>{runningJob ? "打工中" : "5 个备选"}</strong>
         <small>{eraLabel} · 免费刷新剩 {workDay.freeRefreshesLeft} 次</small>
       </section>
       <div className="work-actions">
@@ -349,7 +349,7 @@ function WorkApp({ workDay, onRefreshJobs, onStartJob, onClaimJob, message }) {
         >
           {refreshLabel}
         </button>
-        <span>{runningJob ? `进行中：${runningJob.title}` : "前三次免费，之后从钱包扣费刷新"}</span>
+        <span>{runningJob ? `进行中：${runningJob.title}` : "可选线上或线下，前三次免费刷新"}</span>
       </div>
       {message ? <p className="work-message">{message}</p> : null}
       <div className="work-list">
@@ -361,6 +361,7 @@ function WorkApp({ workDay, onRefreshJobs, onStartJob, onClaimJob, message }) {
           const catY = 0 - Math.sin(progress * Math.PI) * 4;
           const progressPercent = `${progress * 100}%`;
           const canClaim = job.status === "running" && remaining <= 0;
+          const isBlockedByOtherJob = Boolean(runningJob && runningJob.id !== job.id);
           return (
             <article
               className={`work-card ${job.status}`}
@@ -369,13 +370,13 @@ function WorkApp({ workDay, onRefreshJobs, onStartJob, onClaimJob, message }) {
             >
               <div className="work-card-head">
                 <div>
-                  <span>{job.place} · {job.era === "ancient" ? "古代" : "现代"} · 线下</span>
+                  <span>{job.place} · {job.era === "ancient" ? "古代" : "现代"} · {job.workMode === "online" ? "线上" : "线下"}</span>
                   <b>{job.title}</b>
                   <small>{formatWorkDuration(job.durationMinutes)} · ¥{job.pay.toFixed(2)}</small>
                 </div>
                 {job.status === "idle" ? (
-                  <button type="button" onClick={() => onStartJob(job.id)}>
-                    开始打工
+                  <button type="button" onClick={() => onStartJob(job.id)} disabled={isBlockedByOtherJob}>
+                    {isBlockedByOtherJob ? "等待中" : "开始打工"}
                   </button>
                 ) : null}
                 {job.status === "running" ? (
@@ -388,10 +389,10 @@ function WorkApp({ workDay, onRefreshJobs, onStartJob, onClaimJob, message }) {
               <p>{job.description}</p>
               <div className="work-progress" aria-label={`工作进度 ${Math.round(progress * 100)}%`}>
                 <svg viewBox="0 0 240 42" aria-hidden="true">
-                  <path className="work-progress-track" d="M8 27 C62 22 110 22 146 25 S203 30 232 24" pathLength="100" />
+                  <path className="work-progress-track" d="M8 28 C72 26 128 26 232 27" pathLength="100" />
                   <path
                     className="work-progress-fill"
-                    d="M8 27 C62 22 110 22 146 25 S203 30 232 24"
+                    d="M8 28 C72 26 128 26 232 27"
                     pathLength="100"
                     style={{ strokeDasharray: `${progress * 100} 100` }}
                   />
@@ -2805,7 +2806,7 @@ export function App() {
               });
               setWallet(walletStore.snapshot());
               setWorkDay(workStore.snapshot());
-              setWorkMessage(`工资 ¥${job.pay.toFixed(2)} 已存入钱包。`);
+              setWorkMessage(`工资 ¥${job.pay.toFixed(2)} 已存入钱包，新的 5 个工作已刷新。`);
             } catch (error) {
               setWorkMessage(error.message || "领取失败。");
             }

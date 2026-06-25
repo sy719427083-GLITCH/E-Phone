@@ -6,21 +6,23 @@ import { getJobRemainingMs, WorkStore } from "../lib/workStore.js";
 
 const morning = new Date("2026-06-23T09:00:00+08:00");
 
-test("creates one offline daily job with free refresh allowance", () => {
+test("creates five real work options with free refresh allowance", () => {
   const store = new WorkStore(createMemoryStorage(), () => morning);
   const day = store.snapshot();
 
-  assert.equal(day.jobs.length, 1);
+  assert.equal(day.jobs.length, 5);
   assert.equal(day.freeRefreshesLeft, 3);
   assert.equal(day.nextRefreshCost, 0);
   assert.equal(day.worldEra, "modern");
   assert.ok(day.jobs.every((job) => job.status === "idle"));
-  assert.ok(day.jobs.every((job) => job.workMode === "offline"));
+  assert.ok(day.jobs.every((job) => ["offline", "online"].includes(job.workMode)));
   assert.ok(day.jobs.every((job) => job.description.length > 10));
-  assert.doesNotMatch(day.jobs[0].title, /日记|世界观|虚拟|云端|资料|壁纸|论坛/);
+  assert.ok(day.jobs.some((job) => job.workMode === "offline"));
+  assert.ok(day.jobs.some((job) => job.workMode === "online"));
+  assert.doesNotMatch(day.jobs.map((job) => job.title).join(","), /日记|世界观|虚拟|云端|壁纸|论坛/);
 });
 
-test("refreshes one job without a hard limit and charges after three free refreshes", () => {
+test("refreshes five jobs without a hard limit and charges after three free refreshes", () => {
   const store = new WorkStore(createMemoryStorage(), () => morning);
   const wallet = new WalletStore(createMemoryStorage());
   const firstTitles = store.snapshot().jobs.map((job) => job.title).join(",");
@@ -31,6 +33,7 @@ test("refreshes one job without a hard limit and charges after three free refres
 
   assert.equal(refreshed.freeRefreshesLeft, 0);
   assert.equal(refreshed.nextRefreshCost, 10);
+  assert.equal(refreshed.jobs.length, 5);
   assert.notEqual(refreshed.jobs.map((job) => job.title).join(","), firstTitles);
 
   wallet.payWorkRefresh({ amount: refreshed.nextRefreshCost, messageId: "refresh-4" });
@@ -71,14 +74,32 @@ test("deposits claimed work pay into the wallet", () => {
   assert.equal(snapshot.bills[0].note, claimed.title);
 });
 
+test("automatically refreshes a new set of five jobs after claiming pay", () => {
+  const store = new WorkStore(createMemoryStorage(), () => morning);
+  const before = store.snapshot();
+  const job = before.jobs[0];
+  const start = morning.getTime();
+
+  store.startJob(job.id, start);
+  const claimed = store.claimJob(job.id, start + job.durationMinutes * 60_000);
+  const after = store.snapshot();
+
+  assert.equal(claimed.id, job.id);
+  assert.equal(after.jobs.length, 5);
+  assert.equal(after.freeRefreshesLeft, 3);
+  assert.equal(after.nextRefreshCost, 0);
+  assert.ok(after.jobs.every((item) => item.status === "idle"));
+  assert.notEqual(after.jobs.map((item) => item.title).join(","), before.jobs.map((item) => item.title).join(","));
+});
+
 test("selects ancient offline work when a world book era is available", () => {
   const store = new WorkStore(createMemoryStorage(), () => morning, () => ({ era: "ancient" }));
   const day = store.snapshot();
 
   assert.equal(day.worldEra, "ancient");
-  assert.equal(day.jobs.length, 1);
-  assert.ok(day.jobs[0].era === "ancient");
-  assert.ok(day.jobs[0].workMode === "offline");
+  assert.equal(day.jobs.length, 5);
+  assert.ok(day.jobs.every((job) => job.era === "ancient"));
+  assert.ok(day.jobs.every((job) => ["offline", "online"].includes(job.workMode)));
 });
 
 test("migrates old online jobs into the offline work pool", () => {
@@ -103,8 +124,7 @@ test("migrates old online jobs into the offline work pool", () => {
   const store = new WorkStore(storage, () => morning);
   const day = store.snapshot();
 
-  assert.equal(day.jobs.length, 1);
-  assert.equal(day.jobs[0].status, "idle");
-  assert.equal(day.jobs[0].workMode, "offline");
-  assert.doesNotMatch(day.jobs[0].title, /日记|世界观|虚拟|云端|资料|壁纸|论坛/);
+  assert.equal(day.jobs.length, 5);
+  assert.ok(day.jobs.every((job) => job.status === "idle"));
+  assert.doesNotMatch(day.jobs.map((job) => job.title).join(","), /日记|世界观|虚拟|云端|壁纸|论坛/);
 });

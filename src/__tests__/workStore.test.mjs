@@ -15,11 +15,42 @@ test("creates five real work options with free refresh allowance", () => {
   assert.equal(day.nextRefreshCost, 0);
   assert.equal(day.worldEra, "modern");
   assert.ok(day.jobs.every((job) => job.status === "idle"));
+  assert.ok(day.jobs.every((job) => ["SSS", "S", "A", "B", "C"].includes(job.tier)));
   assert.ok(day.jobs.every((job) => ["offline", "online"].includes(job.workMode)));
   assert.ok(day.jobs.every((job) => job.description.length > 10));
   assert.ok(day.jobs.some((job) => job.workMode === "offline"));
   assert.ok(day.jobs.some((job) => job.workMode === "online"));
   assert.doesNotMatch(day.jobs.map((job) => job.title).join(","), /日记|世界观|虚拟|云端|壁纸|论坛/);
+});
+
+test("assigns ranked work rewards with higher pay and longer time", () => {
+  const store = new WorkStore(createMemoryStorage(), () => morning);
+  const seenTiers = new Set();
+  const jobs = [];
+
+  for (let index = 0; index < 80; index += 1) {
+    const day = index === 0 ? store.snapshot() : store.refreshJobs();
+    jobs.push(...day.jobs);
+    day.jobs.forEach((job) => seenTiers.add(job.tier));
+  }
+
+  assert.ok(seenTiers.has("SSS"));
+  assert.ok(seenTiers.has("S"));
+  assert.ok(seenTiers.has("A"));
+  assert.ok(seenTiers.has("B"));
+  assert.ok(seenTiers.has("C"));
+
+  for (const job of jobs) {
+    if (job.tier === "SSS") {
+      assert.ok(job.pay >= 1000 && job.pay <= 9999);
+      assert.ok(job.durationMinutes >= 90);
+    } else if (job.tier === "S") {
+      assert.ok(job.pay >= 100 && job.pay <= 999);
+      assert.ok(job.durationMinutes >= 45);
+    } else {
+      assert.ok(job.pay >= 10 && job.pay <= 99);
+    }
+  }
 });
 
 test("refreshes five jobs without a hard limit and charges after three free refreshes", () => {
@@ -127,4 +158,66 @@ test("migrates old online jobs into the offline work pool", () => {
   assert.equal(day.jobs.length, 5);
   assert.ok(day.jobs.every((job) => job.status === "idle"));
   assert.doesNotMatch(day.jobs.map((job) => job.title).join(","), /日记|世界观|虚拟|云端|壁纸|论坛/);
+});
+
+test("migrates pre-rank jobs into ranked pay jobs", () => {
+  const storage = createMemoryStorage();
+  storage.setItem("ephone.work", JSON.stringify({
+    day: {
+      dateKey: "2026-06-23",
+      refreshIndex: 0,
+      jobs: Array.from({ length: 5 }, (_, index) => ({
+        id: `old-${index}`,
+        title: "便利店晚班",
+        place: "街角便利店",
+        durationMinutes: 18,
+        pay: 52,
+        description: "整理货架、补齐饮料和关东煮签子。",
+        era: "modern",
+        workMode: "offline",
+        status: "idle",
+      })),
+    },
+  }));
+
+  const store = new WorkStore(storage, () => morning);
+  const day = store.snapshot();
+
+  assert.equal(day.jobs.length, 5);
+  assert.ok(day.jobs.every((job) => ["SSS", "S", "A", "B", "C"].includes(job.tier)));
+  assert.ok(day.jobs.some((job) => job.pay !== 52 || job.durationMinutes !== 18));
+});
+
+test("migrates partially ranked old jobs with invalid pay ranges", () => {
+  const storage = createMemoryStorage();
+  storage.setItem("ephone.work", JSON.stringify({
+    day: {
+      dateKey: "2026-06-23",
+      refreshIndex: 0,
+      jobs: Array.from({ length: 5 }, (_, index) => ({
+        id: `half-old-${index}`,
+        title: "便利店晚班",
+        place: "街角便利店",
+        tier: "A",
+        durationMinutes: 18,
+        pay: 52,
+        description: "整理货架、补齐饮料和关东煮签子。",
+        era: "modern",
+        workMode: "offline",
+        status: "idle",
+      })),
+    },
+  }));
+
+  const store = new WorkStore(storage, () => morning);
+  const day = store.snapshot();
+
+  assert.ok(day.jobs.every((job) => ["SSS", "S", "A", "B", "C"].includes(job.tier)));
+  assert.ok(day.jobs.every((job) => {
+    if (job.tier === "SSS") return job.pay >= 1000;
+    if (job.tier === "S") return job.pay >= 100 && job.pay <= 999;
+    if (job.tier === "A") return job.pay >= 80 && job.pay <= 99;
+    if (job.tier === "B") return job.pay >= 45 && job.pay <= 79;
+    return job.pay >= 20 && job.pay <= 44;
+  }));
 });

@@ -346,9 +346,11 @@ function WorkApp({ workDay, onRefreshJobs, onStartJob, onClaimJob, message }) {
       <Header title="工作" />
       <section className="work-board">
         <section className="work-summary">
-          <span>当前工作</span>
+          <div>
+            <span>当前工作</span>
+            <small>{eraLabel} · 免费刷新剩 {workDay.freeRefreshesLeft} 次</small>
+          </div>
           <strong>{runningJob ? "打工中" : "现有工作"}</strong>
-          <small>{eraLabel} · 免费刷新剩 {workDay.freeRefreshesLeft} 次</small>
         </section>
         <div className="work-actions">
           <button
@@ -385,7 +387,7 @@ function WorkApp({ workDay, onRefreshJobs, onStartJob, onClaimJob, message }) {
                 </div>
                 <div className="work-card-meta">
                   <small>{formatWorkDuration(job.durationMinutes)}</small>
-                  <strong>¥{job.pay.toFixed(2)}</strong>
+                  <strong><span className={`work-tier tier-${job.tier}`}>{job.tier}</span> ¥{job.pay.toFixed(2)}</strong>
                 </div>
                 <div className="work-card-action">
                   {job.status === "idle" ? (

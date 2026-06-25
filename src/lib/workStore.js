@@ -2,6 +2,14 @@ export const WORK_STORAGE_KEY = "ephone.work";
 export const WORK_REFRESH_FREE_COUNT = 3;
 export const WORK_REFRESH_COST = 10;
 
+const WORK_TIERS = {
+  SSS: { minPay: 1000, maxPay: 2999, minDuration: 120, maxDuration: 240 },
+  S: { minPay: 160, maxPay: 680, minDuration: 60, maxDuration: 110 },
+  A: { minPay: 80, maxPay: 99, minDuration: 35, maxDuration: 55 },
+  B: { minPay: 45, maxPay: 79, minDuration: 25, maxDuration: 42 },
+  C: { minPay: 20, maxPay: 44, minDuration: 15, maxDuration: 30 },
+};
+
 const MODERN_WORK_TEMPLATES = [
   { title: "便利店晚班", place: "街角便利店", durationMinutes: 18, pay: 52, description: "整理货架、补齐饮料和关东煮签子，临近下班前再核对一次收银小票。", era: "modern", workMode: "offline" },
   { title: "奶茶店帮工", place: "粉桃奶茶店", durationMinutes: 15, pay: 45, description: "擦台面、贴杯标、给外卖袋打包封口，忙完这一轮就能结今天的小费。", era: "modern", workMode: "offline" },
@@ -58,23 +66,62 @@ function isLegacyOnlineJob(job = {}) {
   return !["offline", "online"].includes(job.workMode) || /日记|世界观|虚拟|云端|壁纸|论坛/.test(text);
 }
 
+function isLegacyRankJob(job = {}) {
+  const rules = WORK_TIERS[job.tier];
+  const pay = Number(job.pay);
+  const duration = Number(job.durationMinutes);
+  if (!rules) return true;
+  return pay < rules.minPay || pay > rules.maxPay || duration < rules.minDuration || duration > rules.maxDuration;
+}
+
 function getRefreshCost(refreshIndex = 0) {
   return refreshIndex < WORK_REFRESH_FREE_COUNT ? 0 : WORK_REFRESH_COST;
 }
 
 const WORK_OPTION_COUNT = 5;
 
+function hashWorkSeed(seed = "") {
+  return Array.from(String(seed)).reduce((sum, char, index) => sum + char.charCodeAt(0) * (index + 17), 0);
+}
+
+function pickWorkTier(seed = "") {
+  const roll = hashWorkSeed(seed) % 100;
+  if (roll < 5) return "SSS";
+  if (roll < 25) return "S";
+  if (roll < 55) return "A";
+  if (roll < 80) return "B";
+  return "C";
+}
+
+function valueInRange(seed = "", min = 0, max = 0) {
+  const low = Math.min(min, max);
+  const high = Math.max(min, max);
+  return low + (hashWorkSeed(seed) % (high - low + 1));
+}
+
+function rankWorkJob(template, seed = "") {
+  const tier = pickWorkTier(seed);
+  const rules = WORK_TIERS[tier] || WORK_TIERS.C;
+  return {
+    tier,
+    durationMinutes: valueInRange(`${seed}-duration`, rules.minDuration, rules.maxDuration),
+    pay: valueInRange(`${seed}-pay`, rules.minPay, rules.maxPay),
+  };
+}
+
 function pickJobs(dateKey, refreshIndex = 0, era = "modern", count = WORK_OPTION_COUNT) {
   const templates = getTemplatesForEra(era);
   const base = Array.from(`${dateKey}-${era}`).reduce((sum, char) => sum + char.charCodeAt(0), 0) + refreshIndex * 5;
   return Array.from({ length: count }, (_, offset) => {
     const template = templates[(base + offset * 3) % templates.length];
+    const rank = rankWorkJob(template, `${dateKey}-${era}-${refreshIndex}-${offset}-${template.title}`);
     return {
       id: makeWorkId("work-job"),
       title: template.title,
       place: template.place,
-      durationMinutes: template.durationMinutes,
-      pay: template.pay,
+      tier: rank.tier,
+      durationMinutes: rank.durationMinutes,
+      pay: rank.pay,
       description: template.description,
       era: template.era,
       workMode: template.workMode || "offline",
@@ -102,6 +149,7 @@ function mergeJob(job = {}, era = "modern") {
     id: job.id || makeWorkId("work-job"),
     title: job.title || fallback.title,
     place: job.place || fallback.place,
+    tier: WORK_TIERS[job.tier] ? job.tier : fallback.tier,
     durationMinutes: Math.max(1, Number(job.durationMinutes) || fallback.durationMinutes),
     pay: Math.max(1, Number(job.pay) || fallback.pay),
     description: job.description || fallback.description,
@@ -119,7 +167,7 @@ function mergeWorkDay(day = {}, now = new Date(), era = "modern") {
   const generationIndex = Math.max(0, Number(day.generationIndex ?? day.refreshIndex) || 0);
   const worldEra = day.worldEra || era;
   const incomingJobs = Array.isArray(day.jobs) ? day.jobs.slice(0, WORK_OPTION_COUNT) : [];
-  const hasLegacyJobs = incomingJobs.some(isLegacyOnlineJob);
+  const hasLegacyJobs = incomingJobs.some(isLegacyOnlineJob) || incomingJobs.some(isLegacyRankJob);
   const jobs = incomingJobs.length === WORK_OPTION_COUNT && !hasLegacyJobs
     ? incomingJobs.map((job) => mergeJob(job, worldEra)).slice(0, WORK_OPTION_COUNT)
     : pickJobs(dateKey, generationIndex, worldEra);

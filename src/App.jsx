@@ -331,15 +331,15 @@ function getWorkCurvePoint(progress) {
   if (clamped <= 0.5) {
     const t = clamped * 2;
     return {
-      x: point(2, 72, 112, 150, t),
-      y: point(38, 18, 55, 36, t),
+      x: point(2, 86, 130, 170, t),
+      y: point(39, 15, 56, 35, t),
     };
   }
 
   const t = (clamped - 0.5) * 2;
   return {
-    x: point(150, 190, 238, 298, t),
-    y: point(36, 18, 18, 39, t),
+    x: point(170, 216, 282, 338, t),
+    y: point(35, 15, 15, 40, t),
   };
 }
 
@@ -358,37 +358,38 @@ function WorkApp({ workDay, onRefreshJobs, onStartJob, onClaimJob, message }) {
   return (
     <section className="page soft-page work-page">
       <Header title="工作" />
-      <section className="work-summary">
-        <span>当前工作</span>
-        <strong>{runningJob ? "打工中" : "现有工作"}</strong>
-        <small>{eraLabel} · 免费刷新剩 {workDay.freeRefreshesLeft} 次</small>
-      </section>
-      <div className="work-actions">
-        <button
-          type="button"
-          onClick={onRefreshJobs}
-          disabled={workDay.jobs.some((job) => job.status === "running")}
-        >
-          {refreshLabel}
-        </button>
-        <span>{runningJob ? `进行中：${runningJob.title}` : "前三次免费刷新"}</span>
-      </div>
-      {message ? <p className="work-message">{message}</p> : null}
-      <div className="work-list">
-        {workDay.jobs.map((job) => {
+      <section className="work-board">
+        <section className="work-summary">
+          <span>当前工作</span>
+          <strong>{runningJob ? "打工中" : "现有工作"}</strong>
+          <small>{eraLabel} · 免费刷新剩 {workDay.freeRefreshesLeft} 次</small>
+        </section>
+        <div className="work-actions">
+          <button
+            type="button"
+            onClick={onRefreshJobs}
+            disabled={workDay.jobs.some((job) => job.status === "running")}
+          >
+            {refreshLabel}
+          </button>
+          <span>{runningJob ? `进行中：${runningJob.title}` : "前三次免费刷新"}</span>
+        </div>
+        {message ? <p className="work-message">{message}</p> : null}
+        <div className="work-list">
+        {workDay.jobs.map((job, index) => {
           const remaining = getJobRemainingMs(job, now);
           const durationMs = Math.max(1, Number(job.durationMinutes) || 1) * 60_000;
           const elapsedMs = job.status === "running" ? durationMs - remaining : job.status === "claimed" ? durationMs : 0;
           const progress = Math.max(0, Math.min(1, elapsedMs / durationMs));
           const curvePoint = getWorkCurvePoint(progress);
-          const progressPercent = `${(curvePoint.x / 300) * 100}%`;
+          const progressPercent = `${(curvePoint.x / 340) * 100}%`;
           const canClaim = job.status === "running" && remaining <= 0;
           const isBlockedByOtherJob = Boolean(runningJob && runningJob.id !== job.id);
           return (
             <article
               className={`work-card ${job.status}`}
               key={job.id}
-              style={{ "--work-progress-percent": progressPercent, "--work-cat-line-y": `${curvePoint.y}px` }}
+              style={{ "--work-slot-index": index, "--work-progress-percent": progressPercent, "--work-cat-line-y": `${curvePoint.y}px` }}
             >
               <div className="work-card-head">
                 <div>
@@ -410,11 +411,11 @@ function WorkApp({ workDay, onRefreshJobs, onStartJob, onClaimJob, message }) {
               </div>
               <p>{job.description}</p>
               <div className="work-progress" aria-label={`工作进度 ${Math.round(progress * 100)}%`}>
-                <svg viewBox="0 0 300 64" aria-hidden="true">
-                  <path className="work-progress-track" d="M2 38 C72 18 112 55 150 36 S238 18 298 39" pathLength="100" />
+                <svg viewBox="0 0 340 64" aria-hidden="true">
+                  <path className="work-progress-track" d="M2 39 C86 15 130 56 170 35 S282 15 338 40" pathLength="100" />
                   <path
                     className="work-progress-fill"
-                    d="M2 38 C72 18 112 55 150 36 S238 18 298 39"
+                    d="M2 39 C86 15 130 56 170 35 S282 15 338 40"
                     pathLength="100"
                     style={{ strokeDasharray: `${progress * 100} 100` }}
                   />
@@ -424,7 +425,8 @@ function WorkApp({ workDay, onRefreshJobs, onStartJob, onClaimJob, message }) {
             </article>
           );
         })}
-      </div>
+        </div>
+      </section>
     </section>
   );
 }

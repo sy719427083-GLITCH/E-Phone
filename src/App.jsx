@@ -323,23 +323,9 @@ function formatRemaining(ms) {
 
 function getWorkCurvePoint(progress) {
   const clamped = Math.max(0, Math.min(1, Number(progress) || 0));
-  const point = (a, b, c, d, t) => {
-    const mt = 1 - t;
-    return (mt ** 3 * a) + (3 * mt ** 2 * t * b) + (3 * mt * t ** 2 * c) + (t ** 3 * d);
-  };
-
-  if (clamped <= 0.5) {
-    const t = clamped * 2;
-    return {
-      x: point(2, 86, 130, 170, t),
-      y: point(39, 15, 56, 35, t),
-    };
-  }
-
-  const t = (clamped - 0.5) * 2;
   return {
-    x: point(170, 216, 282, 338, t),
-    y: point(35, 15, 15, 40, t),
+    x: 4 + (clamped * 332),
+    y: 24,
   };
 }
 
@@ -392,30 +378,35 @@ function WorkApp({ workDay, onRefreshJobs, onStartJob, onClaimJob, message }) {
               style={{ "--work-slot-index": index, "--work-progress-percent": progressPercent, "--work-cat-line-y": `${curvePoint.y}px` }}
             >
               <div className="work-card-head">
-                <div>
+                <div className="work-card-main">
                   <span>{job.place} · {job.era === "ancient" ? "古代" : "现代"} · {job.workMode === "online" ? "线上" : "线下"}</span>
                   <b>{job.title}</b>
-                  <small>{formatWorkDuration(job.durationMinutes)} · ¥{job.pay.toFixed(2)}</small>
+                  <p>{job.description}</p>
                 </div>
-                {job.status === "idle" ? (
-                  <button type="button" onClick={() => onStartJob(job.id)} disabled={isBlockedByOtherJob}>
-                    {isBlockedByOtherJob ? "等待中" : "开始打工"}
-                  </button>
-                ) : null}
-                {job.status === "running" ? (
-                  <button type="button" onClick={() => onClaimJob(job.id)} disabled={!canClaim}>
-                    {canClaim ? "领取工资" : formatRemaining(remaining)}
-                  </button>
-                ) : null}
-                {job.status === "claimed" ? <em>已入账</em> : null}
+                <div className="work-card-meta">
+                  <small>{formatWorkDuration(job.durationMinutes)}</small>
+                  <strong>¥{job.pay.toFixed(2)}</strong>
+                </div>
+                <div className="work-card-action">
+                  {job.status === "idle" ? (
+                    <button type="button" onClick={() => onStartJob(job.id)} disabled={isBlockedByOtherJob}>
+                      {isBlockedByOtherJob ? "等待中" : "开始"}
+                    </button>
+                  ) : null}
+                  {job.status === "running" ? (
+                    <button type="button" onClick={() => onClaimJob(job.id)} disabled={!canClaim}>
+                      {canClaim ? "领取" : formatRemaining(remaining)}
+                    </button>
+                  ) : null}
+                  {job.status === "claimed" ? <em>已入账</em> : null}
+                </div>
               </div>
-              <p>{job.description}</p>
               <div className="work-progress" aria-label={`工作进度 ${Math.round(progress * 100)}%`}>
-                <svg viewBox="0 0 340 64" aria-hidden="true">
-                  <path className="work-progress-track" d="M2 39 C86 15 130 56 170 35 S282 15 338 40" pathLength="100" />
+                <svg viewBox="0 0 340 48" aria-hidden="true">
+                  <path className="work-progress-track" d="M4 24 L336 24" pathLength="100" />
                   <path
                     className="work-progress-fill"
-                    d="M2 39 C86 15 130 56 170 35 S282 15 338 40"
+                    d="M4 24 L336 24"
                     pathLength="100"
                     style={{ strokeDasharray: `${progress * 100} 100` }}
                   />

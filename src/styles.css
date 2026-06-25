@@ -533,31 +533,26 @@ button {
   flex-direction: column;
   gap: 8px;
   overflow-y: auto;
-  background: #fff8fb;
+  background:
+    linear-gradient(180deg, rgba(255, 249, 252, 0.12), rgba(255, 247, 250, 0.26)),
+    url("/assets/work-soft-bg-v75.png") center top / cover no-repeat;
 }
 
 .work-board {
   position: relative;
   width: min(100%, 430px);
   margin: -2px auto 0;
-  aspect-ratio: 887 / 1774;
-  flex: 0 0 auto;
-  background:
-    linear-gradient(180deg, rgba(255, 250, 252, 0.02), rgba(255, 250, 252, 0.06)),
-    url("/assets/work-board-bg-v74.png") center / 100% 100% no-repeat;
+  padding: 10px 20px calc(28px + var(--safe-bottom));
+  flex: 1 0 auto;
 }
 
 .work-summary {
-  position: absolute;
-  top: 5.6%;
-  left: 7.4%;
-  right: 7.4%;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 5px 12px;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 4px;
   align-items: end;
-  min-height: 13.4%;
-  padding: 4.5% 5.1% 3.8%;
+  min-height: 96px;
+  padding: 14px 4px 10px;
   color: #705260;
   text-shadow: 0 1px 9px rgba(255, 255, 255, 0.78);
 }
@@ -570,41 +565,36 @@ button {
 }
 
 .work-summary strong {
-  grid-row: 2;
   color: #58434b;
-  font-size: 27px;
+  font-size: 30px;
   font-weight: 650;
 }
 
 .work-summary small {
-  justify-self: end;
-  align-self: center;
-  grid-row: 1 / span 2;
-  padding: 7px 10px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.5);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.62);
+  justify-self: start;
+  padding: 0;
+  background: transparent;
+  box-shadow: none;
 }
 
 .work-actions {
-  position: absolute;
-  top: 23%;
-  left: 11.2%;
-  right: 11.2%;
+  position: relative;
   display: grid;
-  grid-template-columns: 108px minmax(0, 1fr);
-  gap: 10px;
+  grid-template-columns: 106px minmax(0, 1fr);
+  gap: 12px;
   align-items: center;
+  margin: 6px 0 14px;
 }
 
 .work-actions button,
 .work-card button {
-  min-height: 34px;
-  border-radius: 10px;
+  min-height: 32px;
+  border-radius: 999px;
   color: #7c5967;
-  background: rgba(255, 226, 235, 0.78);
+  background: rgba(255, 227, 235, 0.56);
   font-size: 12px;
   font-weight: 600;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.62), 0 8px 22px rgba(208, 146, 164, 0.12);
 }
 
 .work-actions button:disabled,
@@ -614,42 +604,38 @@ button {
 }
 
 .work-message {
-  position: absolute;
-  top: 28.4%;
-  left: 11.2%;
-  right: 11.2%;
-  margin: 0;
+  margin: -2px 0 10px;
   color: #a87385;
   font-size: 12px;
 }
 
 .work-list {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
+  display: grid;
+  gap: 14px;
 }
 
 .work-card {
   --work-progress-percent: 0%;
-  position: absolute;
-  top: calc(31.8% + (var(--work-slot-index) * 13.28%));
-  left: 7.2%;
-  right: 7.2%;
-  height: 12.25%;
-  display: block;
-  padding: 12px 14px;
+  position: relative;
+  min-height: 148px;
+  display: grid;
+  align-content: start;
+  gap: 12px;
+  padding: 4px 0 0;
   color: #51444b;
   background: transparent;
   box-shadow: none;
-  pointer-events: auto;
   text-shadow: 0 1px 8px rgba(255, 255, 255, 0.72);
 }
 
 .work-card-head {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 74px;
-  gap: 9px;
-  align-items: center;
+  grid-template-columns: minmax(0, 1fr) 70px;
+  grid-template-areas:
+    "main meta"
+    "main action";
+  gap: 8px 12px;
+  align-items: start;
 }
 
 .work-card span,
@@ -659,27 +645,53 @@ button {
   font-size: 11px;
 }
 
+.work-card-main {
+  grid-area: main;
+  min-width: 0;
+}
+
 .work-card b {
   display: block;
   margin: 4px 0;
   color: #59454e;
-  font-size: 15px;
+  font-size: 18px;
   font-weight: 600;
 }
 
 .work-card p {
-  position: absolute;
-  top: 58px;
-  left: 14px;
-  right: 90px;
-  margin: 0;
+  margin: 8px 0 0;
   color: #7e6f76;
-  font-size: 10px;
-  line-height: 1.25;
-  white-space: nowrap;
-  text-overflow: ellipsis;
+  font-size: 12px;
+  line-height: 1.45;
   display: block;
   overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.work-card-meta {
+  grid-area: meta;
+  justify-self: end;
+  text-align: right;
+}
+
+.work-card-meta strong {
+  display: block;
+  margin-top: 3px;
+  color: #8c5f70;
+  font-size: 15px;
+  font-weight: 650;
+}
+
+.work-card-action {
+  grid-area: action;
+  justify-self: end;
+}
+
+.work-card-action button {
+  min-width: 62px;
+  padding: 0 10px;
 }
 
 .work-card em {
@@ -690,19 +702,17 @@ button {
 }
 
 .work-progress {
-  position: absolute;
-  left: 9.3%;
-  right: 7.6%;
-  bottom: 2px;
-  height: 43px;
-  margin: 0;
+  position: relative;
+  width: 100%;
+  height: 46px;
+  margin-top: 2px;
 }
 
 .work-progress svg {
   position: absolute;
-  inset: 0 0 0;
+  inset: 0;
   width: 100%;
-  height: 64px;
+  height: 48px;
   overflow: visible;
 }
 
@@ -710,22 +720,22 @@ button {
 .work-progress-fill {
   fill: none;
   stroke-linecap: round;
-  stroke-width: 3;
+  stroke-width: 4;
 }
 
 .work-progress-track {
-  stroke: rgba(234, 202, 213, 0.44);
+  stroke: rgba(238, 211, 221, 0.62);
 }
 
 .work-progress-fill {
-  stroke: rgba(210, 126, 154, 0.54);
+  stroke: rgba(206, 132, 157, 0.62);
   transition: stroke-dasharray 0.35s ease;
 }
 
 .work-progress img {
   position: absolute;
   left: clamp(14px, var(--work-progress-percent), calc(100% - 14px));
-  top: calc(var(--work-cat-line-y) - 20px);
+  top: calc(var(--work-cat-line-y) - 19px);
   width: 26px;
   height: 22px;
   object-fit: contain;

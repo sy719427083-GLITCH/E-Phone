@@ -69,7 +69,8 @@ test("wires a real work app to the home screen and wallet", () => {
   assert.match(appSource, /function getWorkCurvePoint/);
   assert.match(appSource, /--work-cat-line-y/);
   assert.match(appSource, /curvePoint\.x \/ 340/);
-  assert.match(styleSource, /work-board-bg-v74\.png/);
+  assert.match(appSource, /M4 24 L336 24/);
+  assert.match(styleSource, /work-soft-bg-v75\.png/);
   assert.doesNotMatch(appSource, /5 个备选/);
   assert.doesNotMatch(appSource, /可选线上或线下/);
   assert.doesNotMatch(appSource, /现代工作池/);

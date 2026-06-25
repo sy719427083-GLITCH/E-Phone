@@ -381,8 +381,8 @@ button {
   align-content: start;
   gap: 14px;
   background:
-    linear-gradient(180deg, rgba(255, 248, 251, 0.16), rgba(255, 255, 255, 0.16)),
-    url("/assets/wallet-wallpaper-cat-v78.png") center bottom / cover no-repeat;
+    linear-gradient(180deg, rgba(255, 252, 253, 0.08), rgba(255, 255, 255, 0.08)),
+    url("/assets/wallet-wallpaper-cat-v79.png") center bottom / cover no-repeat;
 }
 
 .wallet-balance-card {
@@ -400,15 +400,19 @@ button {
 }
 
 .wallet-balance-content {
+  display: grid;
+  gap: 6px;
   min-width: 0;
 }
 
 .wallet-balance-card span {
+  display: block;
   color: #a48691;
   font-size: 12px;
 }
 
 .wallet-balance-card strong {
+  display: block;
   color: #5a424b;
   font-size: 34px;
   font-weight: 650;

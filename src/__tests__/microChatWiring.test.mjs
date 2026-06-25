@@ -33,7 +33,7 @@ test("renders a real wallet app instead of the placeholder pane", () => {
   assert.match(appSource, /walletStore\.adjustBalance/);
   assert.match(appSource, /walletStore\.clearBills/);
   assert.match(appSource, /确认清空我的账单/);
-  assert.match(styleSource, /wallet-wallpaper-cat-v78\.png/);
+  assert.match(styleSource, /wallet-wallpaper-cat-v79\.png/);
   assert.match(appSource, /还没有账单/);
   assert.match(appSource, /walletStore\.receiveRedPacket/);
   assert.match(appSource, /walletStore\.receiveTransfer/);

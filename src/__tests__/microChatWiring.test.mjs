@@ -64,4 +64,7 @@ test("wires a real work app to the home screen and wallet", () => {
   assert.match(appSource, /walletStore\.receiveWorkPay/);
   assert.match(appSource, /work-progress-cat\.png/);
   assert.match(appSource, /job.description/);
+  assert.match(appSource, /工作目录/);
+  assert.doesNotMatch(appSource, /5 个备选/);
+  assert.doesNotMatch(appSource, /可选线上或线下/);
 });

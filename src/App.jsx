@@ -338,7 +338,7 @@ function WorkApp({ workDay, onRefreshJobs, onStartJob, onClaimJob, message }) {
       <Header title="工作" />
       <section className="work-summary">
         <span>当前工作</span>
-        <strong>{runningJob ? "打工中" : "5 个备选"}</strong>
+        <strong>{runningJob ? "打工中" : "工作目录"}</strong>
         <small>{eraLabel} · 免费刷新剩 {workDay.freeRefreshesLeft} 次</small>
       </section>
       <div className="work-actions">
@@ -349,7 +349,7 @@ function WorkApp({ workDay, onRefreshJobs, onStartJob, onClaimJob, message }) {
         >
           {refreshLabel}
         </button>
-        <span>{runningJob ? `进行中：${runningJob.title}` : "可选线上或线下，前三次免费刷新"}</span>
+        <span>{runningJob ? `进行中：${runningJob.title}` : "前三次免费刷新"}</span>
       </div>
       {message ? <p className="work-message">{message}</p> : null}
       <div className="work-list">
@@ -358,7 +358,7 @@ function WorkApp({ workDay, onRefreshJobs, onStartJob, onClaimJob, message }) {
           const durationMs = Math.max(1, Number(job.durationMinutes) || 1) * 60_000;
           const elapsedMs = job.status === "running" ? durationMs - remaining : job.status === "claimed" ? durationMs : 0;
           const progress = Math.max(0, Math.min(1, elapsedMs / durationMs));
-          const catY = 0 - Math.sin(progress * Math.PI) * 4;
+          const catY = 4 - Math.sin(progress * Math.PI) * 3;
           const progressPercent = `${progress * 100}%`;
           const canClaim = job.status === "running" && remaining <= 0;
           const isBlockedByOtherJob = Boolean(runningJob && runningJob.id !== job.id);
@@ -388,11 +388,11 @@ function WorkApp({ workDay, onRefreshJobs, onStartJob, onClaimJob, message }) {
               </div>
               <p>{job.description}</p>
               <div className="work-progress" aria-label={`工作进度 ${Math.round(progress * 100)}%`}>
-                <svg viewBox="0 0 240 42" aria-hidden="true">
-                  <path className="work-progress-track" d="M8 28 C72 26 128 26 232 27" pathLength="100" />
+                <svg viewBox="0 0 260 42" aria-hidden="true">
+                  <path className="work-progress-track" d="M4 31 C72 27 174 29 256 27" pathLength="100" />
                   <path
                     className="work-progress-fill"
-                    d="M8 28 C72 26 128 26 232 27"
+                    d="M4 31 C72 27 174 29 256 27"
                     pathLength="100"
                     style={{ strokeDasharray: `${progress * 100} 100` }}
                   />

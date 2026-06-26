@@ -1,4 +1,4 @@
-const CACHE_NAME = "e-phone-pink-pwa-v84";
+const CACHE_NAME = "e-phone-pink-pwa-v85";
 const ASSETS = [
   "manifest.webmanifest",
   "version.json",
@@ -27,6 +27,12 @@ const ASSETS = [
   "assets/app-icons/diary.png",
   "assets/app-icons/couple.png",
   "assets/app-icons/work.png",
+  "assets/app-icons/parallel.png",
+  "assets/app-icons/phonecheck.png",
+  "assets/app-icons/weibo.png",
+  "assets/app-icons/schedule.png",
+  "assets/app-icons/event.png",
+  "assets/app-icons/business.png",
   "assets/settings-wallpaper-cat-action.png",
   "assets/slider-cat-thumb.png",
   "assets/settings-icons/api.png",

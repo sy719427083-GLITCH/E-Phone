@@ -115,6 +115,12 @@ const appItems = [
   { key: "diary", label: "日记", icon: assetPath("assets/app-icons/diary.png") },
   { key: "couple", label: "情侣空间", icon: assetPath("assets/app-icons/couple.png") },
   { key: "work", label: "工作", icon: assetPath("assets/app-icons/work.png") },
+  { key: "parallel", label: "平行时空", icon: assetPath("assets/app-icons/parallel.png") },
+  { key: "phonecheck", label: "查手机", icon: assetPath("assets/app-icons/phonecheck.png") },
+  { key: "weibo", label: "微博", icon: assetPath("assets/app-icons/weibo.png") },
+  { key: "schedule", label: "日程", icon: assetPath("assets/app-icons/schedule.png") },
+  { key: "event", label: "特别活动", icon: assetPath("assets/app-icons/event.png") },
+  { key: "business", label: "经营", icon: assetPath("assets/app-icons/business.png") },
 ];
 
 const settingsItems = [

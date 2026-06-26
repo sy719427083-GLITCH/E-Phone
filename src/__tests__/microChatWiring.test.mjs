@@ -83,3 +83,13 @@ test("wires a real work app to the home screen and wallet", () => {
   assert.doesNotMatch(appSource, /可选线上或线下/);
   assert.doesNotMatch(appSource, /现代工作池/);
 });
+
+test("wires the world book app to role worldview selection", () => {
+  assert.match(appSource, /label: "世界书"/);
+  assert.match(appSource, /function WorldBookApp\(/);
+  assert.match(appSource, /appPage\?\.key === "world"/);
+  assert.match(appSource, /worldBookStore\.save/);
+  assert.match(appSource, /worldBooks\.map/);
+  assert.match(appSource, /关联世界观/);
+  assert.match(styleSource, /\.world-book-card/);
+});

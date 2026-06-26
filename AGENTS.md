@@ -101,3 +101,4 @@ Current prototype direction:
 - Work app reward ranks should display before the pay amount. Tier odds are SSS 5%, S 20%, and the rest A/B/C; SSS jobs pay four digits, S jobs pay three digits, A/B/C jobs pay two digits. Higher tiers should also take longer, and the progress marker should appear as a cat head on the line.
 - Work app idle header should read "工作清单". Work tier labels should be borderless and background-free, using distinct stylish colors for SSS/S/A/B/C instead of pill frames.
 - Wallet wallpaper should stay very pale and low-saturation across the full screen, with the balance amount placed on its own line below "我的余额" rather than beside the label.
+- The home app formerly called "世界观" should be labeled "世界书". It starts with a fixed first page that can be edited and saved, and saved world-book page names should appear in role/identity "关联世界观" selectors.

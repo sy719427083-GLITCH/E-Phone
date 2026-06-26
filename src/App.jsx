@@ -42,6 +42,7 @@ import { createRoleDraft, RoleStore } from "./lib/roleStore.js";
 import { APP_VERSION } from "./lib/appVersion.js";
 import { WalletStore } from "./lib/walletStore.js";
 import { getJobRemainingMs, WorkStore } from "./lib/workStore.js";
+import { createWorldBookDraft, WorldBookStore } from "./lib/worldBookStore.js";
 
 const assetPath = (path) => `${import.meta.env.BASE_URL}${path.replace(/^\/+/, "")}`;
 
@@ -107,7 +108,7 @@ const appItems = [
   { key: "wallet", label: "钱包", icon: assetPath("assets/app-icons/wallet.png") },
   { key: "game", label: "游戏", icon: assetPath("assets/app-icons/game.png") },
   { key: "beauty", label: "美化", icon: assetPath("assets/app-icons/beauty.png") },
-  { key: "world", label: "世界观", icon: assetPath("assets/app-icons/world.png") },
+  { key: "world", label: "世界书", icon: assetPath("assets/app-icons/world.png") },
   { key: "preset", label: "预设", icon: assetPath("assets/app-icons/preset.png") },
   { key: "food", label: "外卖", icon: assetPath("assets/app-icons/food.png") },
   { key: "outing", label: "外出", icon: assetPath("assets/app-icons/outing.png") },
@@ -248,6 +249,92 @@ function SimplePane({ title }) {
         <div className="mini-mark" />
         <h2>{title}</h2>
         <p>这里会承载对应的 AI 聊天扮演功能页面。</p>
+      </div>
+    </section>
+  );
+}
+
+function WorldBookApp({ pages, onBack, onSave }) {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(() => pages[0] || createWorldBookDraft());
+  const [message, setMessage] = useState("");
+  const savedPage = pages[0] || null;
+
+  useEffect(() => {
+    setDraft(pages[0] || createWorldBookDraft());
+  }, [pages]);
+
+  const updateDraft = (key, value) => {
+    setDraft((current) => ({ ...current, [key]: value }));
+    setMessage("");
+  };
+
+  if (editing) {
+    return (
+      <section className="page soft-page world-book-page">
+        <Header title="第一页" onBack={() => setEditing(false)} />
+        <div className="world-book-editor">
+          <div className="settings-group role-form-card">
+            <Field label="名称" className="control-wide">
+              <input
+                value={draft.name}
+                placeholder="例如：北辰学园"
+                onChange={(event) => updateDraft("name", event.target.value)}
+              />
+            </Field>
+            <Field label="时代" className="select-wide">
+              <select value={draft.era} onChange={(event) => updateDraft("era", event.target.value)}>
+                <option value="modern">现代</option>
+                <option value="ancient">古代</option>
+              </select>
+            </Field>
+          </div>
+          <div className="settings-group role-form-card">
+            <Field label="概况" className="textarea-row">
+              <textarea
+                value={draft.summary}
+                placeholder="一句话写这个世界的核心设定..."
+                onChange={(event) => updateDraft("summary", event.target.value)}
+              />
+            </Field>
+          </div>
+          <div className="settings-group role-form-card">
+            <Field label="世界观" className="textarea-row persona-row">
+              <textarea
+                value={draft.content}
+                placeholder="地点、规则、势力、时代、日常氛围..."
+                onChange={(event) => updateDraft("content", event.target.value)}
+              />
+            </Field>
+          </div>
+          {message ? <p className="api-message role-message">{message}</p> : null}
+          <div className="action-row compact">
+            <button
+              onClick={() => {
+                const saved = onSave(draft);
+                setDraft(saved);
+                setMessage("世界书已保存，可以在角色里关联。");
+              }}
+            >
+              保存世界书
+            </button>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  return (
+    <section className="page soft-page world-book-page">
+      <Header title="世界书" onBack={onBack} />
+      <div className="world-book-list">
+        <button className="world-book-card" onClick={() => setEditing(true)}>
+          <span>
+            <b>{savedPage?.name || "第一页"}</b>
+            <small>{savedPage ? (savedPage.summary || "已保存世界观，可关联角色") : "点击填写世界观"}</small>
+          </span>
+          <em>{savedPage?.era === "ancient" ? "古代" : "现代"}</em>
+        </button>
       </div>
     </section>
   );
@@ -1818,6 +1905,7 @@ function CharacterCreatePage({
   onSave,
   profileKind = "role",
   createDraft = createRoleDraft,
+  worldBooks = [],
 }) {
   const isIdentity = profileKind === "identity";
   const noun = isIdentity ? "身份" : "角色";
@@ -2006,7 +2094,12 @@ function CharacterCreatePage({
                 onChange={(event) => updateRole("worldview", event.target.value)}
               >
                 <option value="">暂无</option>
-                {draft.worldview ? <option value={draft.worldview}>{draft.worldview}</option> : null}
+                {worldBooks.map((page) => (
+                  <option key={page.id} value={page.name}>{page.name}</option>
+                ))}
+                {draft.worldview && !worldBooks.some((page) => page.name === draft.worldview) ? (
+                  <option value={draft.worldview}>{draft.worldview}</option>
+                ) : null}
               </select>
             </Field>
           </div>
@@ -2400,7 +2493,7 @@ function AppearanceSettings({ onBack }) {
     <section className="page detail-page">
       <Header title="外观设置" onBack={onBack} />
       <div className="settings-group">
-        {["替换壁纸", "替换屏保", "替换微聊图标", "替换论坛图标", "替换小红书图标", "替换钱包图标", "替换游戏图标", "替换美化图标", "替换世界观图标", "替换预设图标", "替换外卖图标", "替换外出图标", "替换日记图标", "替换情侣空间图标"].map((item) => (
+        {["替换壁纸", "替换屏保", "替换微聊图标", "替换论坛图标", "替换小红书图标", "替换钱包图标", "替换游戏图标", "替换美化图标", "替换世界书图标", "替换预设图标", "替换外卖图标", "替换外出图标", "替换日记图标", "替换情侣空间图标"].map((item) => (
           <button className="settings-row" key={item}>
             <span className="row-symbol" />
             <span className="row-copy"><b>{item}</b></span>
@@ -2461,8 +2554,10 @@ export function App() {
   const [chatStore] = useState(() => new ChatStore());
   const [walletStore] = useState(() => new WalletStore());
   const [workStore] = useState(() => new WorkStore());
+  const [worldBookStore] = useState(() => new WorldBookStore());
   const [roles, setRoles] = useState(() => roleStore.list());
   const [identities, setIdentities] = useState(() => identityStore.list());
+  const [worldBooks, setWorldBooks] = useState(() => worldBookStore.list());
   const [conversations, setConversations] = useState(() => chatStore.list());
   const [wallet, setWallet] = useState(() => walletStore.snapshot());
   const [workDay, setWorkDay] = useState(() => workStore.snapshot());
@@ -2927,11 +3022,25 @@ export function App() {
         />
       );
     }
+    if (appPage?.key === "world") {
+      return (
+        <WorldBookApp
+          pages={worldBooks}
+          onBack={() => setAppPage(null)}
+          onSave={(draft) => {
+            const saved = worldBookStore.save(draft);
+            setWorldBooks(worldBookStore.list());
+            return saved;
+          }}
+        />
+      );
+    }
     if (appPage) return <SimplePane title={appPage.label} />;
     if (settingPage) return <SettingDetail page={settingPage} onBack={() => setSettingPage(null)} />;
     if (rolePage === "create") {
       return (
         <CharacterCreatePage
+          worldBooks={worldBooks}
           onBack={() => setRolePage(null)}
           onSave={(draft) => {
             const saved = roleStore.save(draft);
@@ -2946,6 +3055,7 @@ export function App() {
       return (
         <CharacterCreatePage
           initialRole={selectedRole}
+          worldBooks={worldBooks}
           onBack={() => {
             setRolePage(null);
             setSelectedRoleId(null);
@@ -2964,6 +3074,7 @@ export function App() {
         <CharacterCreatePage
           profileKind="identity"
           createDraft={createIdentityDraft}
+          worldBooks={worldBooks}
           onBack={() => setIdentityPage(null)}
           onSave={(draft) => {
             const saved = identityStore.save(draft);
@@ -2980,6 +3091,7 @@ export function App() {
           profileKind="identity"
           createDraft={createIdentityDraft}
           initialRole={selectedIdentity}
+          worldBooks={worldBooks}
           onBack={() => setIdentityPage(null)}
           onSave={(draft) => {
             const saved = identityStore.save(draft);
@@ -3055,6 +3167,8 @@ export function App() {
     workDay,
     workMessage,
     workStore,
+    worldBooks,
+    worldBookStore,
   ]);
 
   if (locked) {

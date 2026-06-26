@@ -74,14 +74,14 @@ button {
 .home-page {
   background-image:
     linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.16)),
-    url("/assets/home-window-cat-plants-v88.png");
+    url("/assets/home-curtain-green-cat-v91.png");
   background-size: cover;
   background-position: center;
 }
 
 .home-widget {
   position: absolute;
-  top: 25.2%;
+  top: 29.5%;
   left: 24px;
   right: 24px;
   z-index: 3;
@@ -289,7 +289,7 @@ button {
 .lock-time {
   position: relative;
   z-index: 2;
-  margin-top: max(58px, calc(var(--safe-top) + 42px));
+  margin-top: max(86px, calc(var(--safe-top) + 68px));
   text-align: center;
 }
 
@@ -324,7 +324,7 @@ button {
   width: 48px;
   height: 5px;
   border-radius: 8px;
-  background: rgba(210, 142, 165, 0.45);
+  background: rgba(122, 122, 122, 0.38);
 }
 
 .topbar {

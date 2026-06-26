@@ -3,7 +3,7 @@
   "short_name": "E-Phone",
   "description": "粉色 iOS 风 AI 聊天扮演 PWA",
   "id": "/E-Phone/",
-  "start_url": "/E-Phone/?v=pwa-start-v81",
+  "start_url": "/E-Phone/?v=pwa-start-v82",
   "scope": "/E-Phone/",
   "display": "standalone",
   "background_color": "#fff8fa",

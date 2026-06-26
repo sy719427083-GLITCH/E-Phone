@@ -56,7 +56,8 @@ test("renders a real wallet app instead of the placeholder pane", () => {
   assert.match(appSource, /ImageLineIcon/);
   assert.match(styleSource, /\.chat-thread-page \.topbar \{\s*background: transparent;/);
   assert.match(styleSource, /\.message-bubble \{[\s\S]*border-radius: 10px;/);
-  assert.match(styleSource, /rgba\(255, 255, 255, 0\.06\)/);
+  assert.match(styleSource, /microchat-chat-bg-comic-cat-v82\.png/);
+  assert.match(styleSource, /rgba\(255, 255, 255, 0\.045\)/);
   assert.doesNotMatch(appSource, /拍一拍功能稍后开放/);
   assert.doesNotMatch(appSource, /领取了你的红包/);
 });

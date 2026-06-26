@@ -88,12 +88,12 @@ button {
   display: grid;
   place-items: center;
   min-height: clamp(76px, 10%, 92px);
-  color: rgba(71, 58, 65, 0.78);
+  color: rgba(76, 99, 78, 0.76);
   text-shadow: 0 2px 10px rgba(255, 255, 255, 0.92);
 }
 
 .home-widget span {
-  color: rgba(183, 145, 158, 0.68);
+  color: rgba(105, 132, 104, 0.66);
   font-size: 12px;
   font-weight: 600;
 }
@@ -105,7 +105,7 @@ button {
 }
 
 .widget-clock b {
-  color: rgba(213, 145, 168, 0.58);
+  color: rgba(116, 148, 111, 0.62);
   font-size: clamp(50px, 6.2dvh, 58px);
   font-weight: 750;
   line-height: 1;
@@ -161,13 +161,13 @@ button {
   height: 6px;
   border-radius: 999px;
   padding: 0;
-  background: rgba(132, 112, 122, 0.22);
+  background: rgba(107, 130, 104, 0.24);
   box-shadow: none;
 }
 
 .home-page-dots button.active {
   width: 15px;
-  background: rgba(196, 120, 145, 0.48);
+  background: rgba(94, 128, 91, 0.52);
 }
 
 .app-hit {
@@ -235,7 +235,7 @@ button {
   gap: 2px;
   min-width: 0;
   border-radius: 11px;
-  color: #9b858e;
+  color: rgba(92, 111, 91, 0.72);
   background: transparent;
   box-shadow: none;
   font-size: 10px;
@@ -255,7 +255,7 @@ button {
 .action-row button:focus-visible,
 .back-button:focus-visible,
 .floating-back:focus-visible {
-  outline: 2px solid rgba(215, 131, 158, 0.55);
+  outline: 2px solid rgba(115, 148, 108, 0.46);
   outline-offset: 2px;
 }
 
@@ -270,14 +270,14 @@ button {
 }
 
 .bottom-tabs .active {
-  color: #c66f8d;
+  color: rgba(82, 123, 78, 0.9);
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.26), rgba(255, 244, 249, 0.1)),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.28), rgba(238, 247, 235, 0.13)),
     rgba(255, 255, 255, 0.1);
   box-shadow:
-    0 8px 20px rgba(196, 145, 164, 0.07),
+    0 8px 20px rgba(126, 153, 120, 0.08),
     inset 0 1px 0 rgba(255, 255, 255, 0.4),
-    inset 0 -8px 16px rgba(255, 225, 236, 0.08);
+    inset 0 -8px 16px rgba(231, 244, 226, 0.1);
 }
 
 .lock-screen {

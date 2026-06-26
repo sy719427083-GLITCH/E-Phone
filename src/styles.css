@@ -73,8 +73,8 @@ button {
 
 .home-page {
   background-image:
-    linear-gradient(180deg, rgba(255, 248, 251, 0.04), rgba(255, 248, 251, 0.24)),
-    url("/assets/pink-cat-home-wallpaper-clean.png");
+    linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.16)),
+    url("/assets/home-window-cat-plants-v84.png");
   background-size: cover;
   background-position: center;
 }

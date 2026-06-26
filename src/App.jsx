@@ -18,6 +18,7 @@ import {
   parseAssistantReplies,
 } from "./lib/chatStore.js";
 import { createIdentityDraft, IdentityStore } from "./lib/identityStore.js";
+import { getHomeAppPages } from "./lib/homeApps.js";
 import {
   buildMomentContext,
   buildMomentsPrompt,
@@ -100,28 +101,6 @@ function MomentReplyText({ authorName, replyToName, content, myName = "我" }) {
     `：${afterColon}`,
   ];
 }
-
-const appItems = [
-  { key: "chat", label: "微聊", icon: assetPath("assets/app-icons/chat.png") },
-  { key: "forum", label: "论坛", icon: assetPath("assets/app-icons/forum.png") },
-  { key: "rednote", label: "小红书", icon: assetPath("assets/app-icons/rednote.png") },
-  { key: "wallet", label: "钱包", icon: assetPath("assets/app-icons/wallet.png") },
-  { key: "game", label: "游戏", icon: assetPath("assets/app-icons/game.png") },
-  { key: "beauty", label: "美化", icon: assetPath("assets/app-icons/beauty.png") },
-  { key: "world", label: "世界书", icon: assetPath("assets/app-icons/world.png") },
-  { key: "preset", label: "预设", icon: assetPath("assets/app-icons/preset.png") },
-  { key: "food", label: "外卖", icon: assetPath("assets/app-icons/food.png") },
-  { key: "outing", label: "外出", icon: assetPath("assets/app-icons/outing.png") },
-  { key: "diary", label: "日记", icon: assetPath("assets/app-icons/diary.png") },
-  { key: "couple", label: "情侣空间", icon: assetPath("assets/app-icons/couple.png") },
-  { key: "work", label: "工作", icon: assetPath("assets/app-icons/work.png") },
-  { key: "parallel", label: "平行时空", icon: assetPath("assets/app-icons/parallel.png") },
-  { key: "phonecheck", label: "查手机", icon: assetPath("assets/app-icons/phonecheck.png") },
-  { key: "weibo", label: "微博", icon: assetPath("assets/app-icons/weibo.png") },
-  { key: "schedule", label: "日程", icon: assetPath("assets/app-icons/schedule.png") },
-  { key: "event", label: "特别活动", icon: assetPath("assets/app-icons/event.png") },
-  { key: "business", label: "经营", icon: assetPath("assets/app-icons/business.png") },
-];
 
 const settingsItems = [
   ["api", "API设置", "接口、模型、测试", assetPath("assets/settings-icons/api.png")],
@@ -223,6 +202,13 @@ function LockScreen({ onUnlock }) {
 }
 
 function HomeScreen({ clock, openApp }) {
+  const appPages = useMemo(() => getHomeAppPages(import.meta.env.BASE_URL), []);
+  const [pageIndex, setPageIndex] = useState(0);
+  const touchStart = useRef(null);
+  const goToPage = (nextIndex) => {
+    setPageIndex(Math.max(0, Math.min(appPages.length - 1, nextIndex)));
+  };
+
   return (
     <section className="page home-page">
       <div className="home-widget" aria-label="主页小组件">
@@ -231,17 +217,45 @@ function HomeScreen({ clock, openApp }) {
           <span>{clock.date}</span>
         </div>
       </div>
-      <div className="home-grid" aria-label="主页应用">
-        {appItems.map((item) => (
-          <button
-            className="app-hit"
-            key={item.key}
-            onClick={() => openApp(item)}
-          >
-            <img src={item.icon} alt="" draggable="false" />
-            <span>{item.label}</span>
-          </button>
-        ))}
+      <div
+        className="home-app-pages"
+        aria-label="主页应用"
+        onTouchStart={(event) => {
+          touchStart.current = event.touches[0]?.clientX ?? null;
+        }}
+        onTouchEnd={(event) => {
+          if (touchStart.current == null) return;
+          const deltaX = (event.changedTouches[0]?.clientX ?? touchStart.current) - touchStart.current;
+          if (Math.abs(deltaX) > 42) goToPage(pageIndex + (deltaX < 0 ? 1 : -1));
+          touchStart.current = null;
+        }}
+      >
+        <div className="home-page-track" style={{ transform: `translateX(-${pageIndex * 100}%)` }}>
+          {appPages.map((page, index) => (
+            <div className="home-grid" key={index} aria-label={`主页应用第 ${index + 1} 页`}>
+              {page.map((item) => (
+                <button
+                  className="app-hit"
+                  key={item.key}
+                  onClick={() => openApp(item)}
+                >
+                  <img src={item.icon} alt="" draggable="false" />
+                  <span>{item.label}</span>
+                </button>
+              ))}
+            </div>
+          ))}
+        </div>
+        <div className="home-page-dots" aria-label="主页分页">
+          {appPages.map((_, index) => (
+            <button
+              key={index}
+              className={index === pageIndex ? "active" : ""}
+              aria-label={`第 ${index + 1} 页`}
+              onClick={() => goToPage(index)}
+            />
+          ))}
+        </div>
       </div>
     </section>
   );

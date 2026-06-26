@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
+import { HOME_APP_ITEMS } from "../lib/homeApps.js";
 
 const appSource = readFileSync(new URL("../App.jsx", import.meta.url), "utf8");
 const styleSource = readFileSync(new URL("../styles.css", import.meta.url), "utf8");
@@ -63,8 +64,11 @@ test("renders a real wallet app instead of the placeholder pane", () => {
 });
 
 test("wires a real work app to the home screen and wallet", () => {
-  assert.match(appSource, /key: "work", label: "工作"/);
-  assert.match(appSource, /assets\/app-icons\/work\.png/);
+  assert.ok(HOME_APP_ITEMS.some((item) => (
+    item.key === "work"
+      && item.label === "工作"
+      && item.icon === "assets/app-icons/work.png"
+  )));
   assert.match(appSource, /function WorkApp\(/);
   assert.match(appSource, /appPage\?\.key === "work"/);
   assert.match(appSource, /workStore\.refreshJobs/);
@@ -86,7 +90,7 @@ test("wires a real work app to the home screen and wallet", () => {
 });
 
 test("wires the world book app to role worldview selection", () => {
-  assert.match(appSource, /label: "世界书"/);
+  assert.ok(HOME_APP_ITEMS.some((item) => item.key === "world" && item.label === "世界书"));
   assert.match(appSource, /function WorldBookApp\(/);
   assert.match(appSource, /appPage\?\.key === "world"/);
   assert.match(appSource, /worldBookStore\.save/);

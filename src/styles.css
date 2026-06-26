@@ -116,12 +116,24 @@ button {
   font-size: 12px;
 }
 
-.home-grid {
+.home-app-pages {
   position: absolute;
   top: 40.8%;
   right: 18px;
   bottom: calc(124px + var(--safe-bottom));
   left: 18px;
+  overflow: hidden;
+}
+
+.home-page-track {
+  display: flex;
+  width: 100%;
+  height: calc(100% - 18px);
+  transition: transform 260ms ease;
+}
+
+.home-grid {
+  flex: 0 0 100%;
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   grid-auto-rows: clamp(82px, 10.7dvh, 100px);
@@ -129,13 +141,33 @@ button {
   row-gap: clamp(24px, 4dvh, 40px);
   align-content: start;
   align-items: start;
-  overflow-y: auto;
-  padding-bottom: 10px;
-  scrollbar-width: none;
+  overflow: hidden;
 }
 
-.home-grid::-webkit-scrollbar {
-  display: none;
+.home-page-dots {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  height: 12px;
+  pointer-events: auto;
+}
+
+.home-page-dots button {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  padding: 0;
+  background: rgba(132, 112, 122, 0.22);
+  box-shadow: none;
+}
+
+.home-page-dots button.active {
+  width: 15px;
+  background: rgba(196, 120, 145, 0.48);
 }
 
 .app-hit {
@@ -4113,8 +4145,11 @@ button {
     aspect-ratio: auto;
   }
 
-  .home-grid {
+  .home-app-pages {
     bottom: 124px;
+  }
+
+  .home-grid {
     grid-auto-rows: 82px;
     row-gap: 24px;
   }

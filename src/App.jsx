@@ -272,7 +272,7 @@ function WorldBookApp({ pages, onBack, onSave }) {
   if (editing) {
     return (
       <section className="page soft-page world-book-page">
-        <Header title="第一页" onBack={() => setEditing(false)} />
+        <Header title="第一页" onBack={() => setEditing(false)} backLabel="返回" />
         <div className="world-book-editor">
           <div className="settings-group role-form-card">
             <Field label="名称" className="control-wide">
@@ -326,7 +326,7 @@ function WorldBookApp({ pages, onBack, onSave }) {
 
   return (
     <section className="page soft-page world-book-page">
-      <Header title="世界书" onBack={onBack} />
+      <Header title="世界书" onBack={onBack} backLabel="返回" />
       <div className="world-book-list">
         <button className="world-book-card" onClick={() => setEditing(true)}>
           <span>
@@ -2120,12 +2120,12 @@ function CharacterCreatePage({
   );
 }
 
-function Header({ title, onBack, action = null }) {
+function Header({ title, onBack, action = null, backLabel = "‹" }) {
   return (
     <header className="topbar">
       {onBack ? (
         <button className="back-button" onClick={onBack} aria-label="返回">
-          ‹
+          {backLabel}
         </button>
       ) : (
         <span />
@@ -3177,7 +3177,7 @@ export function App() {
 
   return (
     <main className="screen">
-      {appPage && appPage.key !== "chat" ? (
+      {appPage && appPage.key !== "chat" && appPage.key !== "world" ? (
         <button className="floating-back" onClick={() => setAppPage(null)}>
           返回
         </button>

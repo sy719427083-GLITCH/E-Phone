@@ -86,6 +86,7 @@ Current prototype direction:
 - Micro Chat role replies must be purely online chat: never include role-name prefixes before bubble text, and never introduce meeting/offline/co-present scenes such as sitting together, visiting each other, handing objects over, or drinking/eating together. Keep interactions limited to things possible through the phone screen, including text, red packets, transfers, location sharing, and images.
 - Micro Chat chat threads should use a generated, very light low-saturation milk-pink wallpaper background with a clean readable center, rather than a flat gray/white fill.
 - Micro Chat chat wallpaper should keep a low-saturation comic cat style with a clean readable center; avoid vivid pink or high-contrast manga backgrounds.
+- Micro Chat composer plus control should sit on the far left of the input row, with the text field in the middle and send button on the right.
 - Micro Chat must never show model prompts, JSON wrappers, Markdown, rewrite notes, analysis, or formatting instructions as chat bubbles; parser and display should filter those leaks, including older stored messages.
 - Micro Chat messages should show a time below each bubble. Roles may proactively send normal messages and WeChat-like special events: recalled message, red packet, pat, and shared location rendered with CSS/SVG instead of external images.
 - In the new friends page, rejection should appear before acceptance when both actions are shown.
@@ -103,3 +104,4 @@ Current prototype direction:
 - Work app idle header should read "工作清单". Work tier labels should be borderless and background-free, using distinct stylish colors for SSS/S/A/B/C instead of pill frames.
 - Wallet wallpaper should stay very pale and low-saturation across the full screen, with the balance amount placed on its own line below "我的余额" rather than beside the label.
 - The home app formerly called "世界观" should be labeled "世界书". It starts with a fixed first page that can be edited and saved, and saved world-book page names should appear in role/identity "关联世界观" selectors.
+- World Book should use a generated low-saturation comic dog wallpaper behind the list/editor pages, and its navigation should show only one text "返回" button without an extra chevron/back glyph.

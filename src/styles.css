@@ -1628,6 +1628,543 @@ button {
   font-weight: 650;
 }
 
+.magazine-roles-page {
+  --mag-bg-base: #f8f8fa;
+  --mag-text-main: #1c1c1e;
+  --mag-text-sub: #9e9ea5;
+  --mag-border: rgba(0, 0, 0, 0.1);
+  position: relative;
+  overflow: hidden auto;
+  padding: 0 20px calc(98px + var(--safe-bottom));
+  color: var(--mag-text-main);
+  background: var(--mag-bg-base);
+  font-family: -apple-system, BlinkMacSystemFont, "Didot", "Times New Roman", "PingFang SC", sans-serif;
+}
+
+.mag-bg-decor,
+.me-bg-decor {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.mag-bg-decor::before {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(0, 0, 0, 0.015) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 0, 0, 0.015) 1px, transparent 1px);
+  background-size: 30px 30px;
+  content: "";
+}
+
+.mag-circle-1,
+.mag-circle-2 {
+  position: absolute;
+  border: 1px solid rgba(0, 0, 0, 0.035);
+  border-radius: 50%;
+  animation: slow-rotate 30s linear infinite;
+}
+
+.mag-circle-1 {
+  top: -10%;
+  right: -22%;
+  width: 50vh;
+  height: 50vh;
+}
+
+.mag-circle-2 {
+  bottom: 10%;
+  left: -22%;
+  width: 40vh;
+  height: 40vh;
+  animation-duration: 25s;
+  animation-direction: reverse;
+}
+
+.mag-crosshair {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  opacity: 0.2;
+}
+
+.mag-crosshair-a {
+  top: 15%;
+  right: 10%;
+}
+
+.mag-crosshair-b {
+  top: 45%;
+  left: 5%;
+}
+
+.mag-crosshair::before,
+.mag-crosshair::after {
+  position: absolute;
+  background: var(--mag-text-main);
+  content: "";
+}
+
+.mag-crosshair::before {
+  top: 50%;
+  left: 0;
+  width: 100%;
+  height: 1px;
+}
+
+.mag-crosshair::after {
+  top: 0;
+  left: 50%;
+  width: 1px;
+  height: 100%;
+}
+
+.mag-data-dust {
+  position: absolute;
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: var(--mag-text-main);
+  opacity: 0;
+  animation: fade-float linear infinite;
+}
+
+.mag-header {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  gap: 16px;
+  padding: max(50px, calc(var(--safe-top) + 34px)) 0 12px;
+}
+
+.mag-vol,
+.me-vol {
+  color: var(--mag-text-sub);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+.mag-title-row {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.mag-title-large,
+.me-title-large {
+  margin: 0;
+  color: var(--mag-text-main);
+  font-size: clamp(32px, 9.2vw, 42px);
+  font-weight: 900;
+  line-height: 1.02;
+  letter-spacing: 1px;
+}
+
+.mag-create-button,
+.me-create-button {
+  flex: 0 0 auto;
+  min-height: 34px;
+  border: 1px solid var(--mag-border);
+  border-radius: 0;
+  padding: 0 13px;
+  color: var(--mag-text-main);
+  background: transparent;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+
+.mag-tabs {
+  display: flex;
+  gap: 20px;
+  border-bottom: 1px solid var(--mag-border);
+  padding-bottom: 10px;
+}
+
+.mag-tab {
+  position: relative;
+  min-height: 24px;
+  color: var(--mag-text-sub);
+  background: transparent;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.mag-tab.active {
+  color: var(--mag-text-main);
+}
+
+.mag-tab.active::after {
+  position: absolute;
+  bottom: -11px;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: var(--mag-text-main);
+  content: "";
+}
+
+.mag-grid {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 15px;
+  padding: 8px 0 22px;
+}
+
+.mag-card.role-card,
+.mag-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-height: 220px;
+  padding: 15px;
+  overflow: hidden;
+  border: 1px solid var(--mag-border);
+  border-radius: 0;
+  color: var(--mag-text-main);
+  background: transparent;
+  box-shadow: none;
+  text-align: left;
+}
+
+.mag-card.role-card {
+  grid-template-columns: none;
+  gap: 0;
+}
+
+.mag-card:active {
+  transform: scale(0.98);
+  background: rgba(0, 0, 0, 0.02);
+}
+
+.mag-card-id {
+  position: absolute;
+  top: 5px;
+  right: 8px;
+  color: var(--mag-text-sub);
+  font-family: "Didot", serif;
+  font-size: 10px;
+  opacity: 0.5;
+}
+
+.mag-avatar-box {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  margin-bottom: 15px;
+  overflow: hidden;
+  background: rgba(28, 28, 30, 0.03);
+  filter: grayscale(20%);
+}
+
+.mag-avatar-box img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.mag-avatar-box svg {
+  width: 40px;
+  height: 40px;
+  fill: var(--mag-text-sub);
+  opacity: 0.28;
+}
+
+.mag-avatar-box > span {
+  position: absolute;
+  color: rgba(28, 28, 30, 0.56);
+  font-size: 26px;
+  font-weight: 800;
+}
+
+.mag-card-name {
+  display: block;
+  width: 100%;
+  overflow: hidden;
+  color: var(--mag-text-main);
+  font-family: "Didot", "Times New Roman", serif;
+  font-size: 17px;
+  font-weight: 900;
+  line-height: 1.1;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mag-card-identity {
+  display: block;
+  width: 100%;
+  overflow: hidden;
+  margin-top: 6px;
+  color: var(--mag-text-sub);
+  font-size: 11px;
+  font-weight: 500;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mag-add-btn {
+  align-items: center;
+  justify-content: center;
+  border-style: dashed;
+  text-align: center;
+}
+
+.mag-add-btn > span {
+  margin-bottom: 10px;
+  font-size: 30px;
+  font-weight: 300;
+}
+
+.mag-add-btn b {
+  color: var(--mag-text-main);
+  font-size: 12px;
+  letter-spacing: 0.14em;
+}
+
+.mag-add-btn small {
+  margin-top: 8px;
+  color: var(--mag-text-sub);
+  font-size: 11px;
+}
+
+.mag-list-container {
+  position: relative;
+  z-index: 2;
+  padding: 8px 0 30px;
+}
+
+.mag-add-relation-btn,
+.me-add-btn {
+  width: 100%;
+  min-height: 56px;
+  border: 1px dashed currentColor;
+  border-radius: 0;
+  color: var(--mag-text-main);
+  background: transparent;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+
+.mag-empty {
+  display: grid;
+  place-items: center;
+  min-height: 150px;
+  color: var(--mag-text-sub);
+  font-size: 13px;
+  letter-spacing: 0.16em;
+}
+
+.me-magazine-page {
+  --mag-text-main: #4a3b32;
+  --mag-text-sub: #a39185;
+  --mag-border: rgba(184, 155, 136, 0.35);
+  position: relative;
+  overflow: hidden auto;
+  padding: 0 20px calc(98px + var(--safe-bottom));
+  color: var(--mag-text-main);
+  background: #fdfbf8;
+  font-family: -apple-system, BlinkMacSystemFont, "Didot", "Times New Roman", "PingFang SC", sans-serif;
+}
+
+.me-shape-1,
+.me-shape-2 {
+  position: absolute;
+  border: 1px solid var(--mag-border);
+  opacity: 0.5;
+}
+
+.me-shape-1 {
+  top: -15%;
+  right: -10%;
+  width: 60vh;
+  height: 60vh;
+  transform: rotate(45deg);
+}
+
+.me-shape-2 {
+  bottom: -5%;
+  left: -20%;
+  width: 50vh;
+  height: 50vh;
+  transform: rotate(15deg);
+}
+
+.me-sparkle {
+  position: absolute;
+  bottom: -20px;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #d4c4b7;
+  filter: blur(1px);
+  opacity: 0;
+  animation: float-up linear infinite;
+}
+
+.me-header {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  gap: 14px;
+  padding: max(50px, calc(var(--safe-top) + 34px)) 0 18px;
+}
+
+.me-vol {
+  color: #b89b88;
+  letter-spacing: 3px;
+}
+
+.me-list-container {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  gap: 20px;
+  padding: 4px 0 28px;
+}
+
+.me-card.role-card {
+  display: flex;
+  grid-template-columns: none;
+  align-items: center;
+  gap: 20px;
+  min-height: 132px;
+  padding: 0 0 20px;
+  border: 0;
+  border-bottom: 1px solid var(--mag-border);
+  border-radius: 0;
+  color: var(--mag-text-main);
+  background: transparent;
+  box-shadow: none;
+}
+
+.me-card-avatar {
+  position: relative;
+  display: grid;
+  flex: 0 0 auto;
+  place-items: center;
+  width: 80px;
+  height: 110px;
+  overflow: hidden;
+  border: 1px solid var(--mag-border);
+  background: rgba(92, 74, 61, 0.04);
+  filter: sepia(35%);
+}
+
+.me-card-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.me-card-avatar svg {
+  width: 30px;
+  height: 30px;
+  fill: var(--mag-text-sub);
+  opacity: 0.45;
+}
+
+.me-card-avatar > span {
+  position: absolute;
+  color: rgba(74, 59, 50, 0.52);
+  font-size: 28px;
+  font-weight: 900;
+}
+
+.me-card-info {
+  display: grid;
+  flex: 1;
+  gap: 6px;
+  min-width: 0;
+  text-align: left;
+}
+
+.me-card-id {
+  overflow: hidden;
+  color: #b89b88;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 2px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.me-card-name {
+  overflow: hidden;
+  color: var(--mag-text-main);
+  font-family: "Didot", "Times New Roman", serif;
+  font-size: 24px;
+  font-weight: 900;
+  line-height: 1.1;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.me-card-identity {
+  overflow: hidden;
+  color: var(--mag-text-sub);
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.me-add-btn {
+  color: var(--mag-text-main);
+}
+
+@keyframes slow-rotate {
+  0% {
+    transform: rotate(0deg) scale(1);
+  }
+  50% {
+    transform: rotate(180deg) scale(1.05);
+  }
+  100% {
+    transform: rotate(360deg) scale(1);
+  }
+}
+
+@keyframes fade-float {
+  0% {
+    opacity: 0;
+    transform: translateY(20px) scale(0.8);
+  }
+  50% {
+    opacity: 0.15;
+    transform: translateY(-20px) scale(1.2);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-40px) scale(0.8);
+  }
+}
+
+@keyframes float-up {
+  0% {
+    opacity: 0;
+    transform: translateY(110vh) scale(0);
+  }
+  20%,
+  80% {
+    opacity: 0.6;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-10vh) scale(1.5);
+  }
+}
+
 .role-detail-page {
   --role-bg-image: none;
   position: relative;

@@ -1786,7 +1786,7 @@ function ChatThread({ conversation, onBack, onSend, onSendRedPacket, onAcceptRed
   );
 }
 
-function SwipeRoleCard({ role, onOpen, onDelete, noun = "角色" }) {
+function SwipeRoleCard({ role, onOpen, onDelete, noun = "角色", children, cardClassName = "" }) {
   const [open, setOpen] = useState(false);
   const startPoint = useRef({ x: 0, y: 0 });
   const swiped = useRef(false);
@@ -1819,7 +1819,7 @@ function SwipeRoleCard({ role, onOpen, onDelete, noun = "角色" }) {
         删除
       </button>
       <button
-        className="role-card role-card-button"
+        className={`role-card role-card-button ${cardClassName}`.trim()}
         type="button"
         onClick={() => {
           if (swiped.current) return;
@@ -1828,91 +1828,198 @@ function SwipeRoleCard({ role, onOpen, onDelete, noun = "角色" }) {
         onPointerDown={onPointerDown}
         onPointerUp={onPointerUp}
       >
-        <span className="role-card-bg" aria-hidden="true" />
-        <div className="role-avatar small">
-          {role.avatar ? <img src={role.avatar} alt="" /> : <span>{role.name.slice(0, 1) || noun.slice(0, 1)}</span>}
-        </div>
-        <div className="role-card-main">
-          <small>{role.worldview || "暂无关联世界观"}</small>
-          <div className="role-card-head">
-            <b>{role.name || `未命名${noun}`}</b>
-            <span>{role.gender || "未填性别"}</span>
-          </div>
-          <div className="role-card-tags">
-            <span>{role.identity || "未填写身份"}</span>
-          </div>
-          <p>{role.personality || role.persona || role.appearance || `还没有填写${noun}概况`}</p>
-        </div>
+        {children || (
+          <>
+            <span className="role-card-bg" aria-hidden="true" />
+            <div className="role-avatar small">
+              {role.avatar ? <img src={role.avatar} alt="" /> : <span>{role.name.slice(0, 1) || noun.slice(0, 1)}</span>}
+            </div>
+            <div className="role-card-main">
+              <small>{role.worldview || "暂无关联世界观"}</small>
+              <div className="role-card-head">
+                <b>{role.name || `未命名${noun}`}</b>
+                <span>{role.gender || "未填性别"}</span>
+              </div>
+              <div className="role-card-tags">
+                <span>{role.identity || "未填写身份"}</span>
+              </div>
+              <p>{role.personality || role.persona || role.appearance || `还没有填写${noun}概况`}</p>
+            </div>
+          </>
+        )}
       </button>
     </div>
   );
 }
 
-function RolesScreen({ roles, onCreate, onOpenRole, onDeleteRole }) {
+function MagazineAvatar({ item, noun = "角色" }) {
   return (
-    <section className="page soft-page roles-page">
-      <Header title="角色" />
-      <div className="role-toolbar">
-        <div>
-          <b>角色总览</b>
-          <span>{roles.length} 个角色</span>
+    <>
+      {item.avatar ? (
+        <img src={item.avatar} alt="" />
+      ) : (
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4Zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4Z" />
+        </svg>
+      )}
+      {!item.avatar ? <span>{item.name?.slice(0, 1) || noun.slice(0, 1)}</span> : null}
+    </>
+  );
+}
+
+function MagazineDecor({ variant = "role" }) {
+  if (variant === "me") {
+    return (
+      <div className="me-bg-decor" aria-hidden="true">
+        <span className="me-shape-1" />
+        <span className="me-shape-2" />
+        <span className="me-sparkle" style={{ left: "18%", animationDelay: "0.2s", animationDuration: "8s" }} />
+        <span className="me-sparkle" style={{ left: "64%", animationDelay: "2.1s", animationDuration: "10s" }} />
+        <span className="me-sparkle" style={{ left: "82%", animationDelay: "4.4s", animationDuration: "7.5s" }} />
+      </div>
+    );
+  }
+
+  return (
+    <div className="mag-bg-decor" aria-hidden="true">
+      <span className="mag-circle-1" />
+      <span className="mag-circle-2" />
+      <span className="mag-crosshair mag-crosshair-a" />
+      <span className="mag-crosshair mag-crosshair-b" />
+      <span className="mag-data-dust" style={{ left: "18%", top: "24%", animationDelay: "0.2s", animationDuration: "5.6s" }} />
+      <span className="mag-data-dust" style={{ left: "72%", top: "48%", animationDelay: "1.5s", animationDuration: "7s" }} />
+      <span className="mag-data-dust" style={{ left: "46%", top: "82%", animationDelay: "2.4s", animationDuration: "6.4s" }} />
+    </div>
+  );
+}
+
+function RolesScreen({ roles, onCreate, onOpenRole, onDeleteRole }) {
+  const [subTab, setSubTab] = useState("main");
+
+  return (
+    <section className="page soft-page roles-page magazine-roles-page">
+      <MagazineDecor />
+      <div className="mag-header">
+        <span className="mag-vol">VOL. 01 — CAST</span>
+        <div className="mag-title-row">
+          <h1 className="mag-title-large">ARCHIVES.</h1>
+          <button className="mag-create-button" onClick={onCreate}>+ 新建</button>
         </div>
-        <button className="role-create-button" onClick={onCreate}>
-          + 新建
-        </button>
+        <div className="mag-tabs" aria-label="角色分类">
+          {[
+            ["main", "主要人物"],
+            ["npc", "NPC 列表"],
+            ["relation", "关系列表"],
+          ].map(([key, label]) => (
+            <button
+              key={key}
+              className={`mag-tab ${subTab === key ? "active" : ""}`}
+              type="button"
+              onClick={() => setSubTab(key)}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
       </div>
-      <div className="role-list">
-        {roles.length === 0 ? (
-          <div className="empty-state compact-empty roles-empty">
-            <div className="mini-mark" />
-            <h2>还没有角色</h2>
-            <p>创建第一个角色后，就可以用于聊天扮演与剧情互动。</p>
+
+      {subTab === "main" ? (
+        <div className="mag-grid">
+          {roles.length === 0 ? (
+            <button type="button" className="mag-card mag-add-btn" onClick={onCreate}>
+              <span>+</span>
+              <b>CREATE FIRST ARCHIVE</b>
+              <small>还没有角色</small>
+            </button>
+          ) : (
+            <>
+              {roles.map((role, index) => (
+                <SwipeRoleCard
+                  key={role.id}
+                  role={role}
+                  onOpen={onOpenRole}
+                  onDelete={onDeleteRole}
+                  cardClassName="mag-card mag-card-button"
+                >
+                    <span className="mag-card-id">{String(index + 1).padStart(2, "0")}</span>
+                    <span className="mag-avatar-box">
+                      <MagazineAvatar item={role} />
+                    </span>
+                    <b className="mag-card-name">{role.name || "未命名角色"}</b>
+                    <small className="mag-card-identity">{role.identity || role.worldview || "未填写身份"}</small>
+                </SwipeRoleCard>
+              ))}
+              <button type="button" className="mag-card mag-add-btn" onClick={onCreate}>
+                <span>+</span>
+                <b>ADD NEW</b>
+                <small>添加角色</small>
+              </button>
+            </>
+          )}
+        </div>
+      ) : subTab === "npc" ? (
+        <div className="mag-grid">
+          <button type="button" className="mag-card mag-add-btn" onClick={onCreate}>
+            <span>+</span>
+            <b>ADD NPC</b>
+            <small>先作为普通角色保存</small>
+          </button>
+        </div>
+      ) : (
+        <div className="mag-list-container">
+          <button className="mag-add-relation-btn" type="button">
+            + ADD NEW BOND / 添加关系
+          </button>
+          <div className="mag-empty">
+            <span>羁绊关系稍后接入</span>
           </div>
-        ) : (
-          roles.map((role) => (
-            <SwipeRoleCard
-              key={role.id}
-              role={role}
-              onOpen={onOpenRole}
-              onDelete={onDeleteRole}
-            />
-          ))
-        )}
-      </div>
+        </div>
+      )}
     </section>
   );
 }
 
 function IdentitiesScreen({ identities, onCreate, onOpenIdentity, onDeleteIdentity }) {
   return (
-    <section className="page soft-page roles-page identities-page">
-      <Header title="我" />
-      <div className="role-toolbar">
-        <div>
-          <b>身份总览</b>
-          <span>{identities.length} 个身份</span>
+    <section className="page soft-page roles-page identities-page me-magazine-page">
+      <MagazineDecor variant="me" />
+      <div className="me-header">
+        <span className="me-vol">DIRECTOR</span>
+        <div className="mag-title-row">
+          <h1 className="me-title-large">MY PERSONAS.</h1>
+          <button className="me-create-button" onClick={onCreate}>+ 新建</button>
         </div>
-        <button className="role-create-button" onClick={onCreate}>
-          + 新建
-        </button>
       </div>
-      <div className="role-list">
+      <div className="me-list-container">
         {identities.length === 0 ? (
-          <div className="empty-state compact-empty roles-empty">
-            <div className="mini-mark" />
-            <h2>还没有身份</h2>
-            <p>创建第一个身份后，就可以用自己的设定进入剧情互动。</p>
-          </div>
+          <button type="button" className="me-add-btn" onClick={onCreate}>
+            + CREATE FIRST PERSONA / 还没有身份
+          </button>
         ) : (
-          identities.map((identity) => (
-            <SwipeRoleCard
-              key={identity.id}
-              role={identity}
-              noun="身份"
-              onOpen={onOpenIdentity}
-              onDelete={onDeleteIdentity}
-            />
-          ))
+          <>
+            {identities.map((identity, index) => (
+              <SwipeRoleCard
+                key={identity.id}
+                role={identity}
+                noun="身份"
+                onOpen={onOpenIdentity}
+                onDelete={onDeleteIdentity}
+                cardClassName="me-card"
+              >
+                  <span className="me-card-avatar">
+                    <MagazineAvatar item={identity} noun="身份" />
+                  </span>
+                  <span className="me-card-info">
+                    <small className="me-card-id">PERSONA / {String(index + 1).padStart(2, "0")}</small>
+                    <b className="me-card-name">{identity.name || "未命名身份"}</b>
+                    <small className="me-card-identity">{identity.identity || identity.personality || "未填写身份设定"}</small>
+                  </span>
+              </SwipeRoleCard>
+            ))}
+            <button type="button" className="me-add-btn" onClick={onCreate}>
+              + ADD NEW PERSONA
+            </button>
+          </>
         )}
       </div>
     </section>
